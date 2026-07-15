@@ -1,4 +1,4 @@
-# C0 — riproduzione SHARP (rete sharp_like, protocollo P1)
+# C0 — SHARP reproduction (sharp_like network, P1 protocol)
 name: C0
 protocol: P1-sharp
 split_file: splits/p1_sharp.json

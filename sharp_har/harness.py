@@ -1,6 +1,6 @@
-"""[STUB] Interfaccia unica checkpoint -> CSV per tutti gli stream di
-valutazione. Rif. pipeline v5 §0.7, §2.1, §9. Non implementare prima del
-gate giorno 2 (§10.1).
+"""[STUB] Single checkpoint -> CSV interface for every evaluation
+stream. Ref. v5 pipeline §0.7, §2.1, §9. Do not implement before the
+day-2 gate (§10.1).
 """
 from __future__ import annotations
 
@@ -11,12 +11,12 @@ from typing import Literal
 def evaluate(
     checkpoint: str | Path, split_file: str | Path, set_name: Literal["val", "test"]
 ) -> Path:
-    """Valuta un checkpoint su un set (val/test) di uno split file e
-    scrive un CSV di risultati per-sample. Fusione antenne per media
-    softmax -> argmax; macro-F1 calcolata per set solo sulle classi
-    presenti nel ground truth. Ogni invocazione con set_name="test" va
-    loggata (§0.7): il test set non si consuma per errore durante lo
-    sviluppo. Include il wrapper per l'eval C0 in stile repo SHARP
-    originale. Rif. §0.7, §2.1, §9.
+    """Evaluates a checkpoint on a set (val/test) of a split file and
+    writes a per-sample results CSV. Antenna fusion by softmax averaging
+    -> argmax; macro-F1 computed per set only over the classes present
+    in the ground truth. Every invocation with set_name="test" must be
+    logged (§0.7): the test set doesn't get consumed by mistake during
+    development. Includes the SHARP-repo-style evaluation wrapper for
+    C0. Ref. §0.7, §2.1, §9.
     """
-    raise NotImplementedError("giorno 2+ — §0.7, §2.1, §9")
+    raise NotImplementedError("day 2+ — §0.7, §2.1, §9")

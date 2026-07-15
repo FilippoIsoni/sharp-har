@@ -1,4 +1,4 @@
-# C2 — cross-entropy + adversary GRL su AR-set, backbone V-B, protocollo P2-office
+# C2 — cross-entropy + GRL adversary on AR-set, V-B backbone, P2-office protocol
 name: C2
 protocol: P2-office
 split_file: splits/p2_office.json

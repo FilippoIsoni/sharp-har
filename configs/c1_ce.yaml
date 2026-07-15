@@ -1,4 +1,4 @@
-# C1 — cross-entropy, backbone V-B, protocollo P2-office
+# C1 — cross-entropy, V-B backbone, P2-office protocol
 name: C1
 protocol: P2-office
 split_file: splits/p2_office.json

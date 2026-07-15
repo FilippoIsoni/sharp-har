@@ -1,6 +1,6 @@
-"""[STUB] Sampler P×K con vincolo trace-distinte + offset. Rif. pipeline
-v5 §4.2. Usato dai config C3/C4 (sampler: pxk). Non implementare prima
-del gate giorno 2 (§10.1).
+"""[STUB] P×K sampler with distinct-trace constraint + offset. Ref. v5
+pipeline §4.2. Used by configs C3/C4 (sampler: pxk). Do not implement
+before the day-2 gate (§10.1).
 """
 from __future__ import annotations
 
@@ -10,23 +10,23 @@ from torch.utils.data import Sampler
 
 
 class PKSampler(Sampler[list[int]]):
-    """Sampler per batch P×K: P = n_att (numero di attività), K = 32
-    sample per attività, round-robin sugli AR-set. Vincoli: al massimo
-    una finestra per trace per classe nel batch; il riuso della stessa
-    trace è ammesso solo con offset di finestra `|Δstart| >= 340`. Riseed
-    deterministico per epoca: `seed_epoch = f(seed, epoca)`. Logga la
-    composizione di ogni batch (trace-id, AR-set, offset). Rif. §4.2.
+    """Sampler for P×K batches: P = n_att (number of activities), K = 32
+    samples per activity, round-robin over AR-sets. Constraints: at most
+    one window per trace per class in the batch; reusing the same trace
+    is only allowed with a window offset `|Δstart| >= 340`. Deterministic
+    reseed per epoch: `seed_epoch = f(seed, epoch)`. Logs the composition
+    of every batch (trace-id, AR-set, offset). Ref. §4.2.
     """
 
     def __init__(self, dataset, p: int, k: int, seed: int, epoch: int = 0) -> None:
         super().__init__()
-        raise NotImplementedError("giorno 2/3 — §4.2")
+        raise NotImplementedError("day 2/3 — §4.2")
 
     def set_epoch(self, epoch: int) -> None:
-        raise NotImplementedError("giorno 2/3 — §4.2")
+        raise NotImplementedError("day 2/3 — §4.2")
 
     def __iter__(self) -> Iterator[list[int]]:
-        raise NotImplementedError("giorno 2/3 — §4.2")
+        raise NotImplementedError("day 2/3 — §4.2")
 
     def __len__(self) -> int:
-        raise NotImplementedError("giorno 2/3 — §4.2")
+        raise NotImplementedError("day 2/3 — §4.2")

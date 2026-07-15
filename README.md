@@ -1,78 +1,76 @@
 # sharp-har
 
-Human Activity Recognition da tracce WiFi CSI (Doppler) sul dataset **SHARP**
-(*Environment and Person-Independent Activity Recognition with Commodity
-IEEE 802.11 Access Points*), con protocollo di valutazione **LOEO**
-(Leave-One-Environment-Out) e una progressione di run core C0→C4 (baseline
-di riproduzione, cross-entropy, adversarial GRL, contrastivo SupCon, e la
-combinazione SupCon+GRL).
+Human Activity Recognition from WiFi CSI (Doppler) traces on the
+**SHARP** dataset (*Environment and Person-Independent Activity
+Recognition with Commodity IEEE 802.11 Access Points*), evaluated under
+the **LOEO** (Leave-One-Environment-Out) protocol, with a progression of
+core runs C0→C4 (reproduction baseline, cross-entropy, adversarial GRL,
+contrastive SupCon, and the SupCon+GRL combination).
 
-## Principio: thin-notebook, logica nel package
+## Principle: thin notebook, logic lives in the package
 
-Tutta la logica vive nel package Python versionato `sharp_har/`. I notebook
-in `notebooks/` sono **runner sottili**: montano Drive, fanno staging dei
-dati, chiamano le funzioni del package e mostrano output ispezionabili.
-Non contengono logica propria. Questo è necessario perché la pipeline
-richiede code review incrociata del dataloader e riproducibilità completa
-(config YAML, seed, git hash) — cose che un diff di notebook non permette
-di verificare.
+All logic lives in the versioned Python package `sharp_har/`. The
+notebooks in `notebooks/` are **thin runners**: they mount Drive, stage
+the data, call the package's functions, and display inspectable output.
+They contain no logic of their own. This is required because the
+pipeline demands cross-review of the dataloader and full reproducibility
+(YAML config, seed, git hash) — things a notebook diff can't be reviewed
+for.
 
-## Principi non negoziabili
+## Non-negotiable principles
 
-1. **Split per trace, mai per finestra.** Le liste di split contengono
-   trace-id, non indici di finestre — evita leakage tra train/val/test.
-2. **μ/σ solo dal train** della rotazione corrente, salvate nel file di
-   split. Non si ricalcolano mai su val/test.
-3. **Seed unico = 42** per ogni scelta stocastica del progetto.
-4. **Gli split, una volta congelati, si committano su Git e non si
-   toccano più.**
-5. **I dati e i checkpoint non entrano mai nel repo.** Vivono su Drive
-   (~762 MB); il repo contiene solo codice, config, split congelati
-   (`splits/*.json`) e report (`reports/*.csv`).
-6. **L'architettura di training non è decisa finché non serve.** I moduli
-   dei giorni 2–9 sono stub con firma e `NotImplementedError`: la review
-   è possibile, l'implementazione arriva al gate corrispondente.
-7. **Ogni invocazione sul test set viene loggata**, incluso il wrapper di
-   valutazione stile repo SHARP per C0 — il test set non si consuma
-   accidentalmente in iterazioni di sviluppo.
+1. **Split by trace, never by window** — split lists contain trace-ids,
+   not window indices, to avoid leakage between train/val/test.
+2. **μ/σ come from train only**, computed for the current rotation and
+   stored in the split file. Never recomputed on val/test.
+3. **A single seed = 42** for every stochastic choice in the project.
+4. **Once frozen, splits are committed to Git and never touched again.**
+5. **Data and checkpoints never enter the repo.** They live on Drive
+   (~762 MB); the repo contains only code, configs, frozen splits
+   (`splits/*.json`), and reports (`reports/*.csv`).
+6. **The training architecture isn't decided until it needs to be.**
+   Day 2–9 modules are stubs with a signature and `NotImplementedError`:
+   review is possible, implementation lands at the corresponding gate.
+7. **Every invocation on the test set is logged**, including the
+   SHARP-repo-style evaluation wrapper for C0 — the test set doesn't get
+   accidentally consumed during development iterations.
 
-## Mappa notebook → giorni
+## Notebook → day map
 
-| Notebook | Giorno | Stato | Scopo |
+| Notebook | Day | Status | Purpose |
 |---|---|---|---|
-| `00_setup_smoke.ipynb` | — | stub | Mount Drive + staging, verifica veloce dell'ambiente |
-| `01_inventory_splits.ipynb` | 1 | **implementato** | Inventario dati + split congelati (`p2_office`, `p1_sharp`) |
-| `02_smoke_gate.ipynb` | 2 | stub | Smoke test modello + gate di throughput |
-| `03_train.ipynb` | 3+ | stub | Runner generico di training su una config `configs/*.yaml` |
+| `00_setup_smoke.ipynb` | — | stub | Mount Drive + staging, quick environment check |
+| `01_inventory_splits.ipynb` | 1 | **implemented** | Data inventory + frozen splits (`p2_office`, `p1_sharp`) |
+| `02_smoke_gate.ipynb` | 2 | stub | Model smoke test + throughput gate |
+| `03_train.ipynb` | 3+ | stub | Generic training runner over a `configs/*.yaml` |
 
-## Dati: mai nel repo
+## Data: never in the repo
 
-I dati Doppler CSI (due archivi zip, ~762 MB totali) vivono su Google
-Drive, path definito in `configs/paths.yaml`. I notebook li montano e li
-staggiano localmente su Colab (`/content/data`); il training legge solo
-dallo staging locale, mai da Drive. Checkpoint e feature cache seguono la
-stessa regola: mai committati (vedi `.gitignore`).
+The Doppler CSI data (two zip archives, ~762 MB total) live on Google
+Drive, with the path defined in `configs/paths.yaml`. The notebooks mount
+and stage them locally on Colab (`/content/data`); training reads only
+from local staging, never from Drive. Checkpoints and feature caches
+follow the same rule: never committed (see `.gitignore`).
 
-## Come far girare il Giorno 1
+## Running Day 1
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Aprire `notebooks/01_inventory_splits.ipynb` (su Colab o in locale con i
-dati già staggiati) ed eseguire le celle in ordine. Il notebook:
+Open `notebooks/01_inventory_splits.ipynb` (on Colab, or locally with
+the data already staged) and run the cells in order. The notebook:
 
-1. monta Drive e stagga i due zip in locale, cronometrando lo staging;
-2. ispeziona i nomi file reali e chiede conferma del pattern regex prima
-   di procedere;
-3. costruisce `reports/inventory.csv` (una riga per file-stream) e
+1. mounts Drive and stages the two zips locally, timing the staging;
+2. inspects the real file names and asks for confirmation of the regex
+   pattern before proceeding;
+3. builds `reports/inventory.csv` (one row per file-stream) and
    `reports/name_to_arset.json`;
-4. esegue le verifiche del gate del giorno 1 (assi, copertura AR-set,
-   contingenza attività×AR-set, policy NaN ≤5%, conteggio finestre vs
-   attesi);
-5. congela `splits/p2_office.json` (rotazione primaria C1–C4) e
-   `splits/p1_sharp.json` (riproduzione SHARP per C0).
+4. runs the day-1 gate checks (axes, AR-set coverage, activity×AR-set
+   contingency, NaN policy ≤5%, window-count sanity check);
+5. freezes `splits/p2_office.json` (primary rotation for C1–C4) and
+   `splits/p1_sharp.json` (SHARP reproduction for C0).
 
-Gli artefatti prodotti (`splits/*.json`, `reports/*.csv`,
-`reports/name_to_arset.json`) si committano su Git: sono i deliverable
-congelati del giorno 1.
+The produced artifacts (`splits/*.json`, `reports/*.csv`,
+`reports/name_to_arset.json`) get committed to Git: they are the frozen
+day-1 deliverables.

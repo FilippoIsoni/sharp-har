@@ -1,5 +1,5 @@
-"""[STUB] Augmentation Doppler CSI, ordine fisso. Rif. pipeline v5 §3.
-Non implementare prima del gate giorno 2 (§10.1).
+"""[STUB] Doppler CSI augmentation, fixed order. Ref. v5 pipeline §3.
+Do not implement before the day-2 gate (§10.1).
 """
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from typing import Any
 import numpy as np
 import torch
 
-# Ordine fisso, applicato dopo la standardizzazione (x - mu) / sigma.
-# Riempimento delle maschere = 0. Vietati: flip velocità, flip temporale.
+# Fixed order, applied after standardization (x - mu) / sigma. Masked
+# regions are filled with 0. Forbidden: velocity flip, time flip.
 AUGMENTATION_ORDER = (
     "time_shift",
     "time_masking",
@@ -20,7 +20,7 @@ AUGMENTATION_ORDER = (
 
 
 def apply(x: torch.Tensor, cfg: dict[str, Any], rng: np.random.Generator) -> torch.Tensor:
-    """Applica la pipeline di augmentation in AUGMENTATION_ORDER a un
-    singolo sample già standardizzato. Chiamata due volte (viste
-    indipendenti) per generare le coppie positive di SupCon. Rif. §3."""
-    raise NotImplementedError("giorno 2 — §3")
+    """Applies the augmentation pipeline in AUGMENTATION_ORDER to a
+    single already-standardized sample. Called twice (independent views)
+    to generate SupCon's positive pairs. Ref. §3."""
+    raise NotImplementedError("day 2 — §3")

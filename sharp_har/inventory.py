@@ -1,8 +1,8 @@
-"""Giorno 1 — inventario dei file Doppler CSI staggiati in locale.
-Rif. giorno1_inventory_splits_SPEC.md §1.1, §2.
+"""Day 1 — inventory of the Doppler CSI files staged locally.
+Ref. giorno1_inventory_splits_SPEC.md §1.1, §2.
 
-Produce reports/inventory.csv (una riga per file-stream = coppia
-trace/antenna) e reports/name_to_arset.json.
+Produces reports/inventory.csv (one row per file-stream = trace/antenna
+pair) and reports/name_to_arset.json.
 """
 from __future__ import annotations
 
@@ -18,50 +18,52 @@ from .utils import get_logger, write_json
 
 logger = get_logger(__name__)
 
-# Regex parametrico per il naming atteso `{Set}{campagna}_{Attività}_stream_{0-3}.txt`.
-# La copia su Drive può usare una nomenclatura propria (es. suffisso S4_S5):
-# ispezionare i nomi reali con list_files()/print_naming_patterns() nel
-# notebook PRIMA di fidarsi di questo pattern, e correggerlo qui se serve (§2.1).
+# Parametric regex for the expected naming `{Set}{campaign}_{Activity}_stream_{0-3}.txt`.
+# The copy on Drive may use its own naming convention (e.g. an S4_S5
+# suffix): inspect the real file names with list_files()/print_naming_patterns()
+# in the notebook BEFORE trusting this pattern, and fix it here if needed (§2.1).
 FILENAME_PATTERN = re.compile(
     r"^(?P<set_num>[A-Za-z]+\d+)(?P<campagna>[a-z])?_(?P<attivita>[A-Za-z]+)_stream_(?P<stream>[0-3])\.txt$"
 )
 
 EXPECTED_VELOCITY_BINS = 100
 EXPECTED_TIME_STEPS = 340
-NAN_EXCLUSION_THRESHOLD = 0.05  # §2.3: policy NaN, stop se le trace escluse superano il 5%
+NAN_EXCLUSION_THRESHOLD = 0.05  # §2.3: NaN policy, stop if excluded traces exceed 5%
 
-# Metadati (persona, ambiente, hardware) per AR-set, dal paper/dataset SHARP.
-# Placeholder deliberato: va popolato con i valori reali del paper prima di
-# usare build_inventory in produzione. Finché una entry manca, la colonna
-# corrispondente resta "unknown" (§2.2: non inventare).
+# Metadata (subject, environment, hardware) per AR-set, from the SHARP
+# paper/dataset. Deliberate placeholder: fill in with the real values
+# from the paper before using build_inventory in production. As long as
+# an entry is missing, the corresponding column stays "unknown"
+# (§2.2: don't invent values).
 AR_SET_METADATA: dict[str, dict[str, str]] = {}
 
 
 def list_files(stage_dir: str | Path, pattern: str = "**/*.txt") -> list[Path]:
-    """Elenca ricorsivamente i file staggiati in locale. Prima cella del
-    notebook: l'umano ispeziona l'output prima di confermare il regex
-    (§2.1 punto 1)."""
+    """Recursively lists the files staged locally. First cell of the
+    notebook: a human inspects the output before confirming the regex
+    (§2.1 point 1)."""
     return sorted(Path(stage_dir).glob(pattern))
 
 
 def print_naming_patterns(files: list[Path], n_examples: int = 30) -> None:
-    """Stampa n_examples nomi di esempio e i pattern distinti (cifre
-    sostituite da '#') per l'ispezione umana del regex (§2.1 punto 1)."""
+    """Prints n_examples sample names and the distinct patterns (digits
+    replaced by '#') to help with human inspection of the regex
+    (§2.1 point 1)."""
     for f in files[:n_examples]:
         print(f.name)
     stems = sorted({re.sub(r"\d+", "#", f.name) for f in files})
-    print(f"\n{len(stems)} pattern distinti (cifre sostituite da '#'):")
+    print(f"\n{len(stems)} distinct patterns (digits replaced by '#'):")
     for s in stems:
         print(" ", s)
 
 
 def parse_filename(name: str) -> dict[str, Any]:
-    """Estrae set_raw, campagna, attivita, stream da un nome file secondo
-    FILENAME_PATTERN. Solleva ValueError se il nome non combacia — il
-    chiamante deve loggare ed escludere, non indovinare (§2.1 punto 2)."""
+    """Extracts set_raw, campagna, attivita, stream from a file name
+    according to FILENAME_PATTERN. Raises ValueError if the name doesn't
+    match — the caller must log and exclude, not guess (§2.1 point 2)."""
     m = FILENAME_PATTERN.match(name)
     if m is None:
-        raise ValueError(f"nome file non riconosciuto dal pattern atteso: {name!r}")
+        raise ValueError(f"file name not recognized by the expected pattern: {name!r}")
     d = m.groupdict()
     campagna = d["campagna"] or ""
     return {
@@ -74,14 +76,14 @@ def parse_filename(name: str) -> dict[str, Any]:
 
 
 def build_ar_map(set_raw_values: list[str], out_path: str | Path) -> dict[str, str]:
-    """Costruisce la mappa set_raw -> AR-set (AR-1…AR-9) e la salva come
-    artefatto in reports/name_to_arset.json (§2.1 punto 3). Non
-    hardcodare questa mappa altrove nel codice."""
+    """Builds the set_raw -> AR-set (AR-1…AR-9) map and saves it as an
+    artifact in reports/name_to_arset.json (§2.1 point 3). Do not
+    hardcode this map anywhere else in the code."""
     ar_map: dict[str, str] = {}
     for set_raw in sorted(set(set_raw_values)):
         m = re.match(r"^[A-Za-z]+(\d+)", set_raw)
         if m is None:
-            logger.warning("set_raw non mappabile a un AR-set: %r", set_raw)
+            logger.warning("set_raw not mappable to an AR-set: %r", set_raw)
             continue
         ar_map[set_raw] = f"AR-{int(m.group(1))}"
     write_json(out_path, ar_map)
@@ -89,9 +91,9 @@ def build_ar_map(set_raw_values: list[str], out_path: str | Path) -> dict[str, s
 
 
 def load_trace(filepath: str | Path) -> np.ndarray:
-    """Carica un singolo file-stream Doppler (pickle numpy, shape
-    (N_frame, 100)). Solleva se il file non è leggibile — nessun
-    fallback silenzioso su dati corrotti."""
+    """Loads a single Doppler file-stream (numpy pickle, shape
+    (N_frame, 100)). Raises if the file isn't readable — no silent
+    fallback on corrupted data."""
     with open(filepath, "rb") as f:
         arr = pickle.load(f)
     return np.asarray(arr)
@@ -102,11 +104,11 @@ def build_inventory(
     out_dir: str | Path = "reports",
     stft_hop_s: float | None = 0.006,
 ) -> pd.DataFrame:
-    """Scansiona i file Doppler staggiati e produce reports/inventory.csv,
-    una riga per file-stream (§2.2). Scrive anche name_to_arset.json.
+    """Scans the staged Doppler files and produces reports/inventory.csv,
+    one row per file-stream (§2.2). Also writes name_to_arset.json.
 
-    `stft_hop_s`: se non verificato sui metadati reali, passare None —
-    verrà registrato come NaN e va segnalato come blocker (§2.1).
+    `stft_hop_s`: if not verified against the real metadata, pass None —
+    it will be recorded as NaN and must be flagged as a blocker (§2.1).
     """
     files = list_files(stage_dir)
     rows: list[dict[str, Any]] = []
@@ -115,7 +117,7 @@ def build_inventory(
         try:
             parsed = parse_filename(fp.name)
         except ValueError as exc:
-            logger.warning("scarto file non parsabile: %s", exc)
+            logger.warning("dropping unparsable file: %s", exc)
             continue
         parsed_ok.append({**parsed, "filepath": str(fp)})
 
@@ -131,8 +133,8 @@ def build_inventory(
             has_nan = bool(np.isnan(arr).any()) if np.issubdtype(arr.dtype, np.floating) else False
             n_frame = shape_0
             dtype = str(arr.dtype)
-        except Exception as exc:  # dati illeggibili: logga, non inventare valori
-            logger.error("impossibile leggere %s: %s", fp, exc)
+        except Exception as exc:  # unreadable data: log, don't invent values
+            logger.error("could not read %s: %s", fp, exc)
             shape_0 = shape_1 = n_frame = None
             has_nan = None
             dtype = "unreadable"
@@ -163,14 +165,14 @@ def build_inventory(
     out_path = Path(out_dir) / "inventory.csv"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_path, index=False)
-    logger.info("inventory.csv scritto: %d righe (%s)", len(df), out_path)
+    logger.info("inventory.csv written: %d rows (%s)", len(df), out_path)
     return df
 
 
 def trace_table(inventory_df: pd.DataFrame) -> pd.DataFrame:
-    """Collassa l'inventario per-stream a una riga per trace_id (unità di
-    split, §0.2). Assume ar_set/campagna/attivita coerenti tra i 4 stream
-    della stessa trace."""
+    """Collapses the per-stream inventory to one row per trace_id (the
+    split unit, §0.2). Assumes ar_set/campagna/attivita are consistent
+    across the 4 streams of the same trace."""
     agg = (
         inventory_df.groupby("trace_id")
         .agg(
@@ -187,32 +189,33 @@ def trace_table(inventory_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def assert_axes(inventory_df: pd.DataFrame) -> None:
-    """Verifica assi (§2.3): shape_1 == 100 (bin di velocità) per tutti i
-    file. Solleva AssertionError con l'elenco dei file non conformi —
-    blocker esplicito, assi trasposti o ND diverso da investigare."""
+    """Verifies the axes (§2.3): shape_1 == 100 (velocity bins) for
+    every file. Raises AssertionError with the list of non-conforming
+    files — an explicit blocker, transposed axes or a different ND to
+    investigate."""
     bad = inventory_df[inventory_df["shape_1"] != EXPECTED_VELOCITY_BINS]
     assert bad.empty, (
-        f"{len(bad)} file con shape_1 != {EXPECTED_VELOCITY_BINS}: "
+        f"{len(bad)} files with shape_1 != {EXPECTED_VELOCITY_BINS}: "
         f"{bad['filepath'].tolist()[:10]}"
     )
 
 
 def assert_coverage(inventory_df: pd.DataFrame, expected_ar_sets: list[str] | None = None) -> set[str]:
-    """Verifica copertura AR-1…AR-9 dopo l'unione dei due zip (§2.3).
-    Ritorna i set attesi mancanti; il chiamante decide se è un blocker
-    (di norma sì)."""
+    """Verifies AR-1…AR-9 coverage after merging the two zips (§2.3).
+    Returns the missing expected sets; the caller decides whether it's a
+    blocker (usually yes)."""
     if expected_ar_sets is None:
         expected_ar_sets = [f"AR-{i}" for i in range(1, 10)]
     present = set(inventory_df["ar_set"].unique())
     missing = set(expected_ar_sets) - present
     if missing:
-        logger.error("AR-set mancanti dopo l'unione degli zip: %s", sorted(missing))
+        logger.error("missing AR-sets after merging the zips: %s", sorted(missing))
     return missing
 
 
 def build_contingency_table(inventory_df: pd.DataFrame, out_path: str | Path) -> pd.DataFrame:
-    """Tabella di contingenza attività × AR-set, conteggio di *trace* (non
-    stream) — reports/contingency.csv (§2.3)."""
+    """Activity × AR-set contingency table, counting *traces* (not
+    streams) — reports/contingency.csv (§2.3)."""
     traces = trace_table(inventory_df)
     table = pd.crosstab(traces["ar_set"], traces["attivita"])
     table.to_csv(out_path)
@@ -222,9 +225,9 @@ def build_contingency_table(inventory_df: pd.DataFrame, out_path: str | Path) ->
 def apply_nan_policy(
     inventory_df: pd.DataFrame, out_dir: str | Path = "reports", threshold: float = NAN_EXCLUSION_THRESHOLD
 ) -> pd.DataFrame:
-    """Esclude le trace con almeno uno stream NaN, le logga in
-    reports/excluded_traces.csv con il motivo. Solleva se la frazione di
-    trace escluse supera `threshold` (§2.3: stop, non procedere)."""
+    """Excludes traces with at least one NaN stream, logging them to
+    reports/excluded_traces.csv with the reason. Raises if the fraction
+    of excluded traces exceeds `threshold` (§2.3: stop, don't proceed)."""
     traces = trace_table(inventory_df)
     nan_trace_ids = set(inventory_df.loc[inventory_df["has_nan"] == True, "trace_id"])  # noqa: E712
     excluded = traces[traces["trace_id"].isin(nan_trace_ids)].copy()
@@ -234,21 +237,21 @@ def apply_nan_policy(
 
     frac = len(excluded) / len(traces) if len(traces) else 0.0
     assert frac <= threshold, (
-        f"{frac:.1%} delle trace escluse per NaN, oltre la soglia {threshold:.0%}: "
-        "stop, decidere l'imputazione prima di procedere."
+        f"{frac:.1%} of traces excluded for NaN, above the {threshold:.0%} threshold: "
+        "stop, decide on imputation before proceeding."
     )
-    logger.info("trace escluse per NaN: %d/%d (%.1f%%)", len(excluded), len(traces), 100 * frac)
+    logger.info("traces excluded for NaN: %d/%d (%.1f%%)", len(excluded), len(traces), 100 * frac)
     clean_trace_ids = set(traces["trace_id"]) - nan_trace_ids
     return inventory_df[inventory_df["trace_id"].isin(clean_trace_ids)].copy()
 
 
 def decide_classes(inventory_df: pd.DataFrame) -> dict[str, Any]:
-    """Registra le attività osservate (atteso 7 attività + empty => n_att
-    8) e il set di classi del paper per C0 (§2.3, da verificare a mano
-    sulla versione finale del dataset)."""
+    """Records the observed activities (7 activities + empty expected =>
+    n_att 8) and the paper's class set for C0 (§2.3, to be verified by
+    hand against the final dataset version)."""
     labels = sorted(inventory_df["attivita"].unique())
     return {
         "n_att": len(labels),
         "labels": labels,
-        "c0_paper_set": "TODO: verificare arXiv (5 classi) vs TMC esteso (8 classi)",
+        "c0_paper_set": "TODO: verify arXiv (5 classes) vs extended TMC (8 classes)",
     }

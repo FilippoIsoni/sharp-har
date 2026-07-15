@@ -1,4 +1,4 @@
-# Dati e checkpoint: non entrano MAI nel repo (vivono su Drive)
+# Data and checkpoints: never go into the repo (they live on Drive)
 *.zip
 *.pkl
 *.npy
@@ -6,7 +6,7 @@
 *.pt
 /content/
 
-# Cartelle di staging/cache feature
+# Staging/feature-cache folders
 stage/
 staging/
 cache/

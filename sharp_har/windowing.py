@@ -1,13 +1,14 @@
-"""Giorno 1 — windowing minimale: enumerazione finestre + accumulo μ/σ.
-Rif. giorno1_inventory_splits_SPEC.md §3.
+"""Day 1 — minimal windowing: window enumeration + μ/σ accumulation.
+Ref. giorno1_inventory_splits_SPEC.md §3.
 
-Non è il dataset completo (quello è materia del giorno 2+, vedi
-sharp_har/data.py). Qui serve solo per i conteggi attesi e per calcolare
-μ/σ globali sul train di una rotazione, prima di qualsiasi augmentation.
+Not the full dataset (that's day 2+ material, see sharp_har/data.py).
+Here it's only used for the expected counts and to compute global μ/σ
+on the train set of a rotation, before any augmentation.
 
-Nota (§1.4): μ/σ su finestre sovrapposte pesa i frame centrali ~3.4x i
-bordi rispetto ai bordi della trace; effetto trascurabile per due scalari
-globali — si accetta il code path unico, nessuna correzione applicata.
+Note (§1.4): μ/σ over overlapping windows weighs the central frames
+~3.4x more than the edges of the trace; the effect is negligible for
+two global scalars — the single code path is accepted, no correction
+applied.
 """
 from __future__ import annotations
 
@@ -25,23 +26,24 @@ WINDOW_TIME_STEPS = 340
 TRAIN_STRIDE = 100
 EVAL_STRIDE = 340
 
-# Volumi attesi a hop 6ms (sanity §1.2): se i conteggi reali divergono
-# molto, l'hop assunto è sbagliato — rivedere prima di congelare gli split.
+# Expected volumes at a 6ms hop (sanity check §1.2): if the real counts
+# diverge a lot, the assumed hop is wrong — revisit before freezing.
 EXPECTED_WINDOWS_TRAIN_STRIDE = 197
 EXPECTED_WINDOWS_EVAL_STRIDE = 58
 
 
 def iter_windows(trace_array: np.ndarray, stride: int, win: int = WINDOW_TIME_STEPS) -> Iterator[np.ndarray]:
-    """Yield finestre (win, n_velocity) da una trace (n_frame, n_velocity).
-    Scarta la finestra incompleta finale."""
+    """Yields windows (win, n_velocity) from a trace (n_frame, n_velocity).
+    Discards the final incomplete window."""
     n_frame = trace_array.shape[0]
     for start in range(0, n_frame - win + 1, stride):
         yield trace_array[start : start + win]
 
 
 def count_windows(n_frame: int, win: int = WINDOW_TIME_STEPS, stride: int = TRAIN_STRIDE) -> int:
-    """Numero di finestre complete estraibili da una trace di n_frame
-    frame, dato win e stride. Usato per popolare i volumi attesi (§1.2)."""
+    """Number of complete windows extractable from a trace of n_frame
+    frames, given win and stride. Used to populate the expected volumes
+    (§1.2)."""
     if n_frame < win:
         return 0
     return (n_frame - win) // stride + 1
@@ -50,13 +52,12 @@ def count_windows(n_frame: int, win: int = WINDOW_TIME_STEPS, stride: int = TRAI
 def accumulate_moments(
     file_list: list[str | Path], stride: int = TRAIN_STRIDE, win: int = WINDOW_TIME_STEPS
 ) -> tuple[float, float]:
-    """μ, σ come due scalari globali su tutte le finestre di train di
-    tutti i file passati (tipicamente tutte le 4 antenne del train della
-    rotazione corrente), calcolate dopo il windowing, prima di qualsiasi
-    augmentation (§1.4).
+    """μ, σ as two global scalars over all train windows of all the
+    files passed in (typically all 4 antennas of the current rotation's
+    train set), computed after windowing, before any augmentation (§1.4).
 
-    Accumulo running (somma, somma dei quadrati, conteggio) per non
-    tenere tutte le finestre in RAM.
+    Running accumulation (sum, sum of squares, count) so we don't have
+    to keep every window in RAM.
     """
     total_sum = 0.0
     total_sumsq = 0.0
@@ -69,7 +70,7 @@ def accumulate_moments(
             total_count += window.size
 
     if total_count == 0:
-        raise ValueError("nessuna finestra accumulata: file_list vuota o trace troppo corte")
+        raise ValueError("no windows accumulated: file_list is empty or traces are too short")
 
     mu = total_sum / total_count
     variance = total_sumsq / total_count - mu**2

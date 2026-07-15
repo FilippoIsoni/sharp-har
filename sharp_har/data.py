@@ -1,6 +1,7 @@
-"""[STUB] Dataset Doppler CSI: windowing completo, normalizzazione, antenne.
-Rif. pipeline v5 §1.2–1.4. Non implementare prima del gate giorno 2 (§10.1):
-l'architettura di training può cambiare l'input pipeline (escalation §5.2).
+"""[STUB] Doppler CSI dataset: full windowing, normalization, antennas.
+Ref. v5 pipeline §1.2–1.4. Do not implement before the day-2 gate
+(§10.1): the training architecture may change the input pipeline
+(escalation §5.2).
 """
 from __future__ import annotations
 
@@ -12,24 +13,24 @@ from torch.utils.data import Dataset
 
 
 class DopplerDataset(Dataset):
-    """Dataset per una rotazione di split (train/val/test).
+    """Dataset for a split rotation (train/val/test).
 
-    Windowing: finestra 340 (tempo) x 100 (velocità), train_stride 100,
-    eval_stride 340, scarta l'ultima finestra incompleta. Ogni (finestra,
-    antenna) è un sample indipendente in train. Normalizzazione
-    `(x - mu) / sigma` con mu/sigma letti dal file di split (mai
-    ricalcolati qui). Label (attività, persona, ambiente, ar_set,
-    trace-id, antenna) ereditate dalla trace di appartenenza. La fusione
-    antenne (media softmax) NON avviene qui: è responsabilità di
-    harness.py in fase di valutazione. Rif. §1.2–1.4.
+    Windowing: 340 (time) x 100 (velocity) window, train_stride 100,
+    eval_stride 340, discards the final incomplete window. Each
+    (window, antenna) is an independent sample in train. Normalization
+    `(x - mu) / sigma` with mu/sigma read from the split file (never
+    recomputed here). Labels (activity, subject, environment, ar_set,
+    trace-id, antenna) inherited from the parent trace. Antenna fusion
+    (softmax averaging) does NOT happen here: it is harness.py's
+    responsibility at evaluation time. Ref. §1.2–1.4.
     """
 
     def __init__(self, split_file: str | Path, set_name: str, **kwargs: Any) -> None:
         super().__init__()
-        raise NotImplementedError("giorno 2 — §1.2–1.4")
+        raise NotImplementedError("day 2 — §1.2–1.4")
 
     def __len__(self) -> int:
-        raise NotImplementedError("giorno 2 — §1.2–1.4")
+        raise NotImplementedError("day 2 — §1.2–1.4")
 
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
-        raise NotImplementedError("giorno 2 — §1.2–1.4")
+        raise NotImplementedError("day 2 — §1.2–1.4")

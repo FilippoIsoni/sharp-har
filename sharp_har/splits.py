@@ -1,8 +1,8 @@
-"""Giorno 1 — costruzione e congelamento degli split P2-office e P1-SHARP.
-Rif. giorno1_inventory_splits_SPEC.md §4.
+"""Day 1 — building and freezing the P2-office and P1-SHARP splits.
+Ref. giorno1_inventory_splits_SPEC.md §4.
 
-Tutta la stocasticità usa seed 42 (§0.5). Gli split scritti qui sono
-artefatti congelati: una volta committati non si toccano più (§0.1).
+All stochasticity uses seed 42 (§0.5). The splits written here are
+frozen artifacts: once committed they are never touched again (§0.1).
 """
 from __future__ import annotations
 
@@ -20,12 +20,12 @@ logger = get_logger(__name__)
 
 SPLIT_SEED = 42
 VAL_FRACTION = 0.15
-RARE_CELL_THRESHOLD = 4  # celle (ar_set, attivita) con < 4 trace: pin 1 in train
+RARE_CELL_THRESHOLD = 4  # (ar_set, attivita) cells with < 4 traces: pin 1 into train
 
-# P1-SHARP (§4.2): riproduzione SHARP. Train = bedroom AR-1a. Test = set di
-# generalizzazione. AR-3 e AR-4 sono gli ambienti NLOS del dataset (nessun
-# filtro di campagna aggiuntivo necessario). Verificare contro la
-# tabella di contingenza reale prima di congelare (§2.3).
+# P1-SHARP (§4.2): SHARP reproduction. Train = bedroom AR-1a. Test = the
+# generalization set. AR-3 and AR-4 are the dataset's NLOS environments
+# (no extra campaign filter needed). Verify against the real contingency
+# table before freezing (§2.3).
 P1_TRAIN_AR_SET = "AR-1"
 P1_TRAIN_CAMPAGNA = "a"
 P1_TEST_SPECS: list[tuple[str, str | None]] = [
@@ -37,19 +37,19 @@ P1_TEST_SPECS: list[tuple[str, str | None]] = [
 
 
 def _assert_disjoint(train: list[str], val: list[str], test: list[str]) -> None:
-    """Nessun trace-id in più di una lista (§6: assert di disgiunzione)."""
+    """No trace-id appears in more than one list (§6: disjointness assert)."""
     s_train, s_val, s_test = set(train), set(val), set(test)
-    assert not (s_train & s_val), f"leakage train/val: {sorted(s_train & s_val)[:5]}"
-    assert not (s_train & s_test), f"leakage train/test: {sorted(s_train & s_test)[:5]}"
-    assert not (s_val & s_test), f"leakage val/test: {sorted(s_val & s_test)[:5]}"
+    assert not (s_train & s_val), f"train/val leakage: {sorted(s_train & s_val)[:5]}"
+    assert not (s_train & s_test), f"train/test leakage: {sorted(s_train & s_test)[:5]}"
+    assert not (s_val & s_test), f"val/test leakage: {sorted(s_val & s_test)[:5]}"
 
 
 def _stratified_val_split(
     train_pool: pd.DataFrame, val_fraction: float, rng: random.Random
 ) -> tuple[list[str], list[str], list[str]]:
-    """Stratifica per (ar_set, attivita): per ogni cella con >= RARE_CELL_THRESHOLD
-    trace pinna 1 trace in train, poi ripartisce il resto train/val secondo
-    val_fraction. Ritorna (train_ids, val_ids, pinned_ids)."""
+    """Stratifies by (ar_set, attivita): for each cell with >= RARE_CELL_THRESHOLD
+    traces, pins 1 trace into train, then splits the rest train/val
+    according to val_fraction. Returns (train_ids, val_ids, pinned_ids)."""
     train_ids: list[str] = []
     val_ids: list[str] = []
     pinned_ids: list[str] = []
@@ -59,8 +59,8 @@ def _stratified_val_split(
         rng.shuffle(ids)
 
         if len(ids) < RARE_CELL_THRESHOLD:
-            # cella rara: pin 1 trace in train, il resto degrada a train
-            # (nessuna val da una cella troppo piccola, §2.2/§9)
+            # rare cell: pin 1 trace into train, the rest also falls back
+            # to train (no val from a cell that's too small, §2.2/§9)
             pinned_ids.append(ids[0])
             train_ids.extend(ids)
             continue
@@ -78,10 +78,10 @@ def build_p2_office(
     seed: int = SPLIT_SEED,
     labels: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Rotazione primaria (§4.1). Test = tutte le trace di AR-8 (ufficio).
-    Train = resto. Val = 15% del train, stratificato per (ar_set,
-    attivita), con pin delle celle rare. Solleva se l'assert di copertura
-    per-cella fallisce e in tal caso NON scrive il JSON (§4.1)."""
+    """Primary rotation (§4.1). Test = all AR-8 (office) traces. Train =
+    the rest. Val = 15% of train, stratified by (ar_set, attivita), with
+    rare cells pinned. Raises if the per-cell coverage assert fails, in
+    which case the JSON is NOT written (§4.1)."""
     rng = random.Random(seed)
     traces = trace_table(inventory_df)
 
@@ -91,15 +91,15 @@ def build_p2_office(
     train_ids, val_ids, pinned_ids = _stratified_val_split(train_pool, VAL_FRACTION, rng)
     test_ids = test_traces["trace_id"].tolist()
 
-    # assert bloccante: ogni cella (ar_set, attivita) del train ha >= 1 trace in train
+    # blocking assert: every (ar_set, attivita) cell in train has >= 1 trace in train
     train_cells = set(map(tuple, train_pool[["ar_set", "attivita"]].drop_duplicates().values))
     covered_cells = set(
         map(tuple, train_pool[train_pool["trace_id"].isin(train_ids)][["ar_set", "attivita"]].drop_duplicates().values)
     )
     missing_cells = train_cells - covered_cells
     assert not missing_cells, (
-        f"celle (ar_set, attivita) senza trace in train: {sorted(missing_cells)} — "
-        "build_p2_office interrotto, nessun JSON scritto."
+        f"(ar_set, attivita) cells with no trace in train: {sorted(missing_cells)} — "
+        "build_p2_office aborted, no JSON written."
     )
 
     _assert_disjoint(train_ids, val_ids, test_ids)
@@ -124,7 +124,7 @@ def build_p2_office(
     }
     write_json(out_path, payload)
     logger.info(
-        "p2_office.json scritto: train=%d val=%d test=%d pinned=%d",
+        "p2_office.json written: train=%d val=%d test=%d pinned=%d",
         len(train_ids), len(val_ids), len(test_ids), len(pinned_ids),
     )
     return payload
@@ -134,10 +134,10 @@ def build_p1_sharp(
     inventory_df: pd.DataFrame,
     out_path: str | Path = "splits/p1_sharp.json",
     seed: int = SPLIT_SEED,
-    c0_paper_set: str = "TODO: verificare arXiv (5 classi) vs TMC esteso (8 classi)",
+    c0_paper_set: str = "TODO: verify arXiv (5 classes) vs extended TMC (8 classes)",
 ) -> dict[str, Any]:
-    """Riproduzione SHARP per C0 (§4.2). Train = bedroom AR-1a. Val = 20%
-    di AR-1a per trace. Test = set di generalizzazione SHARP."""
+    """SHARP reproduction for C0 (§4.2). Train = bedroom AR-1a. Val = 20%
+    of AR-1a by trace. Test = the SHARP generalization set."""
     rng = random.Random(seed)
     traces = trace_table(inventory_df)
 
@@ -177,6 +177,6 @@ def build_p1_sharp(
     }
     write_json(out_path, payload)
     logger.info(
-        "p1_sharp.json scritto: train=%d val=%d test=%d", len(train_ids), len(val_ids), len(test_ids)
+        "p1_sharp.json written: train=%d val=%d test=%d", len(train_ids), len(val_ids), len(test_ids)
     )
     return payload
