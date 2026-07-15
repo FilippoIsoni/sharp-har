@@ -1,0 +1,17 @@
+filepath,trace_id,ar_set,campagna,attivita,repetition,persona,ambiente,monitor,direct_path,hardware,stream_antenna,shape_0,shape_1,dtype,has_nan,n_frame,stft_hop_s
+/content/data/doppler_traces/S4a/S4a_L_stream_0.txt,S4a_L,AR-4,a,L,,P1,bedroom,M2,NLOS,asus-rt-ac86u,0,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S4a/S4a_L_stream_1.txt,S4a_L,AR-4,a,L,,P1,bedroom,M2,NLOS,asus-rt-ac86u,1,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S4a/S4a_L_stream_2.txt,S4a_L,AR-4,a,L,,P1,bedroom,M2,NLOS,asus-rt-ac86u,2,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S4a/S4a_L_stream_3.txt,S4a_L,AR-4,a,L,,P1,bedroom,M2,NLOS,asus-rt-ac86u,3,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S5a/S5a_L_stream_0.txt,S5a_L,AR-5,a,L,,P2,bedroom,M2,NLOS,asus-rt-ac86u,0,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S5a/S5a_L_stream_1.txt,S5a_L,AR-5,a,L,,P2,bedroom,M2,NLOS,asus-rt-ac86u,1,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S5a/S5a_L_stream_2.txt,S5a_L,AR-5,a,L,,P2,bedroom,M2,NLOS,asus-rt-ac86u,2,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces/S5a/S5a_L_stream_3.txt,S5a_L,AR-5,a,L,,P2,bedroom,M2,NLOS,asus-rt-ac86u,3,19430,100,float64,False,19430,0.006
+/content/data/doppler_traces_S4_S5/S4/S4a_L_stream_0.txt,S4a_Lalt,AR-4,a,L,alt,P1,bedroom,M2,NLOS,asus-rt-ac86u,0,19385,100,float64,False,19385,0.006
+/content/data/doppler_traces_S4_S5/S4/S4a_L_stream_1.txt,S4a_Lalt,AR-4,a,L,alt,P1,bedroom,M2,NLOS,asus-rt-ac86u,1,19385,100,float64,False,19385,0.006
+/content/data/doppler_traces_S4_S5/S4/S4a_L_stream_2.txt,S4a_Lalt,AR-4,a,L,alt,P1,bedroom,M2,NLOS,asus-rt-ac86u,2,19385,100,float64,False,19385,0.006
+/content/data/doppler_traces_S4_S5/S4/S4a_L_stream_3.txt,S4a_Lalt,AR-4,a,L,alt,P1,bedroom,M2,NLOS,asus-rt-ac86u,3,19385,100,float64,False,19385,0.006
+/content/data/doppler_traces_S4_S5/S5/S5a_L_stream_0.txt,S5a_Lalt,AR-5,a,L,alt,P2,bedroom,M2,NLOS,asus-rt-ac86u,0,20003,100,float64,False,20003,0.006
+/content/data/doppler_traces_S4_S5/S5/S5a_L_stream_1.txt,S5a_Lalt,AR-5,a,L,alt,P2,bedroom,M2,NLOS,asus-rt-ac86u,1,20003,100,float64,False,20003,0.006
+/content/data/doppler_traces_S4_S5/S5/S5a_L_stream_2.txt,S5a_Lalt,AR-5,a,L,alt,P2,bedroom,M2,NLOS,asus-rt-ac86u,2,20003,100,float64,False,20003,0.006
+/content/data/doppler_traces_S4_S5/S5/S5a_L_stream_3.txt,S5a_Lalt,AR-5,a,L,alt,P2,bedroom,M2,NLOS,asus-rt-ac86u,3,20003,100,float64,False,20003,0.006
