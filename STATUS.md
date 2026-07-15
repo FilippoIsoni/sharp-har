@@ -4,14 +4,28 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-15 · **Phase: day 0 → day 1** (foundations, all together)
+**Last update:** 2026-07-15 · **Phase: day 1 done → day 2**
 
 ## Done
 
 - Repo scaffold: package `sharp_har/`, configs C0–C4, thin notebooks, split/report dirs.
-- Day-1 code implemented (not yet run on real data): `inventory.py`, `windowing.py` (μ/σ), `splits.py`, notebook `01`.
-- **v5.1 dataset errata** applied everywhere: real coverage = S1–S7 ≡ AR-1…AR-7 (12 campaigns, TMC dataset); primary rotation = **leave-S7-out (lab)** → `splits/p2_lab.json`; P1 = train S1(a/b/c), test S2–S7; C0 = 5 paper classes; Tc ≈ 6 ms confirmed from the paper.
-- Local dry-run of the full day-1 flow on synthetic S1a…S7a data: caught and fixed an empty-val bug in P2 stratification (with 1–3 traces per cell every cell is "rare"; now rare cells degrade to AR-set-level stratification per §2.2, plus a blocking assert on empty val); P2 split file now records `c0_paper_set` as in §2.3.
+- **Day 1 complete, run on real Drive data (`DATASET_SHARP`).** 408 file-streams inventoried
+  (`reports/inventory.csv`), axes + AR-set/campaign coverage verified, 0% NaN.
+- Two real-data findings fixed in `inventory.py` and frozen into the split JSONs:
+  - `FILENAME_PATTERN` extended for activity repetition numbers (`S4a_C1`, `S6b_J_0`, …) —
+    the plain-letters-only regex was silently dropping every repeated recording.
+  - `S5a_LOS` excluded as a non-activity calibration/reference trace (near-static signal,
+    single occurrence) — see `NON_ACTIVITY_LABELS`, logged to `reports/excluded_traces.csv`.
+  - `S4a_L`/`S5a_L` staged from **both** `doppler_traces.zip` and `doppler_traces_S4_S5.zip`
+    with different `n_frame` (two distinct physical recordings, not copies) — split into
+    `S4a_Lalt`/`S5a_Lalt` instead of arbitrarily discarding one; see
+    `resolve_duplicate_streams()` + `assert_no_duplicate_files()` safety net, logged to
+    `reports/duplicate_traces_split.csv`.
+- **`splits/p2_lab.json` and `splits/p1_sharp.json` are frozen** (§0.1 — not to be
+  regenerated or edited). p2_lab: leave-S7-out, train=81 val=9 test=11 (40 rare-cell pins,
+  seed 42). p1_sharp: train=22 val=5 test=74 (train S1a/b/c, test S2–S7). n_att=8
+  (C, E, H, J, L, R, S, W); window-count sanity check within ~5% of the assumed hop (186/197
+  train-stride, 55/58 eval-stride) — accepted, not a blocker.
 
 ## In progress
 
@@ -19,12 +33,18 @@
 
 ## Next steps (in order)
 
-1. **Day 1 on Colab (blocker, all together):** run notebook `01` on the Drive data — staging timed, inspect real file names inside `S1a…S7a` dirs → confirm/fix `FILENAME_PATTERN`, coverage + axes + NaN gates, contingency table, freeze `splits/p2_lab.json` + `splits/p1_sharp.json`, commit artifacts.
-2. **Day 2 (gate):** implement `data.py`, `resnet_vb.py`, CE loss, `train.py` skeleton (checkpoint/resume); end-to-end smoke test + throughput gate (s/step, staging time) → written go/no-go, recalibrate §8.4 budget.
-3. **Day 3:** `harness.py` (test-invocation logging), `sampler.py` P×K, `augment.py`, `probe.py`, feature caching; phase-A full-batch memory test (512 views).
-4. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then C4 + probes + C1-lin/C2-lin.
+1. **Day 2 (gate, next up):** implement `data.py`, `resnet_vb.py`, CE loss, `train.py` skeleton
+   (checkpoint/resume); end-to-end smoke test + throughput gate (s/step, staging time) →
+   written go/no-go, recalibrate §8.4 budget.
+2. **Day 3:** `harness.py` (test-invocation logging), `sampler.py` P×K, `augment.py`, `probe.py`,
+   feature caching; phase-A full-batch memory test (512 views).
+3. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then C4 +
+   probes + C1-lin/C2-lin.
 
 ## Blockers / open decisions
 
-- File naming inside the set directories unverified (last unverified assumption; notebook 01 inspects before trusting the regex).
-- Team to ratify: leave-S7-out as primary rotation (small test set, ~1 campaign; person P3 unseen — declared in §2.2).
+- Team to ratify: leave-S7-out as primary rotation (small test set, ~1 campaign; person P3
+  unseen — declared in §2.2).
+- `configs/c0_sharp.yaml` still has a placeholder `n_att` — the real C0 class count (paper's
+  5-class core vs the full inventory's 8) needs a deliberate decision before day 2 touches it,
+  not an assumption carried over from the pipeline doc.
