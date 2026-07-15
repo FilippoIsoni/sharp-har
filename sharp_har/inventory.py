@@ -201,6 +201,74 @@ def build_inventory(
     return df
 
 
+# Marker appended to trace_id when a (trace_id, antenna) pair is staged
+# from both doppler_traces.zip and doppler_traces_S4_S5.zip — found on
+# day 1 (real data, 2026-07-15): S4a_L and S5a_L each had 8 files instead
+# of 4, one full set of 4 antennas from each archive, with different
+# n_frame (19430 vs 19385 for S4a; 19430 vs 20003 for S5a) confirming
+# they are two distinct physical recordings, not duplicate copies. Rather
+# than discarding one — which would require deciding which is
+# "correct" with no reliable signal to do so — both are kept as
+# separate traces.
+DUPLICATE_SOURCE_MARKER = "doppler_traces_S4_S5"
+DUPLICATE_TRACE_SUFFIX = "alt"
+
+
+def resolve_duplicate_streams(
+    inventory_df: pd.DataFrame, out_dir: str | Path = "reports"
+) -> pd.DataFrame:
+    """Splits (trace_id, antenna) pairs staged from both zip archives
+    into two distinct traces instead of dropping one: the copy staged
+    from `doppler_traces_S4_S5.zip` gets DUPLICATE_TRACE_SUFFIX appended
+    to its trace_id so it no longer collides with the
+    `doppler_traces.zip` copy. Logged to
+    reports/duplicate_traces_split.csv for the audit trail. Raises if a
+    duplicate (trace_id, antenna) pair doesn't match this known
+    exactly-one-file-per-archive pattern — an unresolved case to
+    investigate manually, not to guess about."""
+    df = inventory_df.copy()
+    dup_key = df["trace_id"].astype(str) + "\0" + df["stream_antenna"].astype(str)
+    is_dup = dup_key.duplicated(keep=False)
+    if not is_dup.any():
+        return df
+
+    dups = df[is_dup]
+    for key, group in dups.groupby(dup_key[is_dup]):
+        from_supplementary = group["filepath"].str.contains(DUPLICATE_SOURCE_MARKER)
+        assert len(group) == 2 and from_supplementary.sum() == 1, (
+            f"unexpected duplicate pattern for {key!r}: {group['filepath'].tolist()} — "
+            "not the known doppler_traces vs doppler_traces_S4_S5 case, resolve manually."
+        )
+
+    to_rename = is_dup & df["filepath"].str.contains(DUPLICATE_SOURCE_MARKER)
+    df.loc[to_rename, "trace_id"] = df.loc[to_rename, "trace_id"] + DUPLICATE_TRACE_SUFFIX
+    df.loc[to_rename, "repetition"] = df.loc[to_rename, "repetition"].astype(str) + DUPLICATE_TRACE_SUFFIX
+
+    out_path = Path(out_dir) / "duplicate_traces_split.csv"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    df[is_dup].to_csv(out_path, index=False)
+    logger.info(
+        "split %d duplicated (trace_id, antenna) pair(s) into distinct traces: %s",
+        to_rename.sum(), sorted(df.loc[to_rename, "trace_id"].unique()),
+    )
+    return df
+
+
+def assert_no_duplicate_files(inventory_df: pd.DataFrame) -> None:
+    """Safety net: verifies exactly one file per (trace_id, antenna).
+    trace_table()'s n_streams (nunique of stream_antenna) would NOT
+    catch this — duplicated antenna values 0-3 still count as 4 unique
+    values. Call this after resolve_duplicate_streams(); if it still
+    fails, there's an unresolved duplication to investigate (§2.2:
+    blocker, don't freeze the splits)."""
+    counts = inventory_df.groupby(["trace_id", "stream_antenna"]).size()
+    dup = counts[counts > 1]
+    assert dup.empty, (
+        f"{len(dup)} (trace_id, antenna) pairs have more than one file — "
+        f"unresolved duplicate staged files: {dup.index.tolist()[:10]}"
+    )
+
+
 def trace_table(inventory_df: pd.DataFrame) -> pd.DataFrame:
     """Collapses the per-stream inventory to one row per trace_id (the
     split unit, §0.2). Assumes ar_set/campagna/attivita are consistent
