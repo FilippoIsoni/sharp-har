@@ -1,8 +1,8 @@
-# C3 — SupCon (phase A), V-B backbone, P2-office protocol
+# C3 — SupCon (phase A), V-B backbone, P2-lab protocol
 # Intermediate checkpoints at epochs 40/50/60; no early stopping in phase A.
 name: C3
-protocol: P2-office
-split_file: splits/p2_office.json
+protocol: P2-lab
+split_file: splits/p2_lab.json
 backbone: resnet_vb
 d_enc: 256
 n_att: 8

@@ -13,6 +13,16 @@
 > (6) **Eval di C0 instradata nel logger delle invocazioni sul test** (A-1).
 > (7) Precisazioni dichiarative: unità dei conteggi finestre = campioni (finestra, antenna) (I-2); "stock" definita (I-1); probe su feature non aumentate (I-5); nota P100 corretta (I-6); Adam nella probe intenzionale (I-7); asimmetria batch GRL C2 vs C4 (A-3); μ/σ su finestre sovrapposte accettato (A-4); 57→58 finestre eval (E-3); 2–3 frasi di posizionamento related-work (§9).
 
+> **v5.1 — ERRATA DATASET (2026-07-15, verificato su Drive `DATASET_SHARP` + repo SHARP + paper TMC).**
+> La copia su Drive contiene il dataset del paper SHARP TMC (cartelle `doppler_traces/S1a … S7a`), **NON** il dataset esteso a 7 ambienti / 13 soggetti del paper IEEE Comm. Mag. 2023. Conseguenze, recepite in tutto il documento:
+> (1) **Copertura reale: set S1–S7** (che questo progetto denomina AR-1…AR-7, mappa 1:1 Sn ≡ AR-n), campagne **a–c a cardinalità disomogenea**: S1a/b/c, S2a/b, S3a, S4a/b, S5a, S6a/b, S7a — 12 campagne totali. Non esistono AR-8 (ufficio) né AR-9 (semi-anechoic), né campagne d/e.
+> (2) **Mappa set → dominio (Tabella 1 del TMC):** S1 = bedroom, M1, P1, LOS (train nel paper); S2 = bedroom, M1, P1, LOS (giorno diverso); S3 = bedroom, M1, P2, LOS; S4 = bedroom, M2, P1, **NLOS** (libreria); S5 = bedroom, M2, P2, **NLOS**; S6 = living room, M3, P1, LOS; S7 = **laboratorio universitario, M4, P3, LOS** — il set più sfidante: ambiente, giorno e persona mai visti in train.
+> (3) **Hardware identico in tutti i set** (monitor Asus RT-AC86U, link Netgear X4S): il confound hardware Asus/Netgear citato nella v5 non esiste in questa copia. I domini differiscono per: stanza, posizione monitor (M1–M4), persona (P1–P3), giorno, LOS/NLOS.
+> (4) **Rotazione primaria P2 ridefinita: leave-S7-out (laboratorio)** al posto dell'inesistente "ufficio out" (§2.2). Train = S1–S6 (6 domini per la testa GRL), test = S7. E2 ridimensionata (§10.3).
+> (5) **P1/C0:** il paper addestra su S1 (tutte le campagne, cfr. README repo: train S1a+S1b+S1c) e testa su S2–S7; classi del paper core = **5** (walking, running, jumping, sitting + empty; classificatore a 5 uscite, §4.1 TMC); l'estensione TMC arriva a 7 attività + empty (aggiunge standing, arm gym, sit-down/stand-up). C0 usa il set a 5 classi; C1–C4 il set completo dell'inventario (atteso 7+empty, da confermare al giorno 1 dai file).
+> (6) **Tc ≈ 6 ms confermato** dal paper (Tabella parametri: channel estimates interval Tc ≃ 6·10⁻³ s): l'assunzione hop STFT del §1.1 resta da verificare solo contro i file reali.
+> (7) **Vincolo operativo: il training parte esclusivamente dai dati del Drive condiviso** (link team). Nessun ri-download, nessuna integrazione da IEEE DataPort.
+
 ---
 
 ## 0. Principi non negoziabili (leggere prima di scrivere codice)
@@ -31,11 +41,11 @@
 
 ### 1.1 Inventario (giorno 1 — blocker, prima di tutto)
 - **Sorgente dati: Drive condiviso `DATASET_SHARP`** (cartella già accessibile ai 3 account; ciascuno aggiunge una *scorciatoia* al proprio Drive — le scorciatoie a cartelle condivise non consumano quota del visitatore, lo storage conta solo sull'owner). Contenuto rilevante: `doppler_traces.zip` (~762 MB) + `doppler_traces_S4_S5.zip` (~10 MB). Il resto (`Python_code_old.zip` 4.5 GB, `processed_phase/`, `Doppler_plots/`, `confusion_matrices/`) NON si stagia: il riferimento per il codice è il repo GitHub `francescamen/SHARP`.
-- **Verifica di copertura e mapping dei nomi:** la copia su Drive usa una nomenclatura propria (es. suffisso `S4_S5`) che potrebbe non coincidere con la convenzione AR-1…AR-9 del paper. Lo script di inventario costruisce e salva la **mappa file → AR-set** e verifica che tutti i set AR-1…AR-9 (campagne a–e) siano presenti dopo l'unione dei due zip. Set mancanti = blocker: si risolve dal DataPort/paper PRIMA di congelare gli split.
-- Script di inventario: per ogni file → set (AR-1…AR-9), campagna (a–e), attività, persona, ambiente, hardware, shape della matrice, dtype, presenza NaN, e **hop temporale effettivo dello STFT** (dai metadati o dal codice del repo SHARP): il conteggio "~20k frame Doppler per trace da 120 s" assume hop = Tc ≈ 6 ms; se l'hop è diverso cambiano finestre/trace, volumi e step/epoca — cioè il budget. Output: `inventory.csv`.
+- **Verifica di copertura e mapping dei nomi (aggiornata v5.1):** la copia su Drive usa la nomenclatura del repo SHARP (`S1a … S7a`); la mappa è 1:1 con la nostra convenzione interna (Sn ≡ AR-n). Lo script di inventario costruisce e salva la **mappa file → AR-set** e verifica che tutti i set **AR-1…AR-7** siano presenti dopo l'unione dei due zip, con le campagne attese **S1a/b/c, S2a/b, S3a, S4a/b, S5a, S6a/b, S7a** (nota: `doppler_traces_S4_S5.zip` contiene proprio i set NLOS S4–S5). Set o campagne mancanti = blocker: si discute in team PRIMA di congelare gli split (mai ri-download dal DataPort, §v5.1-7).
+- Script di inventario: per ogni file → set (AR-1…AR-7), campagna (a–c), attività, persona (P1–P3), ambiente (bedroom/living/laboratory), posizione monitor (M1–M4), LOS/NLOS, shape della matrice, dtype, presenza NaN, e **hop temporale effettivo dello STFT** (dai metadati o dal codice del repo SHARP): il conteggio "~20k frame Doppler per trace da 120 s" assume hop = Tc ≈ 6 ms (confermato dal paper, da verificare sui file); se l'hop è diverso cambiano finestre/trace, volumi e step/epoca — cioè il budget. Output: `inventory.csv`. I metadati per-set vengono dalla Tabella 1 del TMC (§v5.1-2), non si inventano.
 - **Verifica assi:** convenzione attesa **340 passi temporali × 100 bin di velocità** (Nw=340, ND=100). L'orientamento reale si verifica dalla shape dei file + parametri del codice SHARP e si scrive nel file di split. Nessun codice dipendente dagli assi prima di questa verifica.
 - **Tabella di contingenza attività×AR-set** (conteggio trace), nel report. Serve a: (a) costruire il sampler §4; (b) valutare il rischio *label shift* per il GRL (se la distribuzione delle attività differisce molto tra AR-set, la testa ambiente può predire l'ambiente dal contenuto di attività); (c) flag "n. AR-set per classe": classi presenti in un solo set di train non hanno positivi cross-domain per costruzione; (d) verificare le celle rare per la stratificazione della val (§2.2).
-- **Decisione classi (duplice, vedi anche §6-C0):** (i) quante e quali classi contiene l'inventario (atteso: 7 attività W/R/J/L/S/C/G + empty E → n_att = 8); (ii) **quante e quali classi usano le tabelle del paper TMC che C0 confronta** (la versione arXiv mostra 5 classi: empty, sitting, walking, running, jumping; l'esteso ne usa 8 — da verificare sulla versione TMC finale). Regola: **C0 sul set di classi del paper; C1–C4 sul set completo dell'inventario.** Tutta la pipeline è parametrizzata su n_att: costo zero.
+- **Decisione classi (duplice, vedi anche §6-C0; aggiornata v5.1):** (i) quante e quali classi contiene l'inventario (atteso: 7 attività — walking, running, jumping, sitting, standing, sit-down/stand-up, arm gym — + empty E → n_att = 8; le sigle esatte si leggono dai nomi file al giorno 1); (ii) **le tabelle core del paper TMC usano 5 classi** (walking, running, jumping, sitting + empty; classificatore a 5 uscite, §4.1 TMC), l'esperimento esteso 7+empty. Regola: **C0 sul set a 5 classi del paper; C1–C4 sul set completo dell'inventario.** Tutta la pipeline è parametrizzata su n_att: costo zero.
 - **Policy NaN:** trace con NaN esclusa e loggata con motivo; se le escluse superano il 5%, stop e decisione di imputazione insieme.
 
 ### 1.2 Windowing
@@ -43,7 +53,7 @@
 - **Finestra = 340 passi temporali × tutti i 100 bin.** Finestre incomplete a fine trace si scartano.
 - **Stride train = 100.** Con finestra 340, l'overlap tra finestre consecutive è **~71%** (240/340): il passaggio dallo stride 30 (overlap 91%) è una **riduzione di ridondanza, non un'eliminazione**. La motivazione dello stride 100 è il budget di compute; è sufficiente da sola.
 - **Stride val/test = 340 (finestre disgiunte).** Elimina la correlazione tra le unità di valutazione (a stride 100 le finestre di test condividerebbero il 71% del contenuto e i conteggi per finestra non sarebbero campioni indipendenti), al costo di ~3.4× meno finestre di eval — irrilevante per il budget (l'eval è economica) e accettabile per la stabilità delle metriche. Registrato nel file di split.
-- **Volumi attesi e unità di conteggio (da confermare al giorno 1 con hop STFT e conteggio trace).** A hop 6 ms: ~197 finestre/antenna/trace a stride 100; **58 finestre/antenna/trace a stride 340** in val/test. **Convenzione: tutti i conteggi di training di questo documento sono in campioni (finestra, antenna)**, cioè già espansi ×4 sulle antenne (coerente con §1.3: ogni (finestra, antenna) è un sample). "~100k campioni di train" sulla rotazione primaria = ~25k finestre distinte ≈ ~127 trace × 197 finestre × 4 antenne; con batch 256, un'epoca da 400 step (§8.1) ≈ una passata completa sui campioni antenna-espansi.
+- **Volumi attesi e unità di conteggio (da confermare al giorno 1 con hop STFT e conteggio trace; ricalibrati v5.1).** A hop 6 ms: ~197 finestre/antenna/trace a stride 100; **58 finestre/antenna/trace a stride 340** in val/test. **Convenzione: tutti i conteggi di training di questo documento sono in campioni (finestra, antenna)**, cioè già espansi ×4 sulle antenne (coerente con §1.3: ogni (finestra, antenna) è un sample). Rotazione primaria (train S1–S6 = 11 campagne × ~8 trace ≈ 88 trace): ~88 × 197 × 4 ≈ **~69k campioni di train**; con batch 256, un'epoca da 400 step (§8.1) ≈ ~1.5 passate sui campioni antenna-espansi.
 - Le finestre ereditano le label (attività, persona, ambiente, AR-set, trace-id, antenna) dalla trace madre.
 
 ### 1.3 Gestione antenne
@@ -60,28 +70,28 @@
 
 ## 2. Data splitting
 
-### 2.1 Protocollo P1 — Riproduzione SHARP (solo C0)
-- **Train:** bedroom, set AR-1a (P1, giorno 1), come nel paper.
-- **Validation:** 20% delle trace di AR-1a (per trace, seed 42, congelato), solo per early stopping. **Deviazione dichiarata:** se il repo SHARP addestra su tutto AR-1a senza hold-out, il nostro train è ridotto del 20% rispetto al paper — va nell'elenco "riproduzione parziale" del report.
-- **Test:** i set di generalizzazione di SHARP (AR-1b–e, AR-2a, AR-3/4 NLOS, AR-5–AR-9).
+### 2.1 Protocollo P1 — Riproduzione SHARP (solo C0) — aggiornato v5.1
+- **Train:** bedroom, set S1 (≡ AR-1), **tutte le campagne a/b/c**, come nel paper/repo (README SHARP: train = S1a+S1b+S1c).
+- **Validation:** 20% delle trace di S1 (per trace, seed 42, congelato), solo per early stopping. **Deviazione dichiarata:** il repo SHARP addestra su tutto S1 senza hold-out → il nostro train è ridotto del 20% rispetto al paper — va nell'elenco "riproduzione parziale" del report.
+- **Test:** i set di generalizzazione di SHARP: S2 (stesso setup, giorno diverso), S3 (persona P2), S4–S5 (NLOS), S6 (living room), S7 (laboratorio, nessun elemento in comune).
 - **Eval di C0 = procedura del repo SHARP** (stessa fusione antenne e aggregazione temporale), non la harness di P2 — **ma invocata attraverso il wrapper della harness che logga ogni accesso al test** (§0.7): la procedura di aggregazione è quella del repo, l'audit trail è quello comune. Dove il repo non documenta, harness comune + dichiarazione. Classi: quelle dei numeri pubblicati (§1.1).
 
-### 2.2 Protocollo P2 — Cross-domain (protocollo principale, C1–C4)
-- **Rotazione primaria (tutto il core):** leave-one-environment-out con **ufficio (AR-8) come test**. Train = tutti gli altri set AR; val = 15% delle trace di train, stratificato per (AR-set, attività), seed 42, congelato.
+### 2.2 Protocollo P2 — Cross-domain (protocollo principale, C1–C4) — aggiornato v5.1
+- **Rotazione primaria (tutto il core):** leave-one-domain-out con **laboratorio (S7 ≡ AR-7) come test** — il set più sfidante del paper: ambiente, giorno E persona (P3) mai visti in train. Train = S1–S6 (11 campagne); val = 15% delle trace di train, stratificato per (AR-set, attività), seed 42, congelato. **Limite dichiarato:** S7 ha una sola campagna (~8 trace) → test piccolo; le metriche di test si riportano con i conteggi assoluti delle finestre accanto.
 - **Garanzia celle rare (meccanica, non solo dichiarata):** per ogni cella (AR-set, attività) con **< 4 trace**, lo script di split **pinna d'ufficio 1 trace (estratta con seed 42) in train**, poi stratifica il resto (per la cella degradando a solo-AR-set). A valle, **assert bloccante:** ogni cella (AR-set, attività) presente nell'inventario di train ha ≥ 1 trace in train. Lo split non si congela se l'assert fallisce. Conseguenza accettata e dichiarata: le celle rare possono non comparire in val (la macro-F1 di val è comunque definita sulle classi presenti, §9).
-- **Rotazione completa:** solo come estensione E2 (§10.3), solo C1 e C4: bedroom out / living+kitchen out / laboratory out. Il semi-anechoic mai come unico test. Ogni rotazione = proprio file di split + proprie μ/σ.
-- **Label avversariale = identità dell'AR-set** (campagne aggregate). Ambiente, persona e hardware sono confusi nei set AR (P1↔bedroom; AR-8/AR-9 = Asus, gli altri Netgear): nel report si parla di **"AR-set invariance"**, non di "environment invariance". La persona si misura solo diagnosticamente (§7).
-- **Mitigazione sulla rotazione primaria:** con AR-8 (ufficio, Asus, P4) come test, AR-9 (semi-anechoic, Asus, P4) resta in train → hardware Asus e P4 visti in training, in un ambiente atipico. Da segnalare nell'analisi.
+- **Rotazione completa:** solo come estensione E2 (§10.3), solo C1 e C4: **living-out (test = S6, train = S1–S5+S7)**. La rotazione bedroom-out è **dichiarata infattibile** (train residuo = solo S6+S7, 3 campagne: troppo poco per addestrare) e non si esegue. Ogni rotazione = proprio file di split + proprie μ/σ.
+- **Label avversariale = identità dell'AR-set** (campagne aggregate; 6 domini in train nella rotazione primaria). Nei set sono confusi: stanza, posizione del monitor (M1–M4), persona (P1–P3), giorno e LOS/NLOS — l'hardware invece è identico ovunque (v5.1-3). Nel report si parla di **"AR-set invariance"**, non di "environment invariance". La persona si misura solo diagnosticamente (§7).
+- **Nota sulla rotazione primaria:** con S7 come test, la persona P3 non compare mai in train → il test misura congiuntamente generalizzazione di ambiente e di persona (come nel paper SHARP, che su S7 dichiara proprio questo). S4–S5 (NLOS) restano in train: l'invarianza appresa include la variazione LOS/NLOS. Da segnalare nell'analisi.
 
 ### 2.3 Formato file di split
 ```json
-{"protocol": "P2-office",
+{"protocol": "P2-lab",
  "axes": {"time": 340, "velocity": 100, "layout": "time_x_velocity", "stft_hop_s": 0.006},
  "window": {"train_stride": 100, "eval_stride": 340},
- "classes": {"n_att": 8, "labels": ["W","R","J","L","S","C","G","E"], "c0_paper_set": "da verificare giorno 1"},
+ "classes": {"n_att": 8, "labels": ["sigle esatte dai nomi file, giorno 1"], "c0_paper_set": ["walking","running","jumping","sitting","empty"]},
  "split_seed": 42,
  "pinned_train_traces": ["..."],
- "train": ["AR1a_W1", "..."], "val": ["..."], "test": ["AR8a_W1", "..."],
+ "train": ["S1a_W", "..."], "val": ["..."], "test": ["S7a_W", "..."],
  "norm": {"mu": 0.0, "sigma": 1.0}}
 ```
 Le liste contengono trace-id, non indici di finestre. `axes`, `classes` e `stft_hop_s` registrano le verifiche del giorno 1; `pinned_train_traces` documenta i pin della garanzia celle rare (§2.2).
@@ -232,11 +242,11 @@ Encoder CONGELATO, ricetta §5.3, feature cachate:
 | # | Run | Protocollo | Ore stimate (T4, V-B) | Owner |
 |---|---|---|---|---|
 | 1 | C0 | P1 | 1–2 | A |
-| 2 | C1 | P2-office | 1–2.5 | A |
-| 3 | C2 | P2-office | 1.5–3 | C |
-| 4 | C3 fase A | P2-office | 3–6 | B |
-| 5 | C4 fase A | P2-office | 3–6 | B+C |
-| — | Fasi B, C1-lin, C2-lin, probe | P2-office | < 1 (totale) | C |
+| 2 | C1 | P2-lab | 1–2.5 | A |
+| 3 | C2 | P2-lab | 1.5–3 | C |
+| 4 | C3 fase A | P2-lab | 3–6 | B |
+| 5 | C4 fase A | P2-lab | 3–6 | B+C |
+| — | Fasi B, C1-lin, C2-lin, probe | P2-lab | < 1 (totale) | C |
 | | **Totale core** | | **≈ 10–20 GPU-h** | |
 
 Con 3 account Colab il core sta nei giorni 4–9 con margine per re-run. Tutto il resto è estensione (§10.3).
@@ -264,7 +274,7 @@ Con 3 account Colab il core sta nei giorni 4–9 con margine per re-run. Tutto i
 ## 10. Piano temporale e divisione del lavoro (ownership verticale)
 
 ### 10.1 Giorni 1–3 (tutti insieme): fondamenta e GATE
-- **Giorno 1 (blocker):** scorciatoie Drive + staging su /content + inventario (con hop STFT, dtype, **mapping nomi Drive → AR-set, copertura AR-1…AR-9**) + verifica assi + decisione classi (inventario E paper per C0) + tabella contingenza + policy NaN + split congelati (JSON su Git, con pin celle rare + assert) + μ/σ.
+- **Giorno 1 (blocker):** scorciatoie Drive + staging su /content + inventario (con hop STFT, dtype, **mapping nomi Drive → AR-set, copertura AR-1…AR-7 (12 campagne attese, v5.1)**) + verifica assi + decisione classi (inventario E paper per C0) + tabella contingenza + policy NaN + split congelati (JSON su Git, con pin celle rare + assert) + μ/σ.
 - **Giorno 2 (milestone obbligatoria): smoke test end-to-end CON GATE DI THROUGHPUT.** Run C1 di 2 epoche su mini-subset attraverso TUTTA la pipeline (mount → copia zip → unzip → dataloader → training → checkpoint su Drive → resume → harness → CSV). In più: **misura dei s/step reali** (CE, batch 256), **misura del tempo di staging**, e **ricalcolo della tabella §8.4 dai tempi misurati**, con regola scritta di go/no-go: **se C1 proiettata > 4 h o fase A proiettata > 8 h → escalation §5.2 PRIMA di lanciare qualsiasi run; se staging > ~15 min → repack fp16 (§8.5).** Il throughput è l'assunzione già fallita due volte (v2: volume dati; v3: costo modello): ora si misura, non si stima.
 - **Giorno 3:** harness completa (fusione, macro-F1 per set, CSV, logging invocazioni test incluso wrapper C0) + caching feature + sampler P×K con logging (inclusi riusi e offset) + **test di memoria e throughput della fase A: un forward+backward a batch pieno (512 viste) col sampler reale.** Il percorso di memoria della fase A non deve arrivare vergine al giorno 4.
 
@@ -275,7 +285,7 @@ Con 3 account Colab il core sta nei giorni 4–9 con margine per re-run. Tutto i
 
 ### 10.3 Giorni 10–12: estensioni a tempo residuo (in ordine; solo se il core è completo)
 1. **E1 — Seed 43/44 per C1 e C4** (rotazione primaria): 4 run ≈ 6–14 GPU-h. Priorità massima: trasforma le celle chiave in media ± range.
-2. **E2 — Rotazione completa per C1 e C4** (bedroom / living+kitchen / laboratory out), seed 42: 6 run ≈ 9–21 GPU-h. **Ogni rotazione: proprio split file + proprie μ/σ.**
+2. **E2 — Seconda rotazione per C1 e C4** (living-out: test = S6, train = S1–S5+S7; bedroom-out infattibile, §2.2), seed 42: 2 run ≈ 3–7 GPU-h. **Ogni rotazione: proprio split file + proprie μ/σ.**
 3. **E3 — Seed 43/44 per C2 e C3:** 4 run ≈ 6–14 GPU-h.
 Nulla del core si rifà; estensioni a metà si riportano dichiarandolo.
 

@@ -1,7 +1,7 @@
-# C2 — cross-entropy + GRL adversary on AR-set, V-B backbone, P2-office protocol
+# C2 — cross-entropy + GRL adversary on AR-set, V-B backbone, P2-lab protocol
 name: C2
-protocol: P2-office
-split_file: splits/p2_office.json
+protocol: P2-lab
+split_file: splits/p2_lab.json
 backbone: resnet_vb
 d_enc: 256
 n_att: 8

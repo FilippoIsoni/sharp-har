@@ -40,7 +40,7 @@ for.
 | Notebook | Day | Status | Purpose |
 |---|---|---|---|
 | `00_setup_smoke.ipynb` | — | stub | Mount Drive + staging, quick environment check |
-| `01_inventory_splits.ipynb` | 1 | **implemented** | Data inventory + frozen splits (`p2_office`, `p1_sharp`) |
+| `01_inventory_splits.ipynb` | 1 | **implemented** | Data inventory + frozen splits (`p2_lab`, `p1_sharp`) |
 | `02_smoke_gate.ipynb` | 2 | stub | Model smoke test + throughput gate |
 | `03_train.ipynb` | 3+ | stub | Generic training runner over a `configs/*.yaml` |
 
@@ -66,10 +66,12 @@ the data already staged) and run the cells in order. The notebook:
    pattern before proceeding;
 3. builds `reports/inventory.csv` (one row per file-stream) and
    `reports/name_to_arset.json`;
-4. runs the day-1 gate checks (axes, AR-set coverage, activity×AR-set
-   contingency, NaN policy ≤5%, window-count sanity check);
-5. freezes `splits/p2_office.json` (primary rotation for C1–C4) and
-   `splits/p1_sharp.json` (SHARP reproduction for C0).
+4. runs the day-1 gate checks (axes, AR-set coverage — sets S1–S7 ≡
+   AR-1…AR-7, 12 campaigns —, activity×AR-set contingency, NaN policy
+   ≤5%, window-count sanity check);
+5. freezes `splits/p2_lab.json` (primary rotation for C1–C4:
+   leave-S7-out, laboratory) and `splits/p1_sharp.json` (SHARP
+   reproduction for C0: train S1, test S2–S7).
 
 The produced artifacts (`splits/*.json`, `reports/*.csv`,
 `reports/name_to_arset.json`) get committed to Git: they are the frozen

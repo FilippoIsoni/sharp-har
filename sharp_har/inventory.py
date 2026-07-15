@@ -18,10 +18,11 @@ from .utils import get_logger, write_json
 
 logger = get_logger(__name__)
 
-# Parametric regex for the expected naming `{Set}{campaign}_{Activity}_stream_{0-3}.txt`.
-# The copy on Drive may use its own naming convention (e.g. an S4_S5
-# suffix): inspect the real file names with list_files()/print_naming_patterns()
-# in the notebook BEFORE trusting this pattern, and fix it here if needed (§2.1).
+# Parametric regex for the expected naming `{Set}{campaign}_{Activity}_stream_{0-3}.txt`
+# (e.g. S1a_W_stream_0.txt). The Drive copy follows the SHARP repo layout
+# (`doppler_traces/S1a … S7a`, v5.1); file names inside each set directory
+# must still be inspected with list_files()/print_naming_patterns() in the
+# notebook BEFORE trusting this pattern — fix it here if needed (§2.1).
 FILENAME_PATTERN = re.compile(
     r"^(?P<set_num>[A-Za-z]+\d+)(?P<campagna>[a-z])?_(?P<attivita>[A-Za-z]+)_stream_(?P<stream>[0-3])\.txt$"
 )
@@ -30,12 +31,32 @@ EXPECTED_VELOCITY_BINS = 100
 EXPECTED_TIME_STEPS = 340
 NAN_EXCLUSION_THRESHOLD = 0.05  # §2.3: NaN policy, stop if excluded traces exceed 5%
 
-# Metadata (subject, environment, hardware) per AR-set, from the SHARP
-# paper/dataset. Deliberate placeholder: fill in with the real values
-# from the paper before using build_inventory in production. As long as
-# an entry is missing, the corresponding column stays "unknown"
-# (§2.2: don't invent values).
-AR_SET_METADATA: dict[str, dict[str, str]] = {}
+# Metadata per AR-set from Table 1 of the SHARP TMC paper (v5.1 errata:
+# the Drive copy holds the TMC dataset, sets S1-S7 == AR-1..AR-7).
+# Hardware is identical in every set (Asus RT-AC86U monitor, Netgear X4S
+# Tx/Rx link): domains differ by room, monitor position (M1-M4), person
+# (P1-P3), day, and LOS/NLOS.
+AR_SET_METADATA: dict[str, dict[str, str]] = {
+    "AR-1": {"persona": "P1", "ambiente": "bedroom", "monitor": "M1", "direct_path": "LOS"},
+    "AR-2": {"persona": "P1", "ambiente": "bedroom", "monitor": "M1", "direct_path": "LOS"},
+    "AR-3": {"persona": "P2", "ambiente": "bedroom", "monitor": "M1", "direct_path": "LOS"},
+    "AR-4": {"persona": "P1", "ambiente": "bedroom", "monitor": "M2", "direct_path": "NLOS"},
+    "AR-5": {"persona": "P2", "ambiente": "bedroom", "monitor": "M2", "direct_path": "NLOS"},
+    "AR-6": {"persona": "P1", "ambiente": "living_room", "monitor": "M3", "direct_path": "LOS"},
+    "AR-7": {"persona": "P3", "ambiente": "laboratory", "monitor": "M4", "direct_path": "LOS"},
+}
+MONITOR_HARDWARE = "asus-rt-ac86u"  # same monitor device for all sets
+
+# Campaigns expected per set in the Drive copy (v5.1): uneven a-c.
+EXPECTED_SET_CAMPAIGNS: dict[str, list[str]] = {
+    "AR-1": ["a", "b", "c"],
+    "AR-2": ["a", "b"],
+    "AR-3": ["a"],
+    "AR-4": ["a", "b"],
+    "AR-5": ["a"],
+    "AR-6": ["a", "b"],
+    "AR-7": ["a"],
+}
 
 
 def list_files(stage_dir: str | Path, pattern: str = "**/*.txt") -> list[Path]:
@@ -76,7 +97,7 @@ def parse_filename(name: str) -> dict[str, Any]:
 
 
 def build_ar_map(set_raw_values: list[str], out_path: str | Path) -> dict[str, str]:
-    """Builds the set_raw -> AR-set (AR-1…AR-9) map and saves it as an
+    """Builds the set_raw -> AR-set (AR-1…AR-7) map and saves it as an
     artifact in reports/name_to_arset.json (§2.1 point 3). Do not
     hardcode this map anywhere else in the code."""
     ar_map: dict[str, str] = {}
@@ -150,7 +171,9 @@ def build_inventory(
                 "attivita": p["attivita"],
                 "persona": meta.get("persona", "unknown"),
                 "ambiente": meta.get("ambiente", "unknown"),
-                "hardware": meta.get("hardware", "unknown"),
+                "monitor": meta.get("monitor", "unknown"),
+                "direct_path": meta.get("direct_path", "unknown"),
+                "hardware": MONITOR_HARDWARE,
                 "stream_antenna": p["stream"],
                 "shape_0": shape_0,
                 "shape_1": shape_1,
@@ -201,15 +224,25 @@ def assert_axes(inventory_df: pd.DataFrame) -> None:
 
 
 def assert_coverage(inventory_df: pd.DataFrame, expected_ar_sets: list[str] | None = None) -> set[str]:
-    """Verifies AR-1…AR-9 coverage after merging the two zips (§2.3).
-    Returns the missing expected sets; the caller decides whether it's a
-    blocker (usually yes)."""
+    """Verifies AR-1…AR-7 (= paper sets S1–S7) coverage after merging
+    the two zips, including the expected campaigns per set (v5.1, §1.1).
+    Returns the missing expected (set, campaign) pairs as strings; the
+    caller decides whether it's a blocker (usually yes)."""
     if expected_ar_sets is None:
-        expected_ar_sets = [f"AR-{i}" for i in range(1, 10)]
-    present = set(inventory_df["ar_set"].unique())
-    missing = set(expected_ar_sets) - present
+        expected_ar_sets = sorted(EXPECTED_SET_CAMPAIGNS)
+    present_sets = set(inventory_df["ar_set"].unique())
+    missing: set[str] = set(expected_ar_sets) - present_sets
+
+    present_campaigns = set(
+        map(tuple, inventory_df[["ar_set", "campagna"]].drop_duplicates().values)
+    )
+    for ar_set in expected_ar_sets:
+        for campagna in EXPECTED_SET_CAMPAIGNS.get(ar_set, []):
+            if (ar_set, campagna) not in present_campaigns:
+                missing.add(f"{ar_set}{campagna}")
+
     if missing:
-        logger.error("missing AR-sets after merging the zips: %s", sorted(missing))
+        logger.error("missing AR-sets/campaigns after merging the zips: %s", sorted(missing))
     return missing
 
 
@@ -245,13 +278,20 @@ def apply_nan_policy(
     return inventory_df[inventory_df["trace_id"].isin(clean_trace_ids)].copy()
 
 
+# C0 compares against the TMC paper's core tables: 5 classes (4 activities
+# + empty), see v5.1-5. The exact label letters used in the file names are
+# confirmed on day 1 against the inventory.
+C0_PAPER_CLASSES = ["walking", "running", "jumping", "sitting", "empty"]
+
+
 def decide_classes(inventory_df: pd.DataFrame) -> dict[str, Any]:
     """Records the observed activities (7 activities + empty expected =>
-    n_att 8) and the paper's class set for C0 (§2.3, to be verified by
-    hand against the final dataset version)."""
+    n_att 8) and the paper's 5-class set for C0 (v5.1-5). The mapping
+    from observed label letters to the C0 class names is confirmed by
+    hand on day 1."""
     labels = sorted(inventory_df["attivita"].unique())
     return {
         "n_att": len(labels),
         "labels": labels,
-        "c0_paper_set": "TODO: verify arXiv (5 classes) vs extended TMC (8 classes)",
+        "c0_paper_set": C0_PAPER_CLASSES,
     }

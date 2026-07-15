@@ -1,7 +1,7 @@
-# C1 — cross-entropy, V-B backbone, P2-office protocol
+# C1 — cross-entropy, V-B backbone, P2-lab protocol
 name: C1
-protocol: P2-office
-split_file: splits/p2_office.json
+protocol: P2-lab
+split_file: splits/p2_lab.json
 backbone: resnet_vb
 d_enc: 256
 n_att: 8

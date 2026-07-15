@@ -1,5 +1,5 @@
-"""Day 1 — building and freezing the P2-office and P1-SHARP splits.
-Ref. giorno1_inventory_splits_SPEC.md §4.
+"""Day 1 — building and freezing the P2-lab and P1-SHARP splits.
+Ref. v5.1 pipeline §2.1-2.2.
 
 All stochasticity uses seed 42 (§0.5). The splits written here are
 frozen artifacts: once committed they are never touched again (§0.1).
@@ -12,7 +12,7 @@ from typing import Any
 
 import pandas as pd
 
-from .inventory import trace_table
+from .inventory import C0_PAPER_CLASSES, trace_table
 from .utils import get_logger, write_json
 from .windowing import EVAL_STRIDE, TRAIN_STRIDE, accumulate_moments
 
@@ -22,18 +22,21 @@ SPLIT_SEED = 42
 VAL_FRACTION = 0.15
 RARE_CELL_THRESHOLD = 4  # (ar_set, attivita) cells with < 4 traces: pin 1 into train
 
-# P1-SHARP (§4.2): SHARP reproduction. Train = bedroom AR-1a. Test = the
-# generalization set. AR-3 and AR-4 are the dataset's NLOS environments
-# (no extra campaign filter needed). Verify against the real contingency
+# P1-SHARP (v5.1, §2.1): SHARP reproduction, faithful to the TMC paper.
+# Train = bedroom S1 (AR-1), ALL campaigns a/b/c (repo README trains on
+# S1a+S1b+S1c). Test = S2 (other day), S3 (other person), S4-S5 (NLOS),
+# S6 (living room), S7 (laboratory). Verify against the real contingency
 # table before freezing (§2.3).
 P1_TRAIN_AR_SET = "AR-1"
-P1_TRAIN_CAMPAGNA = "a"
 P1_TEST_SPECS: list[tuple[str, str | None]] = [
-    ("AR-1", "b"), ("AR-1", "c"), ("AR-1", "d"), ("AR-1", "e"),
-    ("AR-2", "a"),
-    ("AR-3", None), ("AR-4", None),
-    ("AR-5", None), ("AR-6", None), ("AR-7", None), ("AR-8", None), ("AR-9", None),
+    ("AR-2", None), ("AR-3", None), ("AR-4", None),
+    ("AR-5", None), ("AR-6", None), ("AR-7", None),
 ]
+
+# P2 primary rotation (v5.1, §2.2): leave-S7-out — laboratory, monitor M4,
+# person P3: the paper's hardest generalization target (environment, day
+# and person never seen in training).
+P2_PRIMARY_TEST_AR_SET = "AR-7"
 
 
 def _assert_disjoint(train: list[str], val: list[str], test: list[str]) -> None:
@@ -72,21 +75,27 @@ def _stratified_val_split(
     return train_ids, val_ids, pinned_ids
 
 
-def build_p2_office(
+def build_p2_rotation(
     inventory_df: pd.DataFrame,
-    out_path: str | Path = "splits/p2_office.json",
+    test_ar_set: str = P2_PRIMARY_TEST_AR_SET,
+    protocol: str = "P2-lab",
+    out_path: str | Path = "splits/p2_lab.json",
     seed: int = SPLIT_SEED,
     labels: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Primary rotation (§4.1). Test = all AR-8 (office) traces. Train =
-    the rest. Val = 15% of train, stratified by (ar_set, attivita), with
-    rare cells pinned. Raises if the per-cell coverage assert fails, in
-    which case the JSON is NOT written (§4.1)."""
+    """Leave-one-set-out rotation (§2.2). Primary rotation (defaults):
+    test = all AR-7 (laboratory, S7) traces, train = S1-S6. The E2
+    extension reuses this with test_ar_set="AR-6" (living room),
+    protocol="P2-living", its own out_path and its own mu/sigma. Val =
+    15% of train, stratified by (ar_set, attivita), with rare cells
+    pinned. Raises if the per-cell coverage assert fails, in which case
+    the JSON is NOT written."""
     rng = random.Random(seed)
     traces = trace_table(inventory_df)
 
-    test_traces = traces[traces["ar_set"] == "AR-8"]
-    train_pool = traces[traces["ar_set"] != "AR-8"]
+    test_traces = traces[traces["ar_set"] == test_ar_set]
+    train_pool = traces[traces["ar_set"] != test_ar_set]
+    assert not test_traces.empty, f"no traces found for test set {test_ar_set!r}"
 
     train_ids, val_ids, pinned_ids = _stratified_val_split(train_pool, VAL_FRACTION, rng)
     test_ids = test_traces["trace_id"].tolist()
@@ -99,7 +108,7 @@ def build_p2_office(
     missing_cells = train_cells - covered_cells
     assert not missing_cells, (
         f"(ar_set, attivita) cells with no trace in train: {sorted(missing_cells)} — "
-        "build_p2_office aborted, no JSON written."
+        "build_p2_rotation aborted, no JSON written."
     )
 
     _assert_disjoint(train_ids, val_ids, test_ids)
@@ -111,7 +120,7 @@ def build_p2_office(
         labels = sorted(inventory_df["attivita"].unique())
 
     payload = {
-        "protocol": "P2-office",
+        "protocol": protocol,
         "axes": {"time": 340, "velocity": 100, "layout": "time_x_velocity", "stft_hop_s": 0.006},
         "window": {"train_stride": TRAIN_STRIDE, "eval_stride": EVAL_STRIDE},
         "classes": {"n_att": len(labels), "labels": labels, "c0_paper_set": None},
@@ -124,8 +133,8 @@ def build_p2_office(
     }
     write_json(out_path, payload)
     logger.info(
-        "p2_office.json written: train=%d val=%d test=%d pinned=%d",
-        len(train_ids), len(val_ids), len(test_ids), len(pinned_ids),
+        "%s written (%s): train=%d val=%d test=%d pinned=%d",
+        out_path, protocol, len(train_ids), len(val_ids), len(test_ids), len(pinned_ids),
     )
     return payload
 
@@ -134,16 +143,17 @@ def build_p1_sharp(
     inventory_df: pd.DataFrame,
     out_path: str | Path = "splits/p1_sharp.json",
     seed: int = SPLIT_SEED,
-    c0_paper_set: str = "TODO: verify arXiv (5 classes) vs extended TMC (8 classes)",
+    c0_paper_set: list[str] | None = None,
 ) -> dict[str, Any]:
-    """SHARP reproduction for C0 (§4.2). Train = bedroom AR-1a. Val = 20%
-    of AR-1a by trace. Test = the SHARP generalization set."""
+    """SHARP reproduction for C0 (v5.1, §2.1). Train = bedroom S1 (AR-1),
+    all campaigns a/b/c as in the paper/repo. Val = 20% of S1 by trace
+    (declared deviation: the repo has no hold-out). Test = S2-S7."""
+    if c0_paper_set is None:
+        c0_paper_set = C0_PAPER_CLASSES
     rng = random.Random(seed)
     traces = trace_table(inventory_df)
 
-    train_pool = traces[
-        (traces["ar_set"] == P1_TRAIN_AR_SET) & (traces["campagna"] == P1_TRAIN_CAMPAGNA)
-    ]
+    train_pool = traces[traces["ar_set"] == P1_TRAIN_AR_SET]
     train_ids = train_pool["trace_id"].tolist()
     rng.shuffle(train_ids)
     n_val = round(len(train_ids) * 0.20)
