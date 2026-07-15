@@ -11,6 +11,7 @@
 - Repo scaffold: package `sharp_har/`, configs C0–C4, thin notebooks, split/report dirs.
 - Day-1 code implemented (not yet run on real data): `inventory.py`, `windowing.py` (μ/σ), `splits.py`, notebook `01`.
 - **v5.1 dataset errata** applied everywhere: real coverage = S1–S7 ≡ AR-1…AR-7 (12 campaigns, TMC dataset); primary rotation = **leave-S7-out (lab)** → `splits/p2_lab.json`; P1 = train S1(a/b/c), test S2–S7; C0 = 5 paper classes; Tc ≈ 6 ms confirmed from the paper.
+- Local dry-run of the full day-1 flow on synthetic S1a…S7a data: caught and fixed an empty-val bug in P2 stratification (with 1–3 traces per cell every cell is "rare"; now rare cells degrade to AR-set-level stratification per §2.2, plus a blocking assert on empty val); P2 split file now records `c0_paper_set` as in §2.3.
 
 ## In progress
 

@@ -50,24 +50,37 @@ def _assert_disjoint(train: list[str], val: list[str], test: list[str]) -> None:
 def _stratified_val_split(
     train_pool: pd.DataFrame, val_fraction: float, rng: random.Random
 ) -> tuple[list[str], list[str], list[str]]:
-    """Stratifies by (ar_set, attivita): for each cell with >= RARE_CELL_THRESHOLD
-    traces, pins 1 trace into train, then splits the rest train/val
-    according to val_fraction. Returns (train_ids, val_ids, pinned_ids)."""
+    """Stratifies by (ar_set, attivita) (§2.2): cells with >=
+    RARE_CELL_THRESHOLD traces split train/val within the cell; for each
+    rare cell 1 trace is pinned into train and the remainder degrades to
+    AR-set-level stratification. The degradation matters: in the v5.1
+    dataset every cell has 1-3 traces (one trace per campaign, max 3
+    campaigns per set), so without it val would be empty.
+    Returns (train_ids, val_ids, pinned_ids)."""
     train_ids: list[str] = []
     val_ids: list[str] = []
     pinned_ids: list[str] = []
+    leftover_by_set: dict[str, list[str]] = {}
 
-    for (_ar_set, _attivita), cell in train_pool.groupby(["ar_set", "attivita"]):
+    for (ar_set, _attivita), cell in train_pool.groupby(["ar_set", "attivita"]):
         ids = cell["trace_id"].tolist()
         rng.shuffle(ids)
 
         if len(ids) < RARE_CELL_THRESHOLD:
-            # rare cell: pin 1 trace into train, the rest also falls back
-            # to train (no val from a cell that's too small, §2.2/§9)
+            # rare cell: pin 1 trace into train, the rest is stratified
+            # at AR-set level below (§2.2)
             pinned_ids.append(ids[0])
-            train_ids.extend(ids)
+            train_ids.append(ids[0])
+            leftover_by_set.setdefault(ar_set, []).extend(ids[1:])
             continue
 
+        n_val = round(len(ids) * val_fraction)
+        val_ids.extend(ids[:n_val])
+        train_ids.extend(ids[n_val:])
+
+    for ar_set in sorted(leftover_by_set):
+        ids = leftover_by_set[ar_set]
+        rng.shuffle(ids)
         n_val = round(len(ids) * val_fraction)
         val_ids.extend(ids[:n_val])
         train_ids.extend(ids[n_val:])
@@ -100,6 +113,13 @@ def build_p2_rotation(
     train_ids, val_ids, pinned_ids = _stratified_val_split(train_pool, VAL_FRACTION, rng)
     test_ids = test_traces["trace_id"].tolist()
 
+    # blocking assert: an empty val makes early stopping / checkpoint
+    # selection impossible (§2.2 val = 15% of train) — never freeze it
+    assert val_ids, (
+        "empty val set after stratification — check the rare-cell "
+        "degradation; build_p2_rotation aborted, no JSON written."
+    )
+
     # blocking assert: every (ar_set, attivita) cell in train has >= 1 trace in train
     train_cells = set(map(tuple, train_pool[["ar_set", "attivita"]].drop_duplicates().values))
     covered_cells = set(
@@ -123,7 +143,7 @@ def build_p2_rotation(
         "protocol": protocol,
         "axes": {"time": 340, "velocity": 100, "layout": "time_x_velocity", "stft_hop_s": 0.006},
         "window": {"train_stride": TRAIN_STRIDE, "eval_stride": EVAL_STRIDE},
-        "classes": {"n_att": len(labels), "labels": labels, "c0_paper_set": None},
+        "classes": {"n_att": len(labels), "labels": labels, "c0_paper_set": C0_PAPER_CLASSES},
         "split_seed": seed,
         "pinned_train_traces": sorted(pinned_ids),
         "train": sorted(train_ids),
