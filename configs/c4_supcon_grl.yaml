@@ -1,0 +1,34 @@
+# C4 — SupCon (fase A) + adversary GRL su AR-set, beta 0.5, protocollo P2-office
+# Checkpoint intermedi a 40/50/60 epoche; nessun early stopping in fase A.
+name: C4
+protocol: P2-office
+split_file: splits/p2_office.json
+backbone: resnet_vb
+d_enc: 256
+n_att: 8
+loss:
+  type: supcon+grl
+  tau: 0.1
+  label_smoothing: null
+adversary:
+  type: grl
+  target: ar_set
+  lambda_max: 1.0
+  beta: 0.5
+optim:
+  name: adamw
+  lr: 1.0e-3
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 60
+  checkpoint_epochs: [40, 50, 60]
+  batch_size: 256
+  sampler: pxk
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: null

@@ -1,0 +1,22 @@
+# Dati e checkpoint: non entrano MAI nel repo (vivono su Drive)
+*.zip
+*.pkl
+*.npy
+*.ckpt
+*.pt
+/content/
+
+# Cartelle di staging/cache feature
+stage/
+staging/
+cache/
+feature_cache/
+*.cache/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS
+.DS_Store

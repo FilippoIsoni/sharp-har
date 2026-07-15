@@ -1,0 +1,7 @@
+drive_root: "/content/drive/MyDrive/DATASET_SHARP"
+zips:
+  - "doppler_traces.zip"          # ~762 MB
+  - "doppler_traces_S4_S5.zip"    # ~10 MB
+stage_dir: "/content/data"        # destinazione unzip locale
+reports_dir: "reports"
+splits_dir: "splits"

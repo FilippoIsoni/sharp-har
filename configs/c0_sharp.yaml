@@ -1,0 +1,31 @@
+# C0 — riproduzione SHARP (rete sharp_like, protocollo P1)
+name: C0
+protocol: P1-sharp
+split_file: splits/p1_sharp.json
+backbone: sharp_like
+d_enc: 256
+n_att: 8
+loss:
+  type: ce
+  label_smoothing: 0.0
+adversary:
+  type: null
+  target: null
+  lambda_max: null
+  beta: null
+optim:
+  name: adam
+  lr: 1.0e-4
+  wd: 0.0
+  warmup_epochs: 0
+  scheduler: none
+train:
+  epoch_steps: 400
+  max_epochs: 60
+  batch_size: 32
+  sampler: uniform
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10
