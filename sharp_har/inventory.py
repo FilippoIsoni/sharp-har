@@ -287,6 +287,43 @@ def apply_nan_policy(
     return inventory_df[inventory_df["trace_id"].isin(clean_trace_ids)].copy()
 
 
+# Activity codes that are not HAR activities but slipped through the naming
+# regex (day-1 finding, confirmed on real data 2026-07-15): "LOS" is a
+# single-occurrence (AR-5 only) near-static recording — mean/min/max
+# essentially identical to "E" (empty) traces in the same set, and
+# std-over-time (~0.004) an order of magnitude below any real activity
+# (~0.03+) and close to "E" (~0.001). Consistent with a line-of-sight
+# calibration/reference recording, not a subject performing an activity.
+NON_ACTIVITY_LABELS = {"LOS"}
+
+
+def exclude_non_activities(
+    inventory_df: pd.DataFrame, out_dir: str | Path = "reports"
+) -> pd.DataFrame:
+    """Excludes traces whose activity code is in NON_ACTIVITY_LABELS
+    (calibration/reference recordings that match the file-naming regex
+    but are not HAR activities). Logs them to reports/excluded_traces.csv
+    with reason 'non_activity_reference', appended to whatever
+    apply_nan_policy already wrote there — call this after
+    apply_nan_policy in the notebook."""
+    traces = trace_table(inventory_df)
+    excluded = traces[traces["attivita"].isin(NON_ACTIVITY_LABELS)].copy()
+    if excluded.empty:
+        return inventory_df.copy()
+
+    excluded["reason"] = "non_activity_reference"
+    out_path = Path(out_dir) / "excluded_traces.csv"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    excluded.to_csv(out_path, mode="a", header=not out_path.exists(), index=False)
+    logger.info(
+        "excluded %d non-activity trace(s) %s: %s",
+        len(excluded), sorted(NON_ACTIVITY_LABELS), sorted(excluded["trace_id"]),
+    )
+
+    clean_trace_ids = set(traces["trace_id"]) - set(excluded["trace_id"])
+    return inventory_df[inventory_df["trace_id"].isin(clean_trace_ids)].copy()
+
+
 # C0 compares against the TMC paper's core tables: 5 classes (4 activities
 # + empty), see v5.1-5. The exact label letters used in the file names are
 # confirmed on day 1 against the inventory.
