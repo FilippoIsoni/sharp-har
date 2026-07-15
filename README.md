@@ -74,3 +74,7 @@ the data already staged) and run the cells in order. The notebook:
 The produced artifacts (`splits/*.json`, `reports/*.csv`,
 `reports/name_to_arset.json`) get committed to Git: they are the frozen
 day-1 deliverables.
+
+
+CIAO  
+
