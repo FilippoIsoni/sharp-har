@@ -19,12 +19,18 @@ from .utils import get_logger, write_json
 logger = get_logger(__name__)
 
 # Parametric regex for the expected naming `{Set}{campaign}_{Activity}_stream_{0-3}.txt`
-# (e.g. S1a_W_stream_0.txt). The Drive copy follows the SHARP repo layout
-# (`doppler_traces/S1a … S7a`, v5.1); file names inside each set directory
-# must still be inspected with list_files()/print_naming_patterns() in the
-# notebook BEFORE trusting this pattern — fix it here if needed (§2.1).
+# (e.g. S1a_W_stream_0.txt). Some activities carry a repetition number,
+# either appended directly (S4a_C1_stream_0.txt) or underscore-separated
+# (S6b_J_0_stream_0.txt, an inconsistency in the raw naming) — both are
+# captured in `repetition` and folded into trace_id so that repeated
+# recordings of the same activity stay distinct traces (day-1 real-data
+# run, confirmed on Drive `DATASET_SHARP`). The Drive copy follows the
+# SHARP repo layout (`doppler_traces/S1a … S7a`, v5.1); file names inside
+# each set directory must still be inspected with
+# list_files()/print_naming_patterns() in the notebook BEFORE trusting
+# this pattern — fix it here if needed (§2.1).
 FILENAME_PATTERN = re.compile(
-    r"^(?P<set_num>[A-Za-z]+\d+)(?P<campagna>[a-z])?_(?P<attivita>[A-Za-z]+)_stream_(?P<stream>[0-3])\.txt$"
+    r"^(?P<set_num>[A-Za-z]+\d+)(?P<campagna>[a-z])?_(?P<attivita>[A-Za-z]+)(?:_?(?P<repetition>\d+))?_stream_(?P<stream>[0-3])\.txt$"
 )
 
 EXPECTED_VELOCITY_BINS = 100
@@ -79,9 +85,10 @@ def print_naming_patterns(files: list[Path], n_examples: int = 30) -> None:
 
 
 def parse_filename(name: str) -> dict[str, Any]:
-    """Extracts set_raw, campagna, attivita, stream from a file name
-    according to FILENAME_PATTERN. Raises ValueError if the name doesn't
-    match — the caller must log and exclude, not guess (§2.1 point 2)."""
+    """Extracts set_raw, campagna, attivita, repetition, stream from a
+    file name according to FILENAME_PATTERN. Raises ValueError if the
+    name doesn't match — the caller must log and exclude, not guess
+    (§2.1 point 2)."""
     m = FILENAME_PATTERN.match(name)
     if m is None:
         raise ValueError(f"file name not recognized by the expected pattern: {name!r}")
@@ -92,6 +99,7 @@ def parse_filename(name: str) -> dict[str, Any]:
         "set_num": d["set_num"],
         "campagna": campagna,
         "attivita": d["attivita"],
+        "repetition": d["repetition"] or "",
         "stream": int(d["stream"]),
     }
 
@@ -165,10 +173,11 @@ def build_inventory(
         rows.append(
             {
                 "filepath": p["filepath"],
-                "trace_id": f"{p['set_raw']}_{p['attivita']}",
+                "trace_id": f"{p['set_raw']}_{p['attivita']}{p['repetition']}",
                 "ar_set": ar_set,
                 "campagna": p["campagna"],
                 "attivita": p["attivita"],
+                "repetition": p["repetition"],
                 "persona": meta.get("persona", "unknown"),
                 "ambiente": meta.get("ambiente", "unknown"),
                 "monitor": meta.get("monitor", "unknown"),
