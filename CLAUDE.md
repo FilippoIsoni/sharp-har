@@ -29,7 +29,7 @@ There is no test suite, linter config, or build step. Verification happens throu
 
 ## Architecture
 
-**Thin notebooks, logic in the package.** `notebooks/*.ipynb` only mount Drive, stage data, call `sharp_har` functions, and display output. No logic is ever added to a notebook — the dataloader requires cross-review and notebooks can't be diffed for that.
+**Thin notebooks, logic in the package.** `notebooks/*.ipynb` only mount Drive, stage data, call `sharp_har` functions, and display output. No logic is ever added to a notebook — the dataloader requires cross-review and notebooks can't be diffed for that. Templates (`notebooks/0*.ipynb`) stay output-free on Git; the executed copy of every real run is committed **verbatim with outputs** under `notebooks/runs/` as `YYYY-MM-DD_<config>.ipynb` (see its README) and never edited afterwards.
 
 **Gated implementation.** Modules are deliberately stubs (`NotImplementedError`) until their pipeline day arrives — the day-2 throughput gate can change the architecture (escalation §5.2), so nothing downstream is implemented before its gate passes. Do not "helpfully" fill in a stub without being asked.
 
@@ -38,6 +38,7 @@ Current status:
 - **Implemented (day 2):** `data.py` (`DopplerDataset` + `build_file_index`), `models/resnet_vb.py` (V-B backbone), `ActivityHead` in `models/heads.py`, `ce_with_label_smoothing` in `losses.py`, `train.py` (`train_run`, CE path with full checkpoint/auto-resume), `notebooks/02_smoke_gate.ipynb` (end-to-end staging + resume + throughput gate runner).
 - **Implemented (day 3):** `harness.py` (fusion softmax-avg + SHARP-repo C0 decision fusion, per-AR-set metrics CSVs, test-invocation JSONL logging, `cache_features`/`evaluate_features`), `sampler.py` (`PKSampler` with reuse/offset logging), `augment.py` (CE + SupCon-view profiles), `probe.py` (frozen linear-probe recipe + majority baseline), `supcon_loss` + `ProjectionHead`, `models/__init__.build_backbone` (shared factory), `bench.py` + `notebooks/02b_phase_a_gate.ipynb` (phase-A 512-view full-batch gate).
 - **Implemented (day 4):** `GRL` + `grl_lambda` ramp in `losses.py`, `ARSetHead`, `models/sharp_like.py` (Keras-same padding, `feature_dim` 25500), full `train_run` wiring (CE augmentation profile, SupCon phase A with P×K + `TwoViewAugmenter`, GRL loss + §6-C2 monitoring), notebooks `00`, `03`. **No stubs left** — every module is live; day 4+ work is running the §10.2 plan, not filling code in.
+- **Implemented (day-4 review):** `viz.py` (`plot_history`/`plot_confusion`/`compare_runs`, panels driven by the columns present in a run's history.csv — notebooks call these, never define plots inline); harness `_load_end_to_end` head sizing fixed to `backbone.feature_dim` (C0/sharp_like eval).
 
 **One config per experimental run.** `configs/c*.yaml` fully describe a run (backbone, loss, adversary, sampler, optimizer, horizon); `train.py` consumes a config, never per-run flags. `configs/paths.yaml` holds Colab paths.
 

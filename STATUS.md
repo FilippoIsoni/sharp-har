@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-16 · **Phase: day 4 code done → §10.2 runs (C0 started)**
+**Last update:** 2026-07-16 · **Phase: §10.2 runs in flight (C0 rerun, C1 finishing)**
 
 ## Done
 
@@ -105,20 +105,35 @@
 
 ## In progress
 
-- **C0 first attempt archived** (`notebooks/runs/2026-07-16_c0_sharp.ipynb`):
-  interrupted at epoch 11/60, best val macro-F1 0.667 @ epoch 6 (val = 3 traces only →
-  noisy selection metric, declared). Ran on a **CPU runtime** (~0.56 s/step); resume
-  from Drive `last.ckpt` on a GPU runtime, or restart fresh if the team prefers a
-  clean GPU-only record.
+- **C0 rerun on GPU** (owner A): the first attempt is archived in
+  `notebooks/runs/2026-07-16_c0_sharp.ipynb` — interrupted at epoch 11/60 on a **CPU
+  runtime**, best val macro-F1 0.667 @ epoch 6 (val = 3 traces only → noisy selection
+  metric, declared). Decision: restart fresh on GPU (delete or rename the Drive `C0`
+  folder first) rather than resuming a mixed CPU/GPU run.
+- **C1 training** (owner A2): running without issues, near completion. The harness
+  head-sizing fix does NOT affect it: training never goes through `_load_end_to_end`,
+  and for `resnet_vb` feature_dim = d_enc, so old and new code build the same head.
+  On finish: archive the executed notebook under `notebooks/runs/`, then C1-lin probe.
 
 ## Next steps (in order)
 
-1. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
-   from the unmodified `c1_ce.yaml`.
-2. **Days 4–9 (vertical ownership, §10.2), budget §8.4 recalibrated by the gates:**
-   A → C0 + C1 · B → C3, then C4 · C → C2, then C4 + probes + C1-lin/C2-lin.
-   All runs via notebook `03` (or `02b`-style thin runners); test evaluation only at the
-   end, through the logging harness (§0.7).
+1. **Launch C3 (owner B) and C2 (owner C) in parallel** via notebook `03` — independent
+   of C0/C1. C3 ≈ 6.9 h (phase A: no val metric, no best.ckpt; deliverables are
+   epoch40/50/60.ckpt). C2: watch the §6-C2 monitoring panel — arset_train_acc must fall
+   as λ ramps without collapsing val macro-F1; if not, DISCUSS λ_max → 0.5, don't tune solo.
+2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
+   (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
+3. After C1/C2 best.ckpt: **C1-lin / C2-lin probes** (cache_features train+val →
+   linear_probe → fused val F1).
+4. After C3 (and C2's outcome): **phase B grid** on C3's epoch40/50/60 → val-selected
+   checkpoint; only then **launch C4** (inherits any GRL contingency), then its phase B.
+5. **Single final test session** (§0.7) once ALL streams have a val-selected checkpoint:
+   evaluate_c0 (C0), evaluate (C1/C2), evaluate_features (C3/C4 + probes); commit per-AR-set
+   CSVs + `test_invocations.jsonl`. Then `viz.compare_runs` + per-AR-set table (§0.5:
+   <~2 points = "comparable").
+6. Optional prep while runs are in flight: thin runner notebooks `04_probe` (phase B /
+   C1-lin / C2-lin) and `05_test_final` — logic already lives in the package.
+7. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
 
 ## Blockers / open decisions
 
