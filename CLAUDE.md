@@ -35,7 +35,8 @@ There is no test suite, linter config, or build step. Verification happens throu
 
 Current status:
 - **Implemented (day 1):** `utils.py`, `inventory.py`, `windowing.py` (window enumeration + μ/σ only), `splits.py`, notebook `01_inventory_splits`.
-- **Stubs (day 2+):** `data.py`, `augment.py`, `sampler.py`, `losses.py`, `harness.py`, `probe.py`, `train.py`, `models/` (V-B ResNet, heads, SHARP-like net), notebooks `00`, `02`, `03`.
+- **Implemented (day 2):** `data.py` (`DopplerDataset` + `build_file_index`).
+- **Stubs (day 2+):** `augment.py`, `sampler.py`, `losses.py`, `harness.py`, `probe.py`, `train.py`, `models/` (V-B ResNet, heads, SHARP-like net), notebooks `00`, `02`, `03`.
 
 **One config per experimental run.** `configs/c*.yaml` fully describe a run (backbone, loss, adversary, sampler, optimizer, horizon); `train.py` consumes a config, never per-run flags. `configs/paths.yaml` holds Colab paths.
 
