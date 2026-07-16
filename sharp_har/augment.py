@@ -159,3 +159,23 @@ class Augmenter:
 
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         return apply(x, self.cfg, self._rng)
+
+
+class TwoViewAugmenter(Augmenter):
+    """SupCon-view variant (§3): every sample yields 2 views = 2
+    independent augmentations of the same (window, antenna), stacked to
+    (2, 1, time, velocity) — the ONE transform whose output shape
+    differs from its input, by contract with the phase-A training loop
+    (which reshapes the collated (B, 2, 1, T, V) batch to 2B views and
+    duplicates the labels). Built on the "supcon_view" profile."""
+
+    def __init__(
+        self,
+        seed: int,
+        time_steps: int = REFERENCE_TIME_STEPS,
+        velocity_bins: int = REFERENCE_VELOCITY_BINS,
+    ) -> None:
+        super().__init__("supcon_view", seed, time_steps, velocity_bins)
+
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.stack([apply(x, self.cfg, self._rng), apply(x, self.cfg, self._rng)])

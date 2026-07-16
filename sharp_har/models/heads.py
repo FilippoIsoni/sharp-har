@@ -39,12 +39,22 @@ class ProjectionHead(nn.Module):
 
 
 class ARSetHead(nn.Module):
-    """AR-set adversary: GRL -> d_enc -> d_enc/2 -> n_arset, ReLU,
-    dropout 0.3. Used by configs C2/C4 (adversary.type: grl). Ref. §5.3."""
+    """AR-set adversary: GRL -> MLP d_enc -> d_enc/2 -> n_arset with
+    ReLU and dropout 0.3 (§5.3). Used by configs C2/C4
+    (adversary.type: grl). The §6-C2 ramp λ(p) weights the LOSS term in
+    the training loop; the GRL inside keeps lambda_ = 1.0."""
 
     def __init__(self, d_enc: int, n_arset: int, lambda_: float = 1.0, dropout: float = 0.3) -> None:
         super().__init__()
-        raise NotImplementedError("day 2/4 — §5.3")
+        from ..losses import GRL  # local import: heads must not cycle with losses at module load
+
+        self.grl = GRL(lambda_)
+        self.net = nn.Sequential(
+            nn.Linear(d_enc, d_enc // 2),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            nn.Linear(d_enc // 2, n_arset),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("day 2/4 — §5.3")
+        return self.net(self.grl(x))

@@ -29,6 +29,7 @@ train:
   max_epochs: 60
   batch_size: 32
   sampler: uniform
+  augment: false  # faithful reproduction: the SHARP repo does not use the §3 set (§6-C0)
   amp: true
   grad_clip: 1.0
 eval:

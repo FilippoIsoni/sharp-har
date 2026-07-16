@@ -1,43 +1,60 @@
-"""Day 2 — training loop shared by the core runs. Ref. §8 (optimization,
-checkpoint/resume), §6 (per-run configs), §0.4-0.5 (run artifacts, seed).
+"""Day 2/4 — training loop shared by the core runs C0–C4. Ref. §8
+(optimization, checkpoint/resume), §6 (per-run configs), §4 (batch
+composition), §3 (augmentation), §0.4-0.5 (run artifacts, seed).
 
-Day-2 scope: the CE path (C1-style; C0 once its class mapping is
-decided). SupCon losses, the GRL adversary, the P×K sampler and the
-sharp_like backbone raise NotImplementedError with their pipeline day —
-gated implementation, nothing downstream of the throughput gate is
-filled in early.
+Two loss paths, both config-driven (§0.4):
+- "ce" (C0/C1/C2): uniform shuffling, "ce" augmentation profile in the
+  dataset transform, ActivityHead, in-loop selection on fused val
+  macro-F1 (harness functions, so selection ≡ reporting).
+- "supcon" (C3/C4 phase A): P×K batch sampler (§4.2), 2 augmented views
+  per (window, antenna) built in the DataLoader workers (§3),
+  ProjectionHead + supcon_loss, NO early stopping/selection in-loop —
+  selection is phase B's linear-probe grid (§6-C3). No gradient
+  accumulation, forbidden in phase A (§4.2).
+
+The GRL adversary (C2, C4) follows §6-C2 literally:
+L = L_task + β·λ(p)·L_env with the fixed ramp λ(p) (losses.grl_lambda,
+β = 1 for C2), plus the mandatory monitoring — AR-set head accuracy on
+train batches, per-epoch mean, in history.csv.
 
 Colab free disconnects: every epoch ends with a complete `last.ckpt`
-(weights + optimizer + scheduler + GradScaler + epoch + config + RNG
-states) written atomically, and `train_run` resumes from it
-automatically. Batch order is reproducible across resumes because the
-shuffle generator is reseeded per epoch as seed_epoch = f(seed, epoch)
-(§8.2), so no sampler state needs saving.
+(weights + heads + optimizer + scheduler + GradScaler + epoch + config
++ RNG states) written atomically, and `train_run` resumes from it
+automatically. Batch order AND augmentation streams are reproducible
+across resumes: shuffle generator, P×K sampler and Augmenter are all
+reseeded per epoch as f(seed, epoch) (§8.2), per worker for the
+transform, so no sampler/augmenter state needs saving. Changing
+num_workers changes the augmentation stream (declared).
 """
 from __future__ import annotations
 
 import math
 import random
 import time
+from functools import partial
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+import torch.nn.functional as F
+from torch.utils.data import DataLoader, get_worker_info
 
+from .augment import Augmenter, TwoViewAugmenter
 from .data import DopplerDataset
 from .harness import fuse_windows, macro_f1, predict
-from .losses import ce_with_label_smoothing
+from .losses import ce_with_label_smoothing, grl_lambda, supcon_loss
 from .models import build_backbone
-from .models.heads import ActivityHead
+from .models.heads import ActivityHead, ARSetHead, ProjectionHead
+from .sampler import PKSampler
 from .utils import epoch_seed as _epoch_seed
 from .utils import get_git_hash, get_logger, set_seed, write_json
 
 logger = get_logger(__name__)
 
-GRAD_CLIP_NORM = 1.0  # §8.1 default when the config omits train.grad_clip; essential with GRL later
+GRAD_CLIP_NORM = 1.0  # §8.1 default when the config omits train.grad_clip; essential with GRL
+_TRANSFORM_SEED_OFFSET = 7919  # decouple the augmentation stream from the shuffle stream
 
 
 @torch.no_grad()
@@ -52,10 +69,6 @@ def _fused_val_macro_f1(
     res = predict(backbone, head, loader, device, amp)
     fused = fuse_windows(res["probs"], res["y"], res["trace_id"], res["window_start"])
     return macro_f1(fused["y_true"], fused["y_pred"])
-
-
-def _build_model(cfg: dict[str, Any]) -> tuple[nn.Module, nn.Module]:
-    return build_backbone(cfg), ActivityHead(cfg["d_enc"], cfg["n_att"])
 
 
 def _build_optimizer(cfg: dict[str, Any], params: Any) -> torch.optim.Optimizer:
@@ -123,6 +136,14 @@ def _atomic_save(state: dict[str, Any], path: Path) -> None:
     tmp.replace(path)
 
 
+def _reseed_transform_worker(worker_id: int, base_seed: int) -> None:
+    """DataLoader worker_init_fn: forked workers would otherwise clone
+    the SAME augmentation generator and draw identical streams (§0.5)."""
+    dataset = get_worker_info().dataset
+    if getattr(dataset, "transform", None) is not None:
+        dataset.transform.reseed(base_seed + worker_id + 1)
+
+
 def train_run(
     cfg: dict[str, Any],
     stage_dir: str | Path,
@@ -137,23 +158,34 @@ def train_run(
     describes the run, no per-run flags (§0.4). The smoke gate passes a
     modified COPY of the config (fewer epochs/steps), never edits the
     file. Optional cfg keys: "seed" (default 42, E1/E3 extensions use
-    43/44), "labels" (explicit class list, required for P1/C0).
+    43/44), "labels" (explicit class list, required for P1/C0),
+    "escalation_b", adversary "lambda_max"/"beta"/"ramp_epochs".
 
     Artifacts under ckpt_dir/<cfg.name>/: last.ckpt (every epoch,
-    atomic), best.ckpt (val-selected), epoch{N}.ckpt for the phase-A
-    grid (train.checkpoint_epochs), run_meta.json (config + seed + git
-    hash, §0.4), history.csv (per-epoch loss/metric/lr/s-per-step — the
-    day-2 gate reads s_per_step from here).
+    atomic), best.ckpt (val-selected; CE runs only — phase-A selection
+    is phase B's probe grid), epoch{N}.ckpt for the phase-A grid
+    (train.checkpoint_epochs), run_meta.json (config + seed + git hash,
+    §0.4), history.csv (per-epoch loss/metric/lr/s-per-step — the gates
+    read s_per_step from here).
     """
-    if cfg["loss"]["type"] != "ce":
-        raise NotImplementedError(
-            f"loss {cfg['loss']['type']!r} — phase-A wiring is day 4 (§6-C3/C4); "
-            "supcon_loss/ProjectionHead/PKSampler/augment are implemented (day 3)."
-        )
-    if (cfg.get("adversary") or {}).get("type"):
-        raise NotImplementedError("GRL adversary — day 4 (§5.3, §8; C2/C4)")
-    if cfg["train"]["sampler"] != "uniform":
-        raise NotImplementedError(f"sampler {cfg['train']['sampler']!r} wiring — day 4 (§4.2, P×K)")
+    loss_type = cfg["loss"]["type"]
+    adversary_cfg = cfg.get("adversary") or {}
+    use_grl = bool(adversary_cfg.get("type"))
+    if use_grl:
+        assert adversary_cfg["type"] == "grl", f"unknown adversary {adversary_cfg['type']!r}"
+        assert adversary_cfg.get("target", "ar_set") == "ar_set", "adversary target must be ar_set (§2.2)"
+
+    if loss_type in ("supcon", "supcon+grl"):
+        # §6-C3/C4 phase A: P×K batches, no early stopping/selection in-loop.
+        use_grl = use_grl or loss_type == "supcon+grl"
+        assert cfg["train"]["sampler"] == "pxk", "SupCon phase A requires the P×K sampler (§4.2)"
+        assert cfg["eval"]["patience"] is None, "no early stopping in phase A (§6-C3)"
+        is_supcon = True
+    elif loss_type == "ce":
+        assert cfg["train"]["sampler"] == "uniform", "CE runs use uniform shuffling (§4.1)"
+        is_supcon = False
+    else:
+        raise ValueError(f"unknown loss type {loss_type!r}")
 
     seed = int(cfg.get("seed", 42))
     set_seed(seed)
@@ -180,6 +212,18 @@ def train_run(
         "config and frozen split disagree."
     )
 
+    # Augmentation (§3): train only, after standardization, profile by
+    # loss path. Reseeded per (epoch, worker) — see the epoch loop.
+    # train.augment: false opts out — C0 reproduces the SHARP repo,
+    # which does not use the §3 set (§6-C0 "faithful").
+    train_ds = datasets["train"]
+    if not cfg["train"].get("augment", True):
+        assert not is_supcon, "SupCon phase A cannot run without augmentation: the 2 views ARE augmentations (§3)"
+    elif is_supcon:
+        train_ds.transform = TwoViewAugmenter(seed, train_ds.window_len, train_ds.velocity_bins)
+    else:
+        train_ds.transform = Augmenter("ce", seed, train_ds.window_len, train_ds.velocity_bins)
+
     batch_size = cfg["train"]["batch_size"]
     grad_clip = float(cfg["train"].get("grad_clip", GRAD_CLIP_NORM))
     epoch_steps = cfg["train"]["epoch_steps"]
@@ -188,24 +232,63 @@ def train_run(
     grid_epochs = set(cfg["train"].get("checkpoint_epochs") or [])
     total_steps = max_epochs * epoch_steps
 
-    assert len(datasets["train"]) >= batch_size, (
-        f"train set ({len(datasets['train'])} samples) smaller than one batch "
-        f"({batch_size}) — with drop_last the loader would be empty."
-    )
     shuffle_gen = torch.Generator()
-    train_loader = DataLoader(
-        datasets["train"], batch_size=batch_size, shuffle=True, generator=shuffle_gen,
-        num_workers=num_workers, pin_memory=dev.type == "cuda", drop_last=True,
-    )
+    pk_sampler: PKSampler | None = None
+    if is_supcon:
+        p = datasets["train"].n_att
+        k = batch_size // p  # P = n_att, K = ⌊batch/P⌋ (§4.2)
+        assert k >= 1, f"batch_size {batch_size} < n_att {p}"
+        pk_sampler = PKSampler(datasets["train"], p=p, k=k, seed=seed, num_batches=epoch_steps)
+        if p * k != batch_size:
+            logger.info("P×K batch is %d windows (batch_size %d, P=%d, K=%d)", p * k, batch_size, p, k)
+    else:
+        assert len(datasets["train"]) >= batch_size, (
+            f"train set ({len(datasets['train'])} samples) smaller than one batch "
+            f"({batch_size}) — with drop_last the loader would be empty."
+        )
+
+    def make_train_loader(epoch: int) -> DataLoader:
+        """Per-epoch loader: reseeds shuffle/sampler/augmenter streams as
+        pure functions of (seed, epoch) so an epoch-boundary resume
+        reproduces both batch order and augmentation (§8.2)."""
+        base = _epoch_seed(seed, epoch)
+        if train_ds.transform is not None:
+            train_ds.transform.reseed(base + _TRANSFORM_SEED_OFFSET)  # num_workers=0 path
+        init = partial(_reseed_transform_worker, base_seed=base + _TRANSFORM_SEED_OFFSET)
+        if pk_sampler is not None:
+            pk_sampler.set_epoch(epoch)
+            return DataLoader(
+                train_ds, batch_sampler=pk_sampler, num_workers=num_workers,
+                pin_memory=dev.type == "cuda", worker_init_fn=init,
+            )
+        shuffle_gen.manual_seed(base)
+        return DataLoader(
+            train_ds, batch_size=batch_size, shuffle=True, generator=shuffle_gen,
+            num_workers=num_workers, pin_memory=dev.type == "cuda", drop_last=True,
+            worker_init_fn=init,
+        )
+
     val_loader = DataLoader(
         datasets["val"], batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=dev.type == "cuda",
     )
 
-    backbone, head = _build_model(cfg)
-    backbone.to(dev)
-    head.to(dev)
+    backbone = build_backbone(cfg).to(dev)
+    feature_dim = getattr(backbone, "feature_dim", cfg["d_enc"])
+    head: nn.Module = (
+        ProjectionHead(feature_dim) if is_supcon else ActivityHead(feature_dim, cfg["n_att"])
+    ).to(dev)
+    arset_head: ARSetHead | None = None
+    if use_grl:
+        arset_head = ARSetHead(feature_dim, datasets["train"].n_arset).to(dev)
+    lambda_max = float(adversary_cfg.get("lambda_max") or 1.0)
+    beta = float(adversary_cfg.get("beta") or 1.0)
+    ramp_epochs = int(adversary_cfg.get("ramp_epochs") or 20)
+    tau = float(cfg["loss"].get("tau") or 0.1)
+
     params = list(backbone.parameters()) + list(head.parameters())
+    if arset_head is not None:
+        params += list(arset_head.parameters())
     optimizer = _build_optimizer(cfg, params)
     scheduler = _build_scheduler(cfg, optimizer, total_steps)
     scaler = torch.amp.GradScaler(dev.type, enabled=amp)
@@ -225,6 +308,8 @@ def train_run(
         ckpt = torch.load(last_path, map_location="cpu", weights_only=False)
         backbone.load_state_dict(ckpt["backbone"])
         head.load_state_dict(ckpt["head"])
+        if arset_head is not None:
+            arset_head.load_state_dict(ckpt["adversary"])
         optimizer.load_state_dict(ckpt["optimizer"])
         scheduler.load_state_dict(ckpt["scheduler"])
         scaler.load_state_dict(ckpt["scaler"])
@@ -243,9 +328,12 @@ def train_run(
     for epoch in range(start_epoch, max_epochs + 1):
         backbone.train()
         head.train()
-        shuffle_gen.manual_seed(_epoch_seed(seed, epoch))
+        if arset_head is not None:
+            arset_head.train()
+        train_loader = make_train_loader(epoch)
         batches = iter(train_loader)
-        loss_sum, t0 = 0.0, time.time()
+        lam = grl_lambda(epoch, lambda_max, ramp_epochs) if use_grl else 0.0
+        loss_sum, arset_hits, arset_count, t0 = 0.0, 0, 0, time.time()
 
         for _step in range(epoch_steps):
             try:
@@ -256,9 +344,26 @@ def train_run(
             x = batch["x"].to(dev, non_blocking=True)
             y = batch["y"].to(dev, non_blocking=True)
 
+            if is_supcon:
+                # (B, 2, 1, T, V) -> (2B, 1, T, V); labels follow the views.
+                x = x.flatten(0, 1)
+                y = y.repeat_interleave(2)
+
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast(device_type=dev.type, enabled=amp):
-                loss = ce_with_label_smoothing(head(backbone(x)), y, label_smoothing)
+                feat = backbone(x)
+                if is_supcon:
+                    loss = supcon_loss(head(feat), y, tau=tau)
+                else:
+                    loss = ce_with_label_smoothing(head(feat), y, label_smoothing)
+                if arset_head is not None:
+                    ar = batch["ar_set"].to(dev, non_blocking=True)
+                    if is_supcon:
+                        ar = ar.repeat_interleave(2)
+                    env_logits = arset_head(feat)
+                    loss = loss + beta * lam * F.cross_entropy(env_logits, ar)
+                    arset_hits += int((env_logits.argmax(dim=1) == ar).sum())
+                    arset_count += len(ar)
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(params, grad_clip)
@@ -268,26 +373,37 @@ def train_run(
             loss_sum += loss.item()
 
         train_seconds = time.time() - t0
-        val_f1 = _fused_val_macro_f1(backbone, head, val_loader, dev, amp)
-        row = {
+        row: dict[str, Any] = {
             "epoch": epoch,
             "train_loss": loss_sum / epoch_steps,
-            "val_macro_f1": val_f1,
-            "lr": scheduler.get_last_lr()[0],
-            "s_per_step": train_seconds / epoch_steps,
-            "epoch_seconds": train_seconds,
         }
+        if not is_supcon:
+            # Phase A has no in-loop selection (§6-C3): the val metric
+            # only exists on the CE path.
+            row["val_macro_f1"] = _fused_val_macro_f1(backbone, head, val_loader, dev, amp)
+        if use_grl:
+            # §6-C2 mandatory monitoring: AR-set head accuracy on train
+            # batches (per-epoch mean) must fall toward the majority
+            # baseline as λ ramps; if it stays high, the GRL isn't biting.
+            row["arset_train_acc"] = arset_hits / max(arset_count, 1)
+            row["grl_lambda"] = lam
+        row["lr"] = scheduler.get_last_lr()[0]
+        row["s_per_step"] = train_seconds / epoch_steps
+        row["epoch_seconds"] = train_seconds
         history.append(row)
         logger.info(
-            "%s epoch %d/%d: loss %.4f, val macro-F1 %.4f, %.3f s/step",
-            cfg["name"], epoch, max_epochs, row["train_loss"], val_f1, row["s_per_step"],
+            "%s epoch %d/%d: loss %.4f%s%s, %.3f s/step",
+            cfg["name"], epoch, max_epochs, row["train_loss"],
+            f", val macro-F1 {row['val_macro_f1']:.4f}" if "val_macro_f1" in row else "",
+            f", arset acc {row['arset_train_acc']:.3f} (λ={lam:.3f})" if use_grl else "",
+            row["s_per_step"],
         )
 
-        improved = val_f1 > best_metric
+        improved = not is_supcon and row["val_macro_f1"] > best_metric
         if improved:
-            best_metric = val_f1
+            best_metric = row["val_macro_f1"]
             epochs_no_improve = 0
-        else:
+        elif not is_supcon:
             epochs_no_improve += 1
 
         state = {
@@ -298,6 +414,8 @@ def train_run(
             "best_metric": best_metric, "epochs_no_improve": epochs_no_improve,
             "history": history,
         }
+        if arset_head is not None:
+            state["adversary"] = arset_head.state_dict()
         _atomic_save(state, last_path)
         if improved:
             _atomic_save(state, run_dir / "best.ckpt")

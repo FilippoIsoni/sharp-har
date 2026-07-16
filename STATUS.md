@@ -78,6 +78,24 @@
   backbone untouched (escalation (b) would break shared-encoder comparability); grid
   40/50/60 unchanged. Declared: phase-A epochs are 300 steps vs 400 in CE runs.
 
+- **Day 4 wiring complete** (verified end-to-end on synthetic data: C0/C1/C2/C3/C4-style
+  runs all train, deterministic, bit-exact resume on the SupCon path too):
+  - `train_run` now drives every config: CE path gains the §3 "ce" augmentation profile
+    (in DataLoader workers, per-(epoch, worker) reseed — resume-reproducible; changing
+    num_workers changes the augmentation stream, declared); SupCon phase A wired with
+    P×K batches + `TwoViewAugmenter` (2 views per sample built in the workers, as the
+    day-3 gate note hoped) + `supcon_loss`, no in-loop selection/best.ckpt (§6-C3), grid
+    checkpoints; GRL path (C2/C4): `ARSetHead` + literal §6-C2 loss
+    `L = L_task + β·λ(p)·L_env`, fixed ramp `losses.grl_lambda` (λ_max/β/ramp_epochs from
+    the config), mandatory monitoring in history.csv (arset_train_acc, grl_lambda).
+  - `losses.GRL` (reversal autograd.Function), `models/sharp_like.py` implemented
+    faithful to the TMC figure with Keras-style same padding (feature_dim 25500; heads
+    consume `backbone.feature_dim`, d_enc does not apply to C0).
+  - `c0_sharp.yaml`: `train.augment: false` — the SHARP repo does not use the §3 set,
+    faithfulness wins (declared).
+  - Notebooks `00_setup_smoke` (env + staging + frozen-artifact asserts) and `03_train`
+    (config-driven runner, val-only evaluation, §0.7 test warning) implemented.
+
 ## In progress
 
 - (nothing running)
@@ -86,12 +104,10 @@
 
 1. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
    from the unmodified `c1_ce.yaml`.
-2. **Day 4: wiring** — SupCon phase-A path in `train_run` (P×K + 2 views, checkpoint grid
-   40/50/60), GRL/`ARSetHead` (C2/C4), `sharp_like` backbone (C0), notebooks `00`/`03`.
-   Day-4 note: moving augmentation into DataLoader workers should bring real phase A
-   under the 6.87 h projection (the gate's s/step is a declared upper bound).
-3. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then
-   C4 + probes + C1-lin/C2-lin.
+2. **Days 4–9 (vertical ownership, §10.2), budget §8.4 recalibrated by the gates:**
+   A → C0 + C1 · B → C3, then C4 · C → C2, then C4 + probes + C1-lin/C2-lin.
+   All runs via notebook `03` (or `02b`-style thin runners); test evaluation only at the
+   end, through the logging harness (§0.7).
 
 ## Blockers / open decisions
 

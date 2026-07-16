@@ -18,5 +18,5 @@ def build_backbone(cfg: dict[str, Any]) -> nn.Module:
     if cfg["backbone"] == "resnet_vb":
         return ResNetVB(d_enc=cfg["d_enc"], escalation_b=cfg.get("escalation_b", False))
     if cfg["backbone"] == "sharp_like":
-        return SharpLike(d_enc=cfg["d_enc"])  # still a day-4 stub (§5.1, C0 time-box)
+        return SharpLike(d_enc=cfg["d_enc"])  # d_enc unused: feature size fixed by geometry (§5.1)
     raise ValueError(f"unknown backbone {cfg['backbone']!r}")

@@ -1,8 +1,10 @@
-"""SupCon, gradient reversal (GRL), label-smoothed cross-entropy.
-Ref. §5.3, §8. CE (day 2) and supcon_loss (day 3) are implemented; GRL
-stays stubbed until day 4 per the gated-implementation rule.
+"""SupCon, gradient reversal (GRL) with its §6-C2 ramp, label-smoothed
+cross-entropy. Ref. §5.3, §6-C2, §8.
 """
 from __future__ import annotations
+
+import math
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -45,17 +47,41 @@ def supcon_loss(feats: torch.Tensor, labels: torch.Tensor, tau: float = 0.1) -> 
     return -mean_log_prob_pos.mean()
 
 
+class _ReverseGrad(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx: Any, x: torch.Tensor, lambda_: float) -> torch.Tensor:
+        ctx.lambda_ = lambda_
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx: Any, grad: torch.Tensor) -> tuple[torch.Tensor, None]:
+        return -ctx.lambda_ * grad, None
+
+
 class GRL(nn.Module):
     """Gradient Reversal Layer: identity in forward, reverses and scales
     the gradient by `lambda_` in backward. Used by the AR-set adversary
-    in configs C2/C4. Ref. §5.3, §8."""
+    in configs C2/C4. The RAMP weighting sits on the loss term
+    (L = L_att + λ(p)·L_env, taken literally from §6-C2), so lambda_
+    stays 1.0 in this project. Ref. §5.3, §8."""
 
     def __init__(self, lambda_: float = 1.0) -> None:
         super().__init__()
-        raise NotImplementedError("day 2/4 — §5.3, §8")
+        self.lambda_ = lambda_
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("day 2/4 — §5.3, §8")
+        return _ReverseGrad.apply(x, self.lambda_)
+
+
+def grl_lambda(epoch: int, lambda_max: float = 1.0, ramp_epochs: int = 20) -> float:
+    """The fixed §6-C2 ramp: p = min(epoch / ramp_epochs, 1),
+    λ(p) = λ_max · (2 / (1 + exp(−10 p)) − 1) — λ ≈ λ_max from
+    `ramp_epochs` on, INDEPENDENT of early stopping (otherwise C2
+    collapses into C1). λ_max is the single tuning knob (→ 0.5 if the
+    activity accuracy collapses); C4's contingency (b) delays the ramp
+    by raising ramp_epochs to 30. Ref. §6-C2, §6-C4."""
+    p = min(epoch / ramp_epochs, 1.0)
+    return lambda_max * (2.0 / (1.0 + math.exp(-10.0 * p)) - 1.0)
 
 
 def ce_with_label_smoothing(

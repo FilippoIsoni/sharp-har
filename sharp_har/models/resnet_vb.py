@@ -71,6 +71,7 @@ class ResNetVB(nn.Module):
         super().__init__()
         assert d_enc % 8 == 0, f"d_enc must be divisible by 8, got {d_enc}"
         self.d_enc = d_enc
+        self.feature_dim = d_enc  # what the heads consume; sharp_like differs (fixed by geometry)
         self.escalation_b = escalation_b
         widths = (d_enc // 8, d_enc // 4, d_enc // 2, d_enc)
 
