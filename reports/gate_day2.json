@@ -1,0 +1,16 @@
+{
+  "git_hash": "1e65c1252740601dee5f06190567fe3fc047ec3d",
+  "gpu": "Tesla T4",
+  "staging_seconds": 57.27932095527649,
+  "s_per_step_cold": 0.5614122939109802,
+  "s_per_step_warm": 0.5260169553756714,
+  "projected_c1_hours": 2.34,
+  "projected_phase_a_hours": 7.01,
+  "rule_c1_max_hours": 4,
+  "rule_phase_a_max_hours": 8,
+  "rule_staging_max_seconds": 900,
+  "c1_pass": true,
+  "phase_a_pass": true,
+  "staging_pass": true,
+  "go": true
+}

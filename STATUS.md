@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-15 · **Phase: day 1 done → day 2**
+**Last update:** 2026-07-16 · **Phase: day 2 done (gate GO) → day 3**
 
 ## Done
 
@@ -26,56 +26,45 @@
   seed 42). p1_sharp: train=22 val=5 test=74 (train S1a/b/c, test S2–S7). n_att=8
   (C, E, H, J, L, R, S, W); window-count sanity check within ~5% of the assumed hop (186/197
   train-stride, 55/58 eval-stride) — accepted, not a blocker.
+- **Day 2 implementation:** `data.py` (windowing/normalization/antennas, class-subset
+  filtering), `resnet_vb.py` (V-B, 4.66 GFLOPs / 2.93 escalated, 2.79 M params) +
+  `ActivityHead`, `ce_with_label_smoothing`, `train_run` (atomic checkpoints, auto-resume,
+  per-epoch reseed, bit-exact resume verified on synthetic data), notebook `02_smoke_gate`.
+- Day-2 hardening after the first Colab run: **resume on GPU fixed** — RNG states must be
+  restored as CPU ByteTensors, so `last.ckpt` now loads with `map_location="cpu"` and
+  `_restore_rng` coerces (the dtype-only attempt ed42717 was insufficient); `grad_clip`
+  read from the config; notebooks install requirements AFTER the clone (was a silent no-op
+  on fresh runtimes); numpy pin relaxed to `<3.0` (stock Colab env, proven by day 1).
+- **Day 2 closed — smoke gate GO** (2026-07-16, Colab T4, torch 2.11, commit `1e65c12`,
+  `reports/gate_day2.json`): staging 57 s (≤900), warm 0.526 s/step → projected C1 2.34 h
+  (≤4 h), phase A ~7.01 h (≤8 h, declared 2×-per-step approximation). End-to-end C1_smoke
+  run + real resume from the Drive checkpoint (`resumed ... at epoch 2`) verified.
+  No escalation needed; these measurements recalibrate the §8.4 budget.
 
 ## In progress
 
-- **Day 2:** `data.py` implemented and unit-tested on synthetic data reproducing every
-  real-data quirk (repetitions, dual-archive alt traces, LOS file, shape drift, held-out-domain
-  ar_set sentinel −1). Window volumes from frozen artifacts: p2_lab train 53,400 / val 1,396 /
-  test 1,700 (window, antenna) samples; p1_sharp 14,384 / 980 / 13,672. **Dataloader needs the
-  §11 cross-review before the gate run.**
-- **Day 2:** `resnet_vb.py` (V-B backbone) + `ActivityHead` implemented; measured against §5.2:
-  final map 11×50 (escalation (b): 11×25), 4.66 GFLOPs (spec ~4.7) / 2.93 escalated (spec ~2.9,
-  ratio 0.63), 2.79 M params, deterministic seed-42 init.
-- **Day 2:** `ce_with_label_smoothing` + `train_run` implemented (CE path only; SupCon/GRL/P×K/
-  sharp_like raise NotImplementedError with their day). Fixed-step epochs, warmup+cosine on the
-  full horizon, AMP, clip 1.0, atomic `last.ckpt`/`best.ckpt`/grid checkpoints with complete
-  state (optimizer+scheduler+scaler+RNG), per-epoch-reseeded shuffle. Verified on synthetic
-  data: simulated disconnect after epoch 3 + auto-resume reproduces the straight-through run
-  bit-exactly; fresh seed-42 runs give identical loss curves. `history.csv` records s_per_step
-  for the gate.
-- **Day 2:** notebook `02_smoke_gate` implemented: staging (timed, skip-if-staged), 1-epoch
-  C1_smoke from a COPY of c1_ce.yaml, real resume from the Drive checkpoint (epoch 2 = warm
-  s/step), go/no-go computed against the pre-committed §10.1 rules and written to
-  `reports/gate_day2.json`. Post-review fixes: class-subset filtering in `data.py` (C0's
-  5-class case would have been a KeyError), empty-loader guard in `train.py`, honest torch
-  floor (>=2.4) in requirements, `ckpt_root` in paths.yaml. **Day 2 code complete — the
-  gate itself now needs the Colab run + committed `reports/gate_day2.json` to close.**
-- **Day 2 (Colab run 1, 2026-07-16): resume crashed on GPU** — checkpoint loaded with
-  `map_location=cuda` put the RNG state tensors on GPU, and `torch.set_rng_state` /
-  `torch.cuda.set_rng_state_all` require CPU ByteTensors ("RNG state must be a
-  torch.ByteTensor"); the interim dtype-only fix (ed42717) did not cover the device and
-  its `.to("cuda")` on the CUDA states made restore fail in all cases. Fixed: checkpoint
-  now loads on CPU + `_restore_rng` coerces states to CPU uint8. Also fixed: notebook
-  pip cell ran before the clone (silent no-op on a fresh runtime — every run so far used
-  the stock Colab env), numpy pin relaxed to <3.0 accordingly, and `train.grad_clip` is
-  now read from the config instead of a hardcoded constant. **Smoke gate needs a clean
-  re-run (delete the stale `C1_smoke` folder on Drive first).**
+- Nothing in flight — day 3 starts next.
 
 ## Next steps (in order)
 
-1. **Day 2 (gate, next up):** implement `data.py`, `resnet_vb.py`, CE loss, `train.py` skeleton
-   (checkpoint/resume); end-to-end smoke test + throughput gate (s/step, staging time) →
-   written go/no-go, recalibrate §8.4 budget.
-2. **Day 3:** `harness.py` (test-invocation logging), `sampler.py` P×K, `augment.py`, `probe.py`,
-   feature caching; phase-A full-batch memory test (512 views).
-3. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then C4 +
-   probes + C1-lin/C2-lin.
+1. **Day 3, first GPU task:** measure the real full-batch phase-A step (512 SupCon views)
+   to replace the 2× approximation — the margin to the 8 h rule is only ~1 h; if the
+   measured projection exceeds it, escalation §5.2 before any phase-A run.
+2. **Day 3:** `harness.py` (checkpoint → CSV, test-invocation logging, C0 wrapper),
+   `sampler.py` P×K, `augment.py`, `probe.py`, feature caching.
+3. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
+   from the unmodified `c1_ce.yaml`.
+4. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then
+   C4 + probes + C1-lin/C2-lin.
 
 ## Blockers / open decisions
 
 - Team to ratify: leave-S7-out as primary rotation (small test set, ~1 campaign; person P3
   unseen — declared in §2.2).
-- `configs/c0_sharp.yaml` still has a placeholder `n_att` — the real C0 class count (paper's
-  5-class core vs the full inventory's 8) needs a deliberate decision before day 2 touches it,
-  not an assumption carried over from the pipeline doc.
+- Team to ratify: C0 class set — proposal on the table: `n_att: 5`,
+  `labels: ["E","J","L","R","W"]` (paper's core 5 classes; L = sitting still per the
+  dataset paper's letter map, C is sit-down/stand-up). `c0_sharp.yaml` gets updated only
+  after ratification.
+- Team to decide before `harness.py`: C0 evaluation fusion rule — the paper's decision
+  fusion (TMC §4.2) in the C0 wrapper vs the pipeline's §1.3 softmax averaging
+  (C1–C4 stay on softmax averaging either way).
