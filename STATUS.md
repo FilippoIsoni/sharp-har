@@ -51,6 +51,16 @@
   5-class case would have been a KeyError), empty-loader guard in `train.py`, honest torch
   floor (>=2.4) in requirements, `ckpt_root` in paths.yaml. **Day 2 code complete — the
   gate itself now needs the Colab run + committed `reports/gate_day2.json` to close.**
+- **Day 2 (Colab run 1, 2026-07-16): resume crashed on GPU** — checkpoint loaded with
+  `map_location=cuda` put the RNG state tensors on GPU, and `torch.set_rng_state` /
+  `torch.cuda.set_rng_state_all` require CPU ByteTensors ("RNG state must be a
+  torch.ByteTensor"); the interim dtype-only fix (ed42717) did not cover the device and
+  its `.to("cuda")` on the CUDA states made restore fail in all cases. Fixed: checkpoint
+  now loads on CPU + `_restore_rng` coerces states to CPU uint8. Also fixed: notebook
+  pip cell ran before the clone (silent no-op on a fresh runtime — every run so far used
+  the stock Colab env), numpy pin relaxed to <3.0 accordingly, and `train.grad_clip` is
+  now read from the config instead of a hardcoded constant. **Smoke gate needs a clean
+  re-run (delete the stale `C1_smoke` folder on Drive first).**
 
 ## Next steps (in order)
 

@@ -35,7 +35,7 @@ from .utils import get_git_hash, get_logger, set_seed, write_json
 
 logger = get_logger(__name__)
 
-GRAD_CLIP_NORM = 1.0  # §8.1, essential with GRL later
+GRAD_CLIP_NORM = 1.0  # §8.1 default when the config omits train.grad_clip; essential with GRL later
 
 
 def _epoch_seed(seed: int, epoch: int) -> int:
@@ -135,21 +135,18 @@ def _rng_states() -> dict[str, Any]:
 
 
 def _restore_rng(states: dict[str, Any]) -> None:
+    # Generator states are consumed as CPU ByteTensors — even the CUDA
+    # ones (torch.cuda.set_rng_state_all rejects CUDA tensors with "RNG
+    # state must be a torch.ByteTensor"). Coerce defensively in case the
+    # checkpoint was loaded with a non-CPU map_location.
     random.setstate(states["python"])
     np.random.set_state(states["numpy"])
-    cpu_state = states["torch"]
-    if not isinstance(cpu_state, torch.ByteTensor):
-        cpu_state = cpu_state.to(torch.uint8)
-    torch.set_rng_state(cpu_state)
+    torch.set_rng_state(states["torch"].detach().to("cpu", torch.uint8))
     if states["cuda"] is not None and torch.cuda.is_available():
         cuda_states = states["cuda"]
         if isinstance(cuda_states, torch.Tensor):
             cuda_states = [cuda_states]
-        cuda_states = [
-            s.to("cuda").to(torch.uint8) if not isinstance(s, torch.ByteTensor) or s.device.type != "cuda" else s
-            for s in cuda_states
-        ]
-        torch.cuda.set_rng_state_all(cuda_states)
+        torch.cuda.set_rng_state_all([s.detach().to("cpu", torch.uint8) for s in cuda_states])
 
 
 def _atomic_save(state: dict[str, Any], path: Path) -> None:
@@ -215,6 +212,7 @@ def train_run(
     )
 
     batch_size = cfg["train"]["batch_size"]
+    grad_clip = float(cfg["train"].get("grad_clip", GRAD_CLIP_NORM))
     epoch_steps = cfg["train"]["epoch_steps"]
     max_epochs = cfg["train"]["max_epochs"]
     patience = cfg["eval"]["patience"]
@@ -251,7 +249,11 @@ def train_run(
 
     last_path = run_dir / "last.ckpt"
     if last_path.exists():  # automatic resume, §8.2
-        ckpt = torch.load(last_path, map_location=dev, weights_only=False)
+        # map_location="cpu", NOT dev: the RNG state tensors must stay
+        # CPU ByteTensors (see _restore_rng); load_state_dict copies the
+        # weights onto the module's device and the optimizer casts its
+        # state to the params' device by itself.
+        ckpt = torch.load(last_path, map_location="cpu", weights_only=False)
         backbone.load_state_dict(ckpt["backbone"])
         head.load_state_dict(ckpt["head"])
         optimizer.load_state_dict(ckpt["optimizer"])
@@ -290,7 +292,7 @@ def train_run(
                 loss = ce_with_label_smoothing(head(backbone(x)), y, label_smoothing)
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(params, GRAD_CLIP_NORM)
+            torch.nn.utils.clip_grad_norm_(params, grad_clip)
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()

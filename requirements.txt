@@ -1,5 +1,9 @@
 # Day 1 (inventory, windowing, splits)
-numpy>=1.26,<2.0
+# numpy 2.x allowed: every real Colab run so far executed on the stock
+# runtime (numpy 2), incl. the day-1 inventory of all 408 pickled traces;
+# capping at <2.0 would force a downgrade that can break the preinstalled
+# torch/pandas stack mid-session.
+numpy>=1.26,<3.0
 pandas>=2.0,<3.0
 pyyaml>=6.0,<7.0
 tqdm>=4.66,<5.0
