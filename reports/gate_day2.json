@@ -1,19 +1,11 @@
 {
   "git_hash": "1e65c1252740601dee5f06190567fe3fc047ec3d",
   "gpu": "Tesla T4",
-<<<<<<< HEAD
   "staging_seconds": 57.27932095527649,
   "s_per_step_cold": 0.5614122939109802,
   "s_per_step_warm": 0.5260169553756714,
   "projected_c1_hours": 2.34,
   "projected_phase_a_hours": 7.01,
-=======
-  "staging_seconds": 51.74793195724487,
-  "s_per_step_cold": 0.5712154525518417,
-  "s_per_step_warm": 0.5209281605482101,
-  "projected_c1_hours": 2.32,
-  "projected_phase_a_hours": 6.95,
->>>>>>> 417834f (Add gate_day2.json (Day 2 gate results))
   "rule_c1_max_hours": 4,
   "rule_phase_a_max_hours": 8,
   "rule_staging_max_seconds": 900,

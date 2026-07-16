@@ -13,7 +13,7 @@ class SharpLike(nn.Module):
 
     def __init__(self, d_enc: int = 256) -> None:
         super().__init__()
-        raise NotImplementedError("day 2 — §5.1 (faithful to the SHARP paper)")
+        raise NotImplementedError("day 4 — §5.1 (C0 time-box, faithful to the SHARP paper)")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("day 2 — §5.1 (faithful to the SHARP paper)")
+        raise NotImplementedError("day 4 — §5.1 (C0 time-box, faithful to the SHARP paper)")
