@@ -211,6 +211,10 @@ def train_run(
     grid_epochs = set(cfg["train"].get("checkpoint_epochs") or [])
     total_steps = max_epochs * epoch_steps
 
+    assert len(datasets["train"]) >= batch_size, (
+        f"train set ({len(datasets['train'])} samples) smaller than one batch "
+        f"({batch_size}) — with drop_last the loader would be empty."
+    )
     shuffle_gen = torch.Generator()
     train_loader = DataLoader(
         datasets["train"], batch_size=batch_size, shuffle=True, generator=shuffle_gen,

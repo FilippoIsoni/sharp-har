@@ -3,5 +3,6 @@ zips:
   - "doppler_traces.zip"          # ~762 MB
   - "doppler_traces_S4_S5.zip"    # ~10 MB
 stage_dir: "/content/data"        # local unzip destination
+ckpt_root: "/content/drive/MyDrive/sharp_har_runs"  # per-run checkpoints (§8.2), never in the repo
 reports_dir: "reports"
 splits_dir: "splits"

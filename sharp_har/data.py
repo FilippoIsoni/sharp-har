@@ -112,6 +112,9 @@ class DopplerDataset(Dataset):
         labels: explicit class list, overriding the split file's. Needed
             for P1, whose split records labels as null (the C0 letter ->
             paper-class mapping is a pending deliberate decision).
+            Traces whose activity is NOT in the class list are excluded
+            (and logged): that is how C0 trains on the paper's 5-class
+            subset of the 8 recorded activities (§6-C0).
         transform: applied to the normalized (1, time, velocity) float32
             tensor; must return a tensor of the same shape.
         cache_size: LRU entries for decoded traces (None = unbounded).
@@ -182,6 +185,20 @@ class DopplerDataset(Dataset):
             f"traces without exactly antennas 0..{N_ANTENNAS - 1}: {bad_antennas} — "
             "staging inconsistent with the day-1 inventory."
         )
+
+        # Traces outside the class list are excluded, not an error: C0
+        # trains on the paper's 5-class subset of the 8 recorded
+        # activities (§6-C0). For P2 the split labels cover everything
+        # and this is a no-op.
+        dropped = [t for t in trace_ids if meta[t]["attivita"] not in self.label_to_idx]
+        if dropped:
+            logger.info(
+                "%s: excluding %d trace(s) with activities outside the class list %s: %s",
+                set_name, len(dropped), self.labels, dropped,
+            )
+            trace_ids = [t for t in trace_ids if t not in set(dropped)]
+        assert trace_ids, f"no {set_name} trace left after class filtering — wrong labels?"
+
         self._files = {t: files[t] for t in trace_ids}
         self._meta = {t: meta[t] for t in trace_ids}
 

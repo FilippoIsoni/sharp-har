@@ -43,7 +43,14 @@
   state (optimizer+scheduler+scaler+RNG), per-epoch-reseeded shuffle. Verified on synthetic
   data: simulated disconnect after epoch 3 + auto-resume reproduces the straight-through run
   bit-exactly; fresh seed-42 runs give identical loss curves. `history.csv` records s_per_step
-  for the gate. Next: notebook 02 smoke + throughput gate on Colab.
+  for the gate.
+- **Day 2:** notebook `02_smoke_gate` implemented: staging (timed, skip-if-staged), 1-epoch
+  C1_smoke from a COPY of c1_ce.yaml, real resume from the Drive checkpoint (epoch 2 = warm
+  s/step), go/no-go computed against the pre-committed §10.1 rules and written to
+  `reports/gate_day2.json`. Post-review fixes: class-subset filtering in `data.py` (C0's
+  5-class case would have been a KeyError), empty-loader guard in `train.py`, honest torch
+  floor (>=2.4) in requirements, `ckpt_root` in paths.yaml. **Day 2 code complete — the
+  gate itself now needs the Colab run + committed `reports/gate_day2.json` to close.**
 
 ## Next steps (in order)
 
