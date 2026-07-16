@@ -36,8 +36,14 @@
   §11 cross-review before the gate run.**
 - **Day 2:** `resnet_vb.py` (V-B backbone) + `ActivityHead` implemented; measured against §5.2:
   final map 11×50 (escalation (b): 11×25), 4.66 GFLOPs (spec ~4.7) / 2.93 escalated (spec ~2.9,
-  ratio 0.63), 2.79 M params, deterministic seed-42 init. Next: CE loss helper, `train.py`
-  skeleton, notebook 02 smoke + throughput gate.
+  ratio 0.63), 2.79 M params, deterministic seed-42 init.
+- **Day 2:** `ce_with_label_smoothing` + `train_run` implemented (CE path only; SupCon/GRL/P×K/
+  sharp_like raise NotImplementedError with their day). Fixed-step epochs, warmup+cosine on the
+  full horizon, AMP, clip 1.0, atomic `last.ckpt`/`best.ckpt`/grid checkpoints with complete
+  state (optimizer+scheduler+scaler+RNG), per-epoch-reseeded shuffle. Verified on synthetic
+  data: simulated disconnect after epoch 3 + auto-resume reproduces the straight-through run
+  bit-exactly; fresh seed-42 runs give identical loss curves. `history.csv` records s_per_step
+  for the gate. Next: notebook 02 smoke + throughput gate on Colab.
 
 ## Next steps (in order)
 

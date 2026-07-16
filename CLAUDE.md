@@ -35,8 +35,8 @@ There is no test suite, linter config, or build step. Verification happens throu
 
 Current status:
 - **Implemented (day 1):** `utils.py`, `inventory.py`, `windowing.py` (window enumeration + μ/σ only), `splits.py`, notebook `01_inventory_splits`.
-- **Implemented (day 2):** `data.py` (`DopplerDataset` + `build_file_index`), `models/resnet_vb.py` (V-B backbone), `ActivityHead` in `models/heads.py`.
-- **Stubs (day 2+):** `augment.py`, `sampler.py`, `losses.py`, `harness.py`, `probe.py`, `train.py`, `models/sharp_like.py`, `ProjectionHead`/`ARSetHead` in `models/heads.py`, notebooks `00`, `02`, `03`.
+- **Implemented (day 2):** `data.py` (`DopplerDataset` + `build_file_index`), `models/resnet_vb.py` (V-B backbone), `ActivityHead` in `models/heads.py`, `ce_with_label_smoothing` in `losses.py`, `train.py` (`train_run`, CE path with full checkpoint/auto-resume).
+- **Stubs (day 3+):** `augment.py`, `sampler.py`, `supcon_loss`/`GRL` in `losses.py`, `harness.py`, `probe.py`, `models/sharp_like.py`, `ProjectionHead`/`ARSetHead` in `models/heads.py`, notebooks `00`, `02`, `03`.
 
 **One config per experimental run.** `configs/c*.yaml` fully describe a run (backbone, loss, adversary, sampler, optimizer, horizon); `train.py` consumes a config, never per-run flags. `configs/paths.yaml` holds Colab paths.
 
