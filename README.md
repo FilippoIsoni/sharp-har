@@ -17,6 +17,9 @@ pipeline demands cross-review of the dataloader and full reproducibility
 (YAML config, seed, git hash) — things a notebook diff can't be reviewed
 for.
 
+`STATUS.md` is the single source for where the project currently stands
+(done / in progress / next) — read it before starting work.
+
 ## Non-negotiable principles
 
 1. **Split by trace, never by window** — split lists contain trace-ids,
@@ -29,20 +32,28 @@ for.
    (~762 MB); the repo contains only code, configs, frozen splits
    (`splits/*.json`), and reports (`reports/*.csv`).
 6. **The training architecture isn't decided until it needs to be.**
-   Day 2–9 modules are stubs with a signature and `NotImplementedError`:
-   review is possible, implementation lands at the corresponding gate.
+   Each module stays a stub (a signature and `NotImplementedError`)
+   until the corresponding pipeline gate passes — review is possible
+   before implementation lands.
 7. **Every invocation on the test set is logged**, including the
    SHARP-repo-style evaluation wrapper for C0 — the test set doesn't get
    accidentally consumed during development iterations.
 
 ## Notebook → day map
 
-| Notebook | Day | Status | Purpose |
-|---|---|---|---|
-| `00_setup_smoke.ipynb` | — | stub | Mount Drive + staging, quick environment check |
-| `01_inventory_splits.ipynb` | 1 | **implemented** | Data inventory + frozen splits (`p2_lab`, `p1_sharp`) |
-| `02_smoke_gate.ipynb` | 2 | stub | Model smoke test + throughput gate |
-| `03_train.ipynb` | 3+ | stub | Generic training runner over a `configs/*.yaml` |
+| Notebook | Day | Purpose |
+|---|---|---|
+| `00_setup_smoke.ipynb` | — | Mount Drive + staging, frozen-artifact asserts |
+| `01_inventory_splits.ipynb` | 1 | Data inventory + frozen splits (`p2_lab`, `p1_sharp`) |
+| `02_smoke_gate.ipynb` | 2 | Model smoke test + throughput gate |
+| `02b_phase_a_gate.ipynb` | 3 | SupCon phase-A full-batch throughput gate |
+| `03_train.ipynb` | 3+ | Config-driven training runner over a `configs/*.yaml` |
+| `04_probe.ipynb` | §10.2 | Val-only probe sessions (frozen-encoder linear probe, §7 diagnostics, phase-B grid selection) |
+| `05_test_final.ipynb` | §10.2 | Single §0.7 test session across all streams, once every stream has a val-selected checkpoint |
+
+Executed run notebooks are committed verbatim (with outputs) under
+`notebooks/runs/` as `YYYY-MM-DD_<config>.ipynb`; the templates above
+stay output-free on Git.
 
 ## Data: never in the repo
 
@@ -52,7 +63,7 @@ and stage them locally on Colab (`/content/data`); training reads only
 from local staging, never from Drive. Checkpoints and feature caches
 follow the same rule: never committed (see `.gitignore`).
 
-## Running Day 1
+## Getting started: day 1 (inventory + splits)
 
 ```bash
 pip install -r requirements.txt
@@ -76,7 +87,3 @@ the data already staged) and run the cells in order. The notebook:
 The produced artifacts (`splits/*.json`, `reports/*.csv`,
 `reports/name_to_arset.json`) get committed to Git: they are the frozen
 day-1 deliverables.
-
-
-
-
