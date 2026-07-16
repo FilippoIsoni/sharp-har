@@ -66,20 +66,31 @@
   - `bench.py` + notebook `02b_phase_a_gate`: real 512-view forward+backward with the real
     sampler and augmentation → `reports/gate_day3_phase_a.json`, rule ≤ 8 h (§10.1).
 
+- **Phase-A gate run (2026-07-16, Colab T4, commit `faa0cdb`):** measured 1.373 s/step at
+  full batch (512 views, real P×K + in-step augmentation) → projected 9.16 h > 8 h →
+  **NO-GO** (`reports/gate_day3_phase_a.json`, committed verbatim). Internal consistency
+  verified: per-class trace counts sum to 81 (= frozen p2_lab train), distinct-AR-sets per
+  class match the frozen contingency table, min reuse offset 400 ≥ 340. Peak memory
+  8.57/11.37 GiB → §5.2 verified: no activation checkpointing needed.
+- **Escalation (a) applied** (first rung of the pre-committed §5.2 ladder, recorded in
+  `splits/CHANGELOG.md`): phase-A epoch_steps 400 → 300 in `c3_supcon.yaml` +
+  `c4_supcon_grl.yaml` → projected 6.87 h ≤ 8 h. C1/C2 stay at 400 (their gate passed);
+  backbone untouched (escalation (b) would break shared-encoder comparability); grid
+  40/50/60 unchanged. Declared: phase-A epochs are 300 steps vs 400 in CE runs.
+
 ## In progress
 
-- **Phase-A gate run on Colab (Melissa): notebook `02b_phase_a_gate`** — margin to the
-  8 h rule was only ~1 h under the day-2 2× approximation; if the measured projection
-  exceeds it, escalation §5.2 BEFORE any phase-A run. Commit the JSON verbatim.
+- (nothing running)
 
 ## Next steps (in order)
 
-1. Commit `reports/gate_day3_phase_a.json` from the Colab run + STATUS update (GO/NO-GO).
-2. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
+1. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
    from the unmodified `c1_ce.yaml`.
-3. **Day 4: wiring** — SupCon phase-A path in `train_run` (P×K + 2 views, checkpoint grid
+2. **Day 4: wiring** — SupCon phase-A path in `train_run` (P×K + 2 views, checkpoint grid
    40/50/60), GRL/`ARSetHead` (C2/C4), `sharp_like` backbone (C0), notebooks `00`/`03`.
-4. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then
+   Day-4 note: moving augmentation into DataLoader workers should bring real phase A
+   under the 6.87 h projection (the gate's s/step is a declared upper bound).
+3. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then
    C4 + probes + C1-lin/C2-lin.
 
 ## Blockers / open decisions

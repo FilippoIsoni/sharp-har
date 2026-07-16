@@ -1,5 +1,8 @@
 # C4 — SupCon (phase A) + GRL adversary on AR-set, beta 0.5, P2-lab protocol
 # Intermediate checkpoints at epochs 40/50/60; no early stopping in phase A.
+# Escalation (a) §5.2 applied 2026-07-16 (phase-A gate NO-GO at 9.16 h,
+# reports/gate_day3_phase_a.json): epoch_steps 400 -> 300, same as C3 so
+# C3 vs C4 stay directly comparable. See splits/CHANGELOG.md.
 name: C4
 protocol: P2-lab
 split_file: splits/p2_lab.json
@@ -22,7 +25,7 @@ optim:
   warmup_epochs: 5
   scheduler: cosine
 train:
-  epoch_steps: 400
+  epoch_steps: 300  # escalation (a), §5.2 — see header comment
   max_epochs: 60
   checkpoint_epochs: [40, 50, 60]
   batch_size: 256

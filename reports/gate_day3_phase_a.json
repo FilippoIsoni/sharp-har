@@ -1,0 +1,75 @@
+{
+  "git_hash": "faa0cdbbb572ef7cc976fd2a4a2c4ab9fef1a0c7",
+  "gpu": "Tesla T4",
+  "torch": "2.11.0+cu128",
+  "config_name": "C3",
+  "p": 8,
+  "k": 32,
+  "batch_windows": 256,
+  "batch_views": 512,
+  "warmup_steps": 5,
+  "measure_steps": 20,
+  "s_per_step": 1.3734896183013916,
+  "augmentation_in_step": true,
+  "peak_mem_allocated_gb": 8.569,
+  "peak_mem_reserved_gb": 11.371,
+  "projected_phase_a_hours": 9.16,
+  "rule_phase_a_max_hours": 8.0,
+  "phase_a_pass": false,
+  "sampler_epoch_stats": {
+    "epoch": 1,
+    "num_batches": 25,
+    "per_class": {
+      "C": {
+        "mean_distinct_arsets": 4.0,
+        "mean_unique_traces": 8.0,
+        "n_reuses": 600,
+        "n_train_traces": 8
+      },
+      "E": {
+        "mean_distinct_arsets": 6.0,
+        "mean_unique_traces": 11.0,
+        "n_reuses": 525,
+        "n_train_traces": 11
+      },
+      "H": {
+        "mean_distinct_arsets": 5.0,
+        "mean_unique_traces": 8.0,
+        "n_reuses": 600,
+        "n_train_traces": 8
+      },
+      "J": {
+        "mean_distinct_arsets": 6.0,
+        "mean_unique_traces": 16.12,
+        "n_reuses": 397,
+        "n_train_traces": 17
+      },
+      "R": {
+        "mean_distinct_arsets": 6.0,
+        "mean_unique_traces": 10.0,
+        "n_reuses": 550,
+        "n_train_traces": 10
+      },
+      "S": {
+        "mean_distinct_arsets": 4.0,
+        "mean_unique_traces": 6.0,
+        "n_reuses": 650,
+        "n_train_traces": 6
+      },
+      "L": {
+        "mean_distinct_arsets": 6.0,
+        "mean_unique_traces": 11.0,
+        "n_reuses": 525,
+        "n_train_traces": 11
+      },
+      "W": {
+        "mean_distinct_arsets": 6.0,
+        "mean_unique_traces": 10.0,
+        "n_reuses": 550,
+        "n_train_traces": 10
+      }
+    },
+    "n_reuses_total": 4397,
+    "min_reuse_offset": 400
+  }
+}
