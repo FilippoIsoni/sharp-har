@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-16 · **Phase: §10.2 runs in flight (C0 rerun, C1 finishing)**
+**Last update:** 2026-07-16 · **Phase: §10.2 runs in flight (C1/C2 done, C0 rerun pending, C3 next)**
 
 ## Done
 
@@ -113,6 +113,19 @@
   only) and `05_test_final` (readiness assert → single §0.7 test session → comparison
   table/confusions → artifact copy to `reports/final/` for the final commit).
 
+- **C1 run complete** (2026-07-16, Colab GPU, full 40 epochs): best val macro-F1
+  **0.8871 @ epoch 37** (late best, on the cosine-annealed tail). Executed notebook
+  archived as `notebooks/runs/2026-07-16_c1_ce.ipynb` (commit 761c6c1 — STATUS line
+  landed one commit late, with C2's).
+- **C2 run complete** (2026-07-16, Colab GPU): best val macro-F1 **0.8415 @ epoch 13**,
+  early stop at 23/40 (patience 10) — stopped mid-schedule (lr ≈ 4.8e-4), unlike C1
+  whose best came at the annealed tail; protocol-consistent, declared. §6-C2 monitoring:
+  arset_train_acc plateaued ~0.30 at λ=1.0 (chance 1/6 ≈ 0.167) — held down but not at
+  chance; val macro-F1 did NOT collapse. Val gap to C1 is ~4.6 pts (> §0.5's ~2-pt
+  comparability band) but val is 9 traces / 1396 samples → noisy; verdict deferred to
+  the C1-lin/C2-lin probes (§7) and the single final test. Executed notebook archived
+  as `notebooks/runs/2026-07-16_c2_grl.ipynb`.
+
 ## In progress
 
 - **C0 rerun on GPU** (owner A): the first attempt is archived in
@@ -120,30 +133,28 @@
   runtime**, best val macro-F1 0.667 @ epoch 6 (val = 3 traces only → noisy selection
   metric, declared). Decision: restart fresh on GPU (delete or rename the Drive `C0`
   folder first) rather than resuming a mixed CPU/GPU run.
-- **C1 training** (owner A2): running without issues, near completion. The harness
-  head-sizing fix does NOT affect it: training never goes through `_load_end_to_end`,
-  and for `resnet_vb` feature_dim = d_enc, so old and new code build the same head.
-  On finish: archive the executed notebook under `notebooks/runs/`, then C1-lin probe.
 
 ## Next steps (in order)
 
-1. **Launch C3 (owner B) and C2 (owner C) in parallel** via notebook `03` — independent
-   of C0/C1. C3 ≈ 6.9 h (phase A: no val metric, no best.ckpt; deliverables are
-   epoch40/50/60.ckpt). C2: watch the §6-C2 monitoring panel — arset_train_acc must fall
-   as λ ramps without collapsing val macro-F1; if not, DISCUSS λ_max → 0.5, don't tune solo.
+1. **Launch C3 (owner B)** via notebook `03` — independent of C0. ≈ 6.9 h (phase A:
+   no val metric, no best.ckpt; deliverables are epoch40/50/60.ckpt).
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-3. After C1/C2 best.ckpt: **C1-lin / C2-lin probes** via notebook `04`
-   (`probe_encoder` on best.ckpt) + §7 AR-set/person diagnostics.
-4. After C3 (and C2's outcome): **phase B grid** via notebook `04` (`select_phase_b` on
+3. **C1-lin / C2-lin probes now unblocked** via notebook `04` (`probe_encoder` on each
+   best.ckpt) + §7 AR-set/person diagnostics — this is the designed answer to whether
+   C2's GRL actually scrubbed environment info (arset probe on C1 vs C2 features).
+4. **Team discussion (don't tune solo):** C2's arset_train_acc plateaued ~0.30 ≠ chance
+   with val intact — decide whether C4 inherits λ_max 1.0 as-is or the §6-C2 λ_max → 0.5
+   contingency, informed by the probe results.
+5. After C3 (and the GRL discussion): **phase B grid** via notebook `04` (`select_phase_b` on
    C3's epoch40/50/60 → `phase_b_selection.json`); only then **launch C4** (inherits any
    GRL contingency), then its phase B.
-5. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
    evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook (§0.5: <~2 points = "comparable").
-6. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
+7. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
 
 ## Blockers / open decisions
 
