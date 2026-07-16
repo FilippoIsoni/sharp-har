@@ -5,8 +5,8 @@ artifacts), §6-C2 (GRL monitoring), §9 (per-set reporting, confusion
 matrix for the primary rotation).
 
 Thin-notebook contract: notebooks only call `plot_history`,
-`plot_confusion`, `compare_runs` and display the figures; all plotting
-logic lives here.
+`plot_confusion`, `compare_runs`, `metrics_table` and display the
+output; all plotting/tabulation logic lives here.
 
 Panels are driven by the columns actually present in history.csv, so
 the same function covers every config:
@@ -22,7 +22,7 @@ the same function covers every config:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Mapping
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -209,6 +209,30 @@ def compare_runs(
     if save_path is not None:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")
     return fig
+
+
+def metrics_table(
+    metrics_csvs: Mapping[str, str | Path],
+    metric: str = "macro_f1",
+) -> pd.DataFrame:
+    """Per-AR-set comparison table from harness `*_metrics.csv` files
+    ({run label: csv path}): fused rows only (the per-antenna appendix
+    stays in the CSVs), pivoted to run × AR-set with `metric` values
+    ("macro_f1" or "accuracy"). Rows keep the insertion order of
+    `metrics_csvs`, "ALL" is the first column. Ref. §9 (never
+    aggregate-only); §0.5: differences under ~2 points are
+    "comparable", not improvements. Runs from different protocols
+    (e.g. C0 on P1) simply leave NaN in the AR-sets they don't cover."""
+    rows = []
+    for label, path in metrics_csvs.items():
+        df = pd.read_csv(path)
+        fused = df[df["aggregation"].str.startswith("fused")]
+        assert len(fused) > 0, f"{path}: no fused rows — not a harness metrics CSV?"
+        for _, r in fused.iterrows():
+            rows.append({"run": label, "ar_set": r["ar_set"], metric: float(r[metric])})
+    table = pd.DataFrame(rows).pivot(index="run", columns="ar_set", values=metric)
+    cols = ["ALL"] + sorted(c for c in table.columns if c != "ALL")
+    return table.reindex(index=list(metrics_csvs), columns=cols)
 
 
 def _demo(argv: list[str]) -> None:  # pragma: no cover

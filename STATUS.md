@@ -103,6 +103,16 @@
   added `notebooks/runs/` — executed run notebooks committed verbatim as
   `YYYY-MM-DD_<config>.ipynb` (see its README), 03 stays an output-free template.
 
+- **§10.2 tail prep while runs are in flight (code-only, verified on synthetic data):**
+  `probe.probe_encoder` (frozen encoder → cached train/val features → §5.3 probe →
+  persisted `probe_head_*.npz` + JSON summary; targets `y`/`ar_set`/`persona`, person
+  derived per sample from `AR_SET_METADATA` — no cache change) and `probe.select_phase_b`
+  (§6-C3/C4 grid → `phase_b_selection.json`, ties → earliest epoch, declared);
+  `viz.metrics_table` (run × AR-set pivot from harness metrics CSVs, fused rows only);
+  thin runner notebooks `04_probe` (phase B / C1-lin / C2-lin / §7 diagnostics — val
+  only) and `05_test_final` (readiness assert → single §0.7 test session → comparison
+  table/confusions → artifact copy to `reports/final/` for the final commit).
+
 ## In progress
 
 - **C0 rerun on GPU** (owner A): the first attempt is archived in
@@ -123,17 +133,17 @@
    as λ ramps without collapsing val macro-F1; if not, DISCUSS λ_max → 0.5, don't tune solo.
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-3. After C1/C2 best.ckpt: **C1-lin / C2-lin probes** (cache_features train+val →
-   linear_probe → fused val F1).
-4. After C3 (and C2's outcome): **phase B grid** on C3's epoch40/50/60 → val-selected
-   checkpoint; only then **launch C4** (inherits any GRL contingency), then its phase B.
-5. **Single final test session** (§0.7) once ALL streams have a val-selected checkpoint:
-   evaluate_c0 (C0), evaluate (C1/C2), evaluate_features (C3/C4 + probes); commit per-AR-set
-   CSVs + `test_invocations.jsonl`. Then `viz.compare_runs` + per-AR-set table (§0.5:
-   <~2 points = "comparable").
-6. Optional prep while runs are in flight: thin runner notebooks `04_probe` (phase B /
-   C1-lin / C2-lin) and `05_test_final` — logic already lives in the package.
-7. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
+3. After C1/C2 best.ckpt: **C1-lin / C2-lin probes** via notebook `04`
+   (`probe_encoder` on best.ckpt) + §7 AR-set/person diagnostics.
+4. After C3 (and C2's outcome): **phase B grid** via notebook `04` (`select_phase_b` on
+   C3's epoch40/50/60 → `phase_b_selection.json`); only then **launch C4** (inherits any
+   GRL contingency), then its phase B.
+5. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+   val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
+   evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
+   `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
+   the archived notebook (§0.5: <~2 points = "comparable").
+6. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
 
 ## Blockers / open decisions
 
