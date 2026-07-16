@@ -137,9 +137,19 @@ def _rng_states() -> dict[str, Any]:
 def _restore_rng(states: dict[str, Any]) -> None:
     random.setstate(states["python"])
     np.random.set_state(states["numpy"])
-    torch.set_rng_state(states["torch"])
+    cpu_state = states["torch"]
+    if not isinstance(cpu_state, torch.ByteTensor):
+        cpu_state = cpu_state.to(torch.uint8)
+    torch.set_rng_state(cpu_state)
     if states["cuda"] is not None and torch.cuda.is_available():
-        torch.cuda.set_rng_state_all(states["cuda"])
+        cuda_states = states["cuda"]
+        if isinstance(cuda_states, torch.Tensor):
+            cuda_states = [cuda_states]
+        cuda_states = [
+            s.to("cuda").to(torch.uint8) if not isinstance(s, torch.ByteTensor) or s.device.type != "cuda" else s
+            for s in cuda_states
+        ]
+        torch.cuda.set_rng_state_all(cuda_states)
 
 
 def _atomic_save(state: dict[str, Any], path: Path) -> None:
