@@ -32,9 +32,12 @@
 - **Day 2:** `data.py` implemented and unit-tested on synthetic data reproducing every
   real-data quirk (repetitions, dual-archive alt traces, LOS file, shape drift, held-out-domain
   ar_set sentinel −1). Window volumes from frozen artifacts: p2_lab train 53,400 / val 1,396 /
-  test 1,700 (window, antenna) samples; p1_sharp 14,384 / 980 / 13,672. Next: `resnet_vb.py`,
-  CE loss, `train.py` skeleton, notebook 02 smoke + throughput gate. **Dataloader needs the
+  test 1,700 (window, antenna) samples; p1_sharp 14,384 / 980 / 13,672. **Dataloader needs the
   §11 cross-review before the gate run.**
+- **Day 2:** `resnet_vb.py` (V-B backbone) + `ActivityHead` implemented; measured against §5.2:
+  final map 11×50 (escalation (b): 11×25), 4.66 GFLOPs (spec ~4.7) / 2.93 escalated (spec ~2.9,
+  ratio 0.63), 2.79 M params, deterministic seed-42 init. Next: CE loss helper, `train.py`
+  skeleton, notebook 02 smoke + throughput gate.
 
 ## Next steps (in order)
 

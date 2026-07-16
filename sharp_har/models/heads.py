@@ -1,6 +1,7 @@
-"""[STUB] Classification/projection/adversary heads. Ref. v5 pipeline
-§5.3. All parametrized on d_enc, no hardcoded numbers. Do not implement
-before the day-2 gate (§10.1).
+"""Classification/projection/adversary heads. Ref. §5.3. All
+parametrized on d_enc, no hardcoded numbers. ActivityHead is
+implemented (day 2, needed by the smoke gate); the projection and
+adversary heads stay stubbed until their day (3/4).
 """
 from __future__ import annotations
 
@@ -9,14 +10,14 @@ import torch.nn as nn
 
 
 class ActivityHead(nn.Module):
-    """Linear classifier d_enc -> n_att. Ref. §5.3."""
+    """Linear classifier d_enc -> n_att (C1/C2 end-to-end). Ref. §5.3."""
 
     def __init__(self, d_enc: int, n_att: int) -> None:
         super().__init__()
-        raise NotImplementedError("day 2 — §5.3")
+        self.fc = nn.Linear(d_enc, n_att)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("day 2 — §5.3")
+        return self.fc(x)
 
 
 class ProjectionHead(nn.Module):
