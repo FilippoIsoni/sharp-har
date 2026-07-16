@@ -241,7 +241,9 @@ def _load_end_to_end(checkpoint: str | Path) -> tuple[nn.Module, nn.Module, dict
     )
     backbone = build_backbone(cfg)
     backbone.load_state_dict(ckpt["backbone"])
-    head = ActivityHead(cfg["d_enc"], cfg["n_att"])
+    # Same head sizing as train.py: sharp_like fixes the feature size by
+    # geometry (backbone.feature_dim = 25500), d_enc only applies to V-B.
+    head = ActivityHead(getattr(backbone, "feature_dim", cfg["d_enc"]), cfg["n_att"])
     head.load_state_dict(ckpt["head"])
     return backbone, head, cfg
 

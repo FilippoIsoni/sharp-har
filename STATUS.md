@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-16 · **Phase: day 3 code done → phase-A gate run on Colab**
+**Last update:** 2026-07-16 · **Phase: day 4 code done → §10.2 runs (C0 started)**
 
 ## Done
 
@@ -96,9 +96,20 @@
   - Notebooks `00_setup_smoke` (env + staging + frozen-artifact asserts) and `03_train`
     (config-driven runner, val-only evaluation, §0.7 test warning) implemented.
 
+- **Day-4 review pass:** fixed harness `_load_end_to_end` rebuilding the head with
+  `d_enc` instead of `backbone.feature_dim` (C0/sharp_like eval would have crashed on
+  size mismatch); added `viz.py` (plot_history / plot_confusion / compare_runs, panels
+  driven by history.csv columns) with a thin "Training curves" section in notebook 03;
+  added `notebooks/runs/` — executed run notebooks committed verbatim as
+  `YYYY-MM-DD_<config>.ipynb` (see its README), 03 stays an output-free template.
+
 ## In progress
 
-- (nothing running)
+- **C0 first attempt archived** (`notebooks/runs/2026-07-16_c0_sharp.ipynb`):
+  interrupted at epoch 11/60, best val macro-F1 0.667 @ epoch 6 (val = 3 traces only →
+  noisy selection metric, declared). Ran on a **CPU runtime** (~0.56 s/step); resume
+  from Drive `last.ckpt` on a GPU runtime, or restart fresh if the team prefers a
+  clean GPU-only record.
 
 ## Next steps (in order)
 
