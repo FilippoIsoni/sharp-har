@@ -4,7 +4,12 @@ protocol: P1-sharp
 split_file: splits/p1_sharp.json
 backbone: sharp_like
 d_enc: 256
-n_att: 8
+# Paper's 5-class core (TMC Table 3), ratified 2026-07-16. Letter map from
+# the dataset paper: E=empty, J=jumping, L=sitting still (NOT C, which is
+# sit-down/stand-up), R=running, W=walking. p1_sharp.json records labels
+# as null on purpose — this list is the explicit decision (§6-C0).
+n_att: 5
+labels: ["E", "J", "L", "R", "W"]
 loss:
   type: ce
   label_smoothing: 0.0

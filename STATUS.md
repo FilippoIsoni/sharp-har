@@ -40,6 +40,15 @@
   (≤4 h), phase A ~7.01 h (≤8 h, declared 2×-per-step approximation). End-to-end C1_smoke
   run + real resume from the Drive checkpoint (`resumed ... at epoch 2`) verified.
   No escalation needed; these measurements recalibrate the §8.4 budget.
+- **Team decisions ratified (2026-07-16):**
+  - Leave-S7-out confirmed as the primary P2 rotation (small test set and unseen person P3
+    stay declared limitations, §2.2).
+  - C0 = paper's 5-class core: `c0_sharp.yaml` updated to `n_att: 5`,
+    `labels: ["E","J","L","R","W"]` (letter map from the dataset paper; L = sitting still,
+    C = sit-down/stand-up stays out).
+  - C0 test evaluation uses the paper's decision fusion (TMC §4.2) inside the harness C0
+    wrapper; C1–C4 stay on softmax averaging (§1.3). Both paths log through the same
+    test-invocation harness (§0 rule 7).
 
 ## In progress
 
@@ -50,8 +59,9 @@
 1. **Day 3, first GPU task:** measure the real full-batch phase-A step (512 SupCon views)
    to replace the 2× approximation — the margin to the 8 h rule is only ~1 h; if the
    measured projection exceeds it, escalation §5.2 before any phase-A run.
-2. **Day 3:** `harness.py` (checkpoint → CSV, test-invocation logging, C0 wrapper),
-   `sampler.py` P×K, `augment.py`, `probe.py`, feature caching.
+2. **Day 3:** `harness.py` (checkpoint → CSV, test-invocation logging; C0 wrapper with the
+   paper's decision fusion, TMC §4.2), `sampler.py` P×K, `augment.py`, `probe.py`,
+   feature caching.
 3. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
    from the unmodified `c1_ce.yaml`.
 4. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then
@@ -59,12 +69,4 @@
 
 ## Blockers / open decisions
 
-- Team to ratify: leave-S7-out as primary rotation (small test set, ~1 campaign; person P3
-  unseen — declared in §2.2).
-- Team to ratify: C0 class set — proposal on the table: `n_att: 5`,
-  `labels: ["E","J","L","R","W"]` (paper's core 5 classes; L = sitting still per the
-  dataset paper's letter map, C is sit-down/stand-up). `c0_sharp.yaml` gets updated only
-  after ratification.
-- Team to decide before `harness.py`: C0 evaluation fusion rule — the paper's decision
-  fusion (TMC §4.2) in the C0 wrapper vs the pipeline's §1.3 softmax averaging
-  (C1–C4 stay on softmax averaging either way).
+- None.
