@@ -137,6 +137,17 @@
   executed `.ipynb` — see open decision below. The first (CPU, interrupted) attempt
   stays archived as `notebooks/runs/2026-07-16_c0_sharp.ipynb`.
 
+- **C2-lin probe + C2 §7 diagnostics complete** (2026-07-16, archived as
+  `notebooks/runs/2026-07-16_c2_grl_probe.ipynb`, heads/caches on Drive under `C2/`):
+  - C2-lin (frozen encoder, §5.3 recipe on `best.ckpt`): **val macro-F1 0.8410**,
+    val accuracy 0.8023 — ≈ the end-to-end 0.8415, features linearly separable.
+  - **ar_set probe: val accuracy 0.352 vs majority baseline 0.390** (macro-F1 0.116,
+    ≈ majority-level) — environment is linearly unreadable from C2 features: first
+    half of the §9 invariance evidence. **Pending the C1 reference probe** (C1 entry
+    was commented out in the session) before calling the GRL verdict.
+  - persona probe: 0.928 = majority baseline exactly (val is 92.8% one person →
+    uninformative here; qualitative as declared, §7).
+
 ## In progress
 
 - Nothing running; next launch is C3 (see below).
@@ -148,12 +159,12 @@
    (download the executed copy at the end; do NOT "Save to GitHub" over the template).
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-3. **C1-lin / C2-lin probes now unblocked** via notebook `04` (`probe_encoder` on each
-   best.ckpt) + §7 AR-set/person diagnostics — this is the designed answer to whether
-   C2's GRL actually scrubbed environment info (arset probe on C1 vs C2 features).
-4. **Team discussion (don't tune solo):** C2's arset_train_acc plateaued ~0.30 ≠ chance
-   with val intact — decide whether C4 inherits λ_max 1.0 as-is or the §6-C2 λ_max → 0.5
-   contingency, informed by the probe results.
+3. **C1-lin probe + C1 §7 diagnostics** via notebook `04` (cell 6 with `c1_ce`, cell 8
+   with the C1 entry) — the missing reference for the GRL verdict: C2's ar_set probe is
+   already at majority level, the claim needs C1's to be clearly above it.
+4. **Team discussion (don't tune solo):** λ_max for C4 — evidence so far favors keeping
+   1.0 (C2 ar_set probe ≈ majority baseline, val macro-F1 intact at 0.84); confirm once
+   the C1 reference probe is in.
 5. After C3 (and the GRL discussion): **phase B grid** via notebook `04` (`select_phase_b` on
    C3's epoch40/50/60 → `phase_b_selection.json`); only then **launch C4** (inherits any
    GRL contingency), then its phase B.
