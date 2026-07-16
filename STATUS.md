@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-16 · **Phase: §10.2 runs in flight (C1/C2 done, C0 rerun pending, C3 next)**
+**Last update:** 2026-07-16 · **Phase: §10.2 runs (C0/C1/C2 done, C3 to launch, probes unblocked)**
 
 ## Done
 
@@ -126,18 +126,26 @@
   the C1-lin/C2-lin probes (§7) and the single final test. Executed notebook archived
   as `notebooks/runs/2026-07-16_c2_grl.ipynb`.
 
+- **C0 rerun complete on GPU** (2026-07-16, owner A): fresh start from epoch 1
+  (Drive `C0` folder cleared — epoch-1 losses differ from the CPU attempt, no mixed
+  resume), best val macro-F1 **0.8916 @ epoch 20**, early stop at 30/60 (patience 10).
+  Verified against config/split: 5-class filtering logged (train 15 traces / 9180
+  samples, val 3 / 540), constant lr 1e-4, code era `ae1746e` (same training code as
+  C1/C2). Caveat: val = 3 traces → very noisy selection (declared). **Archive
+  non-conforming for now**: record is `notebooks/runs/C0_train.ipynb.htm` (HTML
+  export) + `history_C0.csv` (CSV matches the HTML log line-by-line) instead of the
+  executed `.ipynb` — see open decision below. The first (CPU, interrupted) attempt
+  stays archived as `notebooks/runs/2026-07-16_c0_sharp.ipynb`.
+
 ## In progress
 
-- **C0 rerun on GPU** (owner A): the first attempt is archived in
-  `notebooks/runs/2026-07-16_c0_sharp.ipynb` — interrupted at epoch 11/60 on a **CPU
-  runtime**, best val macro-F1 0.667 @ epoch 6 (val = 3 traces only → noisy selection
-  metric, declared). Decision: restart fresh on GPU (delete or rename the Drive `C0`
-  folder first) rather than resuming a mixed CPU/GPU run.
+- Nothing running; next launch is C3 (see below).
 
 ## Next steps (in order)
 
-1. **Launch C3 (owner B)** via notebook `03` — independent of C0. ≈ 6.9 h (phase A:
-   no val metric, no best.ckpt; deliverables are epoch40/50/60.ckpt).
+1. **Launch C3 (owner B)** via notebook `03` — ≈ 6.9 h (phase A: no val metric, no
+   best.ckpt; deliverables are epoch40/50/60.ckpt). Use the template on `main` as-is
+   (download the executed copy at the end; do NOT "Save to GitHub" over the template).
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
 3. **C1-lin / C2-lin probes now unblocked** via notebook `04` (`probe_encoder` on each
@@ -158,4 +166,8 @@
 
 ## Blockers / open decisions
 
-- None.
+- **C0 rerun archive format** (stopgap in place): owner A asked whether the executed
+  `.ipynb` of the GPU rerun still exists. If yes → commit it as
+  `notebooks/runs/2026-07-16_c0_sharp_rerun.ipynb` and remove `C0_train.ipynb.htm` +
+  `history_C0.csv` in the same commit. If lost → keep the HTML+CSV pair as the declared
+  measured record (this line becomes the declaration). Does not block C3/probes/phase B.
