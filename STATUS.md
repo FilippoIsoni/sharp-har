@@ -132,10 +132,13 @@
   Verified against config/split: 5-class filtering logged (train 15 traces / 9180
   samples, val 3 / 540), constant lr 1e-4, code era `ae1746e` (same training code as
   C1/C2). Caveat: val = 3 traces → very noisy selection (declared). **Archive
-  non-conforming for now**: record is `notebooks/runs/C0_train.ipynb.htm` (HTML
-  export) + `history_C0.csv` (CSV matches the HTML log line-by-line) instead of the
-  executed `.ipynb` — see open decision below. The first (CPU, interrupted) attempt
-  stays archived as `notebooks/runs/2026-07-16_c0_sharp.ipynb`.
+  non-conforming for now**: record is `notebooks/runs/2026-07-16_c0_sharp.htm` (HTML
+  export) + `2026-07-16_c0_sharp_history.csv` (CSV matches the HTML log line-by-line)
+  instead of the executed `.ipynb` — see open decision below. Note: commit `ac3217d`
+  ("cleaning") renamed both AND **deleted the archived CPU-attempt notebook**
+  (`2026-07-16_c0_sharp.ipynb`, interrupted @11/60, best 0.667 @6) — against the
+  never-remove convention; recoverable from git history (`562c145`) if the team wants
+  it restored.
 
 - **C2-lin probe + C2 §7 diagnostics complete** (2026-07-16, archived as
   `notebooks/runs/2026-07-16_c2_grl_probe.ipynb`, heads/caches on Drive under `C2/`):
@@ -179,6 +182,8 @@
 
 - **C0 rerun archive format** (stopgap in place): owner A asked whether the executed
   `.ipynb` of the GPU rerun still exists. If yes → commit it as
-  `notebooks/runs/2026-07-16_c0_sharp_rerun.ipynb` and remove `C0_train.ipynb.htm` +
-  `history_C0.csv` in the same commit. If lost → keep the HTML+CSV pair as the declared
-  measured record (this line becomes the declaration). Does not block C3/probes/phase B.
+  `notebooks/runs/2026-07-16_c0_sharp.ipynb` and remove `2026-07-16_c0_sharp.htm` +
+  `2026-07-16_c0_sharp_history.csv` in the same commit. If lost → keep the HTML+CSV
+  pair as the declared measured record (this line becomes the declaration). Also
+  decide whether to restore the deleted CPU-attempt notebook (see Done note).
+  Does not block C3/probes/phase B.
