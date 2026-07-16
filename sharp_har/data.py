@@ -244,6 +244,33 @@ class DopplerDataset(Dataset):
     def n_arset(self) -> int:
         return len(self.arset_labels)
 
+    @property
+    def window_len(self) -> int:
+        """Window length in time steps (axes.time, §1.2) — also the
+        minimum |Δstart| for trace reuse in the P×K sampler (§4.2)."""
+        return self._win
+
+    @property
+    def velocity_bins(self) -> int:
+        return self._n_velocity
+
+    @property
+    def samples(self) -> list[tuple[str, int, int]]:
+        """Read-only view of the sample index, one (trace_id, antenna,
+        window_start) per sample; position = __getitem__ index. Consumed
+        by sampler.PKSampler (§4.2) — do not mutate."""
+        return self._samples
+
+    @property
+    def trace_info(self) -> dict[str, dict[str, Any]]:
+        """Per-trace metadata for samplers/harness: class index `y` and
+        AR-set NAME `ar_set` (name, not train index: defined for held-out
+        domains too, unlike the -1 sentinel in __getitem__)."""
+        return {
+            t: {"y": self.label_to_idx[m["attivita"]], "ar_set": self._arset_map[m["set_raw"]]}
+            for t, m in self._meta.items()
+        }
+
     def _load(self, path: Path) -> np.ndarray:
         """LRU-cached decode of one file-stream to float32 (halves cache
         RAM vs the on-disk float64; training runs in float32/AMP anyway)."""

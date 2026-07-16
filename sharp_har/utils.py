@@ -38,6 +38,14 @@ def set_seed(seed: int = 42) -> None:
         pass
 
 
+def epoch_seed(seed: int, epoch: int) -> int:
+    """Deterministic per-epoch reseed, seed_epoch = f(seed, epoch)
+    (§4.2, §8.2): shared by the train-loop shuffle generator and the P×K
+    sampler, so resuming from an epoch boundary reproduces the batch
+    sequence without persisting any sampler state."""
+    return seed * 100_003 + epoch
+
+
 def read_yaml(path: str | Path) -> dict[str, Any]:
     """Reads a YAML file and returns its content as a dict."""
     with open(path, "r", encoding="utf-8") as f:

@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-16 · **Phase: day 2 done (gate GO) → day 3**
+**Last update:** 2026-07-16 · **Phase: day 3 code done → phase-A gate run on Colab**
 
 ## Done
 
@@ -50,20 +50,35 @@
     wrapper; C1–C4 stay on softmax averaging (§1.3). Both paths log through the same
     test-invocation harness (§0 rule 7).
 
+- **Day 3 implementation complete** (verified end-to-end on synthetic data locally):
+  - `harness.py`: single checkpoint → CSV path (windows/metrics/confusion per AR-set +
+    aggregate, per-antenna appendix rows), softmax-averaging fusion + C0 wrapper with the
+    SHARP-repo decision fusion (majority vote, softmax-sum tie-break — verified against
+    `francescamen/SHARP` `CSI_network.py`), test-invocation JSONL logging on EVERY test
+    access (eval, C0, feature caching, probe eval), `cache_features` → npz.
+  - `sampler.py` `PKSampler`: round-robin AR-sets, without-replacement trace queues,
+    ≥340-offset reuse constraint, per-epoch deterministic reseed, §4.2 composition logging.
+  - `augment.py` (CE/SupCon-view profiles, widths rescale with axes), `supcon_loss`
+    (float32 under AMP), `ProjectionHead`, `probe.py` (frozen recipe, fused val macro-F1
+    early stopping, majority baseline), `models/build_backbone` shared factory.
+  - `train.py` in-loop val metric now computed by the harness functions (selection ≡
+    reporting); train still gates SupCon/GRL/P×K wiring to day 4.
+  - `bench.py` + notebook `02b_phase_a_gate`: real 512-view forward+backward with the real
+    sampler and augmentation → `reports/gate_day3_phase_a.json`, rule ≤ 8 h (§10.1).
+
 ## In progress
 
-- Nothing in flight — day 3 starts next.
+- **Phase-A gate run on Colab (Melissa): notebook `02b_phase_a_gate`** — margin to the
+  8 h rule was only ~1 h under the day-2 2× approximation; if the measured projection
+  exceeds it, escalation §5.2 BEFORE any phase-A run. Commit the JSON verbatim.
 
 ## Next steps (in order)
 
-1. **Day 3, first GPU task:** measure the real full-batch phase-A step (512 SupCon views)
-   to replace the 2× approximation — the margin to the 8 h rule is only ~1 h; if the
-   measured projection exceeds it, escalation §5.2 before any phase-A run.
-2. **Day 3:** `harness.py` (checkpoint → CSV, test-invocation logging; C0 wrapper with the
-   paper's decision fusion, TMC §4.2), `sampler.py` P×K, `augment.py`, `probe.py`,
-   feature caching.
-3. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
+1. Commit `reports/gate_day3_phase_a.json` from the Colab run + STATUS update (GO/NO-GO).
+2. Housekeeping: delete the scratch `C1_smoke` folder on Drive; the real C1 starts fresh
    from the unmodified `c1_ce.yaml`.
+3. **Day 4: wiring** — SupCon phase-A path in `train_run` (P×K + 2 views, checkpoint grid
+   40/50/60), GRL/`ARSetHead` (C2/C4), `sharp_like` backbone (C0), notebooks `00`/`03`.
 4. **Days 4–9 (vertical ownership, §10.2):** A → C0 + C1 · B → C3, then C4 · C → C2, then
    C4 + probes + C1-lin/C2-lin.
 

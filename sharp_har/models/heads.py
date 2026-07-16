@@ -1,12 +1,13 @@
 """Classification/projection/adversary heads. Ref. §5.3. All
-parametrized on d_enc, no hardcoded numbers. ActivityHead is
-implemented (day 2, needed by the smoke gate); the projection and
-adversary heads stay stubbed until their day (3/4).
+parametrized on d_enc, no hardcoded numbers. ActivityHead (day 2) and
+ProjectionHead (day 3, SupCon phase A) are implemented; the adversary
+head stays stubbed until day 4.
 """
 from __future__ import annotations
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class ActivityHead(nn.Module):
@@ -21,15 +22,20 @@ class ActivityHead(nn.Module):
 
 
 class ProjectionHead(nn.Module):
-    """Projection head for SupCon: d_enc -> d_enc -> 128, ReLU in
-    between, L2 normalization on output. Ref. §5.3."""
+    """Projection head for SupCon: MLP d_enc -> d_enc -> 128, ReLU in
+    between, L2-normalized output — the input losses.supcon_loss
+    expects. Discarded after phase-A pretraining (§5.3)."""
 
     def __init__(self, d_enc: int, out_dim: int = 128) -> None:
         super().__init__()
-        raise NotImplementedError("day 3 — §5.3")
+        self.net = nn.Sequential(
+            nn.Linear(d_enc, d_enc),
+            nn.ReLU(inplace=True),
+            nn.Linear(d_enc, out_dim),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("day 3 — §5.3")
+        return F.normalize(self.net(x), dim=1)
 
 
 class ARSetHead(nn.Module):

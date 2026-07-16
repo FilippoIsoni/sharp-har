@@ -36,7 +36,8 @@ There is no test suite, linter config, or build step. Verification happens throu
 Current status:
 - **Implemented (day 1):** `utils.py`, `inventory.py`, `windowing.py` (window enumeration + μ/σ only), `splits.py`, notebook `01_inventory_splits`.
 - **Implemented (day 2):** `data.py` (`DopplerDataset` + `build_file_index`), `models/resnet_vb.py` (V-B backbone), `ActivityHead` in `models/heads.py`, `ce_with_label_smoothing` in `losses.py`, `train.py` (`train_run`, CE path with full checkpoint/auto-resume), `notebooks/02_smoke_gate.ipynb` (end-to-end staging + resume + throughput gate runner).
-- **Stubs (day 3+):** `augment.py`, `sampler.py`, `supcon_loss`/`GRL` in `losses.py`, `harness.py`, `probe.py`, `models/sharp_like.py`, `ProjectionHead`/`ARSetHead` in `models/heads.py`, notebooks `00`, `03`.
+- **Implemented (day 3):** `harness.py` (fusion softmax-avg + SHARP-repo C0 decision fusion, per-AR-set metrics CSVs, test-invocation JSONL logging, `cache_features`/`evaluate_features`), `sampler.py` (`PKSampler` with reuse/offset logging), `augment.py` (CE + SupCon-view profiles), `probe.py` (frozen linear-probe recipe + majority baseline), `supcon_loss` + `ProjectionHead`, `models/__init__.build_backbone` (shared factory), `bench.py` + `notebooks/02b_phase_a_gate.ipynb` (phase-A 512-view full-batch gate).
+- **Stubs (day 4+):** `GRL` in `losses.py`, `ARSetHead` in `models/heads.py`, `models/sharp_like.py`, SupCon/GRL/P×K wiring inside `train_run`, notebooks `00`, `03`.
 
 **One config per experimental run.** `configs/c*.yaml` fully describe a run (backbone, loss, adversary, sampler, optimizer, horizon); `train.py` consumes a config, never per-run flags. `configs/paths.yaml` holds Colab paths.
 

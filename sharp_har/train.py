@@ -28,33 +28,16 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from .data import DopplerDataset
+from .harness import fuse_windows, macro_f1, predict
 from .losses import ce_with_label_smoothing
+from .models import build_backbone
 from .models.heads import ActivityHead
-from .models.resnet_vb import ResNetVB
+from .utils import epoch_seed as _epoch_seed
 from .utils import get_git_hash, get_logger, set_seed, write_json
 
 logger = get_logger(__name__)
 
 GRAD_CLIP_NORM = 1.0  # §8.1 default when the config omits train.grad_clip; essential with GRL later
-
-
-def _epoch_seed(seed: int, epoch: int) -> int:
-    """Deterministic per-epoch reseed, seed_epoch = f(seed, epoch) (§8.2):
-    resuming from an epoch boundary reproduces the batch sequence without
-    persisting sampler state."""
-    return seed * 100_003 + epoch
-
-
-def _macro_f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Macro-F1 averaged ONLY over classes present in the ground truth
-    (§9); the same definition harness.py will use for reporting."""
-    scores = []
-    for c in np.unique(y_true):
-        tp = int(((y_pred == c) & (y_true == c)).sum())
-        fp = int(((y_pred == c) & (y_true != c)).sum())
-        fn = int(((y_pred != c) & (y_true == c)).sum())
-        scores.append(2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) else 0.0)
-    return float(np.mean(scores))
 
 
 @torch.no_grad()
@@ -63,33 +46,16 @@ def _fused_val_macro_f1(
 ) -> float:
     """In-loop selection metric (§6-C1): antenna fusion by softmax
     averaging per (trace_id, window_start), then argmax, then macro-F1
-    (§1.3, §9). Selection only — reporting/test evaluation goes through
-    harness.py (day 3), never through this."""
-    backbone.eval()
-    head.eval()
-    prob_sum: dict[tuple[str, int], torch.Tensor] = {}
-    true_label: dict[tuple[str, int], int] = {}
-    for batch in loader:
-        x = batch["x"].to(device, non_blocking=True)
-        with torch.autocast(device_type=device.type, enabled=amp and device.type == "cuda"):
-            probs = torch.softmax(head(backbone(x)), dim=1).float().cpu()
-        for i in range(len(probs)):
-            key = (batch["trace_id"][i], int(batch["window_start"][i]))
-            prob_sum[key] = prob_sum.get(key, 0) + probs[i]
-            true_label[key] = int(batch["y"][i])
-    y_true = np.array([true_label[k] for k in prob_sum])
-    y_pred = np.array([int(p.argmax()) for p in prob_sum.values()])
-    return _macro_f1(y_true, y_pred)
+    (§1.3, §9) — computed by the SAME harness functions used for
+    reporting (day 3), so selection and reporting cannot drift.
+    Reporting/test evaluation still goes only through harness.evaluate."""
+    res = predict(backbone, head, loader, device, amp)
+    fused = fuse_windows(res["probs"], res["y"], res["trace_id"], res["window_start"])
+    return macro_f1(fused["y_true"], fused["y_pred"])
 
 
 def _build_model(cfg: dict[str, Any]) -> tuple[nn.Module, nn.Module]:
-    if cfg["backbone"] == "resnet_vb":
-        backbone: nn.Module = ResNetVB(d_enc=cfg["d_enc"], escalation_b=cfg.get("escalation_b", False))
-    elif cfg["backbone"] == "sharp_like":
-        raise NotImplementedError("sharp_like backbone — day 4, §5.1 (C0 time-box)")
-    else:
-        raise ValueError(f"unknown backbone {cfg['backbone']!r}")
-    return backbone, ActivityHead(cfg["d_enc"], cfg["n_att"])
+    return build_backbone(cfg), ActivityHead(cfg["d_enc"], cfg["n_att"])
 
 
 def _build_optimizer(cfg: dict[str, Any], params: Any) -> torch.optim.Optimizer:
@@ -180,11 +146,14 @@ def train_run(
     day-2 gate reads s_per_step from here).
     """
     if cfg["loss"]["type"] != "ce":
-        raise NotImplementedError(f"loss {cfg['loss']['type']!r} — day 3+ (§5.3, SupCon phase)")
+        raise NotImplementedError(
+            f"loss {cfg['loss']['type']!r} — phase-A wiring is day 4 (§6-C3/C4); "
+            "supcon_loss/ProjectionHead/PKSampler/augment are implemented (day 3)."
+        )
     if (cfg.get("adversary") or {}).get("type"):
-        raise NotImplementedError("GRL adversary — day 3/4 (§5.3, §8; C2/C4)")
+        raise NotImplementedError("GRL adversary — day 4 (§5.3, §8; C2/C4)")
     if cfg["train"]["sampler"] != "uniform":
-        raise NotImplementedError(f"sampler {cfg['train']['sampler']!r} — day 3 (§4.2, P×K)")
+        raise NotImplementedError(f"sampler {cfg['train']['sampler']!r} wiring — day 4 (§4.2, P×K)")
 
     seed = int(cfg.get("seed", 42))
     set_seed(seed)
