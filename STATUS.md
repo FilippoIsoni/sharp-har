@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0/C1/C2/C3 done; phase B next; GRL/C4 team call pending)**
+**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0–C3 done incl. C3 phase B; C4 gate diagnostic in flight)**
 
 ## Done
 
@@ -254,31 +254,45 @@
   (epochs 1-42 snapshot — the first session's notebook was not saved, declared C0-style
   exception; CSV vs part-2 dict verified to ≤3.3e-13 relative, float truncation only).
 
+- **C3 phase B complete** (2026-07-17, owner A via a Drive shortcut to owner B's `C3/`
+  — write access verified in-session; archived as `notebooks/runs/2026-07-17_phase_b_c3.ipynb`):
+  grid probed with the frozen §5.3 recipe → **selected epoch 40, val macro-F1 0.8190**
+  (epoch50 0.8150, epoch60 0.8120 — the whole grid spans 0.7 pts and one fused window
+  of val accuracy: plateau confirmed, the last 20 phase-A epochs bought nothing).
+  C3-lin sits ~6.5 pts under C1-lin (0.8835) and under C2-lin (0.8410) on the 5-class
+  val — declared-noisy, the final test decides. §7 record for C3 collected in the same
+  session with the known underpowered-val caveats: ar_set 0.289 vs baseline 0.390
+  (≈ C1's 0.287), persona 0.928 = baseline exactly — third encoder, third loss family,
+  same instrument-limited result. Only `epoch40.ckpt` + `probe_head_epoch40.npz` go to
+  the final test session.
+
 ## In progress
 
-- Nothing running; next is phase B on C3's grid checkpoints (see below).
+- **C3 domain diagnostic (the C4 gate)** running (owner A): template
+  `notebooks/diagnostics/2026-07-17_c3_supcon_domain_probe.ipynb` on the phase-B
+  feature caches — do SupCon features retain the domain CE discards?
 
 ## Next steps (in order)
 
-1. **Phase B (owner B)** via notebook `04`: `probe_encoder` on C3's epoch40/50/60 →
-   `select_phase_b` → `phase_b_selection.json` (val-only; not blocked by the GRL call).
-   First confirm epoch40/50/60.ckpt exist on Drive under `C3/`.
-2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
+1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-3. **Team discussion — the GRL premise, not λ_max.** The old item here was "pick λ_max
+2. **Team discussion — the GRL premise, not λ_max.** The old item here was "pick λ_max
    for C4"; it is moot — no λ removes information that is already absent. Evidence is
    now complete (C1 + C2 domain diagnostics in Done). What needs deciding: (a) does the
    GRL branch survive at all, (b) what §7 reports now that its key figure cannot exist,
    (c) whether C4 (~7 h) is still worth launching. Proposed framing: not "the GRL
    failed" but "on this dataset a plain CE encoder already yields features with no
    readable environment — the GRL is redundant, and we showed it".
-4. **C4 only if the branch survives step 3**, then its phase A + phase B.
-5. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+3. **C4 only if the branch survives step 2** (the in-flight C3 domain diagnostic is
+   that call's last evidence: SupCon compresses less than CE, so the GRL premise may be
+   alive for C4 even though it was dead for C2), then its phase A + phase B.
+4. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
    evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
-   the archived notebook (§0.5: <~2 points = "comparable").
-6. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
+   the archived notebook (§0.5: <~2 points = "comparable"). Whoever runs it needs
+   Editor-shortcut access to EVERY run folder (C0…C4) from one account, as done for C3.
+5. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
 
 ## Blockers / open decisions
 
