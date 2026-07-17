@@ -27,8 +27,8 @@ Sibling folder: `notebooks/diagnostics/` holds investigation sessions
 
 | Notebook | Config | Status |
 |---|---|---|
-| `c0_sharp_train.ipynb` | `c0_sharp` | GPU rerun, **resumed tail only** (log opens at epoch 31, early stop there); best val macro-F1 0.8916 @ epoch 20. Epochs 1-30 are in the `.htm` export below. Name/segmentation are an open decision in `STATUS.md`. |
-| `2026-07-16_c0_sharp.htm` + `_history.csv` | `c0_sharp` | HTML export + CSV of the GPU rerun's main session (epochs 1-30). Non-conforming archive format, declared in `STATUS.md`. |
+| `2026-07-16_c0_sharp_part1.htm` + `_part1_history.csv` | `c0_sharp` | GPU rerun, main session (epochs 1-30); best val macro-F1 0.8916 @ epoch 20. Part 1 is an HTML export + CSV instead of an executed `.ipynb` (the session notebook was not saved — declared exception). |
+| `2026-07-16_c0_sharp_part2.ipynb` | `c0_sharp` | GPU rerun, resumed tail: epoch 31 only, early stop 31/60. Its `Train run finished` dict carries the full 31-epoch history — verified identical to `_part1_history.csv` at full float precision (2026-07-17). |
 | `2026-07-16_c1_ce.ipynb` | `c1_ce` | Complete, 40/40 epochs; best val macro-F1 0.8871 @ epoch 37. |
 | `2026-07-16_c2_grl.ipynb` | `c2_grl` | Complete; best val macro-F1 0.8415 @ epoch 13, early stop 23/40. See the corrected §6-C2 monitoring reading in `STATUS.md`. |
 | `2026-07-16_c2_grl_probe.ipynb` | `c2_grl` | C2-lin probe (val macro-F1 0.8410) + §7 diagnostics. |

@@ -131,17 +131,21 @@
 
 - **C0 rerun complete on GPU** (2026-07-16, owner A): fresh start from epoch 1
   (Drive `C0` folder cleared — epoch-1 losses differ from the CPU attempt, no mixed
-  resume), best val macro-F1 **0.8916 @ epoch 20**, early stop at 30/60 (patience 10).
+  resume), best val macro-F1 **0.8916 @ epoch 20**, early stop at **31/60** (patience
+  10; an earlier STATUS line said 30/60 — the resumed tail ran epoch 31).
   Verified against config/split: 5-class filtering logged (train 15 traces / 9180
   samples, val 3 / 540), constant lr 1e-4, code era `ae1746e` (same training code as
   C1/C2). Caveat: val = 3 traces → very noisy selection (declared). **Archive
-  non-conforming for now**: record is `notebooks/runs/2026-07-16_c0_sharp.htm` (HTML
-  export) + `2026-07-16_c0_sharp_history.csv` (CSV matches the HTML log line-by-line)
-  instead of the executed `.ipynb` — see open decision below. Note: commit `ac3217d`
-  ("cleaning") renamed both AND **deleted the archived CPU-attempt notebook**
-  (`2026-07-16_c0_sharp.ipynb`, interrupted @11/60, best 0.667 @6) — against the
-  never-remove convention; recoverable from git history (`562c145`) if the team wants
-  it restored.
+  regularized 2026-07-17** per the multi-session rule: `_part1` =
+  `2026-07-16_c0_sharp_part1.htm` + `_part1_history.csv` (main session, epochs 1-30;
+  HTML export instead of an executed `.ipynb`, declared exception), `_part2` =
+  `2026-07-16_c0_sharp_part2.ipynb` (resumed tail, epoch 31; was `c0_sharp_train.ipynb`
+  from `fbb8fa0`). Consistency verified before renaming: part-2's full 31-epoch history
+  dict ≡ CSV at full float precision (30/30 rows), `.htm` log ≡ CSV line-by-line.
+  Note: commit `ac3217d` ("cleaning") had also **deleted the archived CPU-attempt
+  notebook** (`2026-07-16_c0_sharp.ipynb`, interrupted @11/60, best 0.667 @6) — against
+  the never-remove convention; recoverable from git history (`562c145`) if the team
+  wants it restored.
 
 - **C2-lin probe + C2 §7 diagnostics complete** (2026-07-16, archived as
   `notebooks/runs/2026-07-16_c2_grl_probe.ipynb`, heads/caches on Drive under `C2/`):
@@ -287,18 +291,8 @@
   is in-domain by construction, and the unseen environment (S7) is test, closed until
   §0.7's single session.
 
-- **C0 rerun archive format** — partially answered 2026-07-17, needs owner A's call.
-  An executed `.ipynb` of the GPU rerun **is already committed**, as
-  `notebooks/runs/c0_sharp_train.ipynb` (added by `fbb8fa0` "Add files via upload",
-  not listed in the `runs/README.md` index). Two things to settle:
-  - It is **not the whole run**: its log opens with `resumed C0 ... at epoch 31` and
-    covers epoch 31 only (the `Train run finished` dict does carry the full 31-epoch
-    history). So it is the resumed tail, and the `.htm` export is the record of
-    epochs 1-30 → per the `runs/README.md` multi-session rule this is a `_part2`,
-    and dropping the HTML would lose epochs 1-30.
-  - Name does not follow `YYYY-MM-DD_<config>.ipynb`.
-  Proposal (not applied): rename to `2026-07-16_c0_sharp_part2.ipynb`, keep the `.htm`
-  as `_part1` with a declaration that part 1 is an HTML export, index both.
-  Also note STATUS said "early stop at 30/60"; the log says **epoch 31**.
-  Also decide whether to restore the deleted CPU-attempt notebook (see Done note).
-  Does not block C3/probes/phase B.
+- **Restore the deleted CPU-attempt notebook?** (owner A's call, does not block
+  anything) — `2026-07-16_c0_sharp.ipynb` (interrupted @11/60) was deleted by
+  `ac3217d` against the never-remove convention; recoverable from `562c145`.
+  This is the only piece left of the "C0 rerun archive format" decision: the
+  part1/part2 rename + index + consistency check were applied 2026-07-17 (see Done).
