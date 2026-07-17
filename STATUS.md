@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0–C3 done; C4 gate CLOSED by evidence — launch-or-close team call, then the single test session)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — core closed (C0–C3 run, C4 closed without running); extensions E1′/E2′ + transductive-row prep, then the single test session** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -292,52 +292,107 @@
   concat control. C3 deliberately not replicated (declared). One pre-registered
   test row each; probes/techniques stay on seed 42.
 
+- **Team decisions ratified (2026-07-17) — recorded as pipeline doc v5.2** (header
+  block + amended §0.7, §2.2, §6, §7, §9, §10.3, §10.4):
+  - **C4 closed without running**, on evidence: the GRL has no readable domain target
+    under either loss family; expected outcome "C3 plus noise". Final table has one
+    fewer stream; no extension involves C4.
+  - **§7 ar_set probe declared underpowered** on p2_lab (structural — split-audit
+    findings); §9 invariance evidence rests on the train-feature domain diagnostics
+    (replicated on C1/C2/C3).
+  - **Transductive rows pre-registered** for the single §0.7 test session: C1+AdaBN,
+    C1+T3A, C1+both (ratified as "optional"; pinned **unconditional** in the same-day
+    refinement pass — a conditional row inside a frozen list would reopen an in-session
+    choice, §9) — C1 only, unlabeled test data, hyperparameters fixed a priori (T3A
+    paper defaults), same logging harness; **row list frozen, no additions once the
+    session is open** (§0.7 v5.2 note).
+  - **Extensions redefined (§10.3):** E1′ = seed-43 replicates of C1/C2 (as committed
+    above; seed 44 only on an explicit further call); E2′ = living-out rotation for C1
+    only + domain-diagnostic replication on its train; C3 declared single-seed.
+    Val-only NCM/kNN/concat diagnostics (seed 42, fixed hyperparameters, incl. the
+    C1⊕C1′ ensemble control) added to §7.
+- **Doc refinement pass (2026-07-17, doc/CHANGELOG-only, no code):** frozen §0.7
+  test-row list enumerated (12 rows; notebook-05 readiness assert will check it
+  hard-coded); C1+AdaBN+T3A pinned unconditional; NCM/kNN hyperparameters declared
+  (cosine on L2-normed features, kNN k=20 majority vote + mean-similarity tie-break,
+  score-mean antenna fusion); T3A pinned M=20 a priori (the paper has no single
+  default — it selects filter_K per dataset via validation, which would be tuning);
+  t-SNE subsampling fixed at 8 windows/trace; §0.5 rule-5 pointer to the E1′
+  amendment; §8.4/§11 C4 rows annotated closed (budget note: E1′+E2′ ≈ 7.1 h, same
+  order as the ~6.9 h freed by C4, well under the pre-v5.2 extension envelope);
+  stale `E2` refs → `E2′` (§0.3, §1.4); deadline recorded 2026-07-30 →
+  freeze 2026-07-28; E2′ artifacts pre-declared (`splits/p2_living.json`,
+  `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`); CHANGELOG E-label collision fixed.
+- **Transductive + viz specs pinned (2026-07-18, doc-only, §9):** T3A fixed as a
+  declared **batch variant** on cached features (single assignment with the initial
+  prototypes = L2-normed head weight rows, bias dropped as in the paper; per-class
+  top-M=20 entropy filter; adjusted prototype = renormalized mean of initial ∪
+  supports; prediction path = §1.3 unchanged → the row differs from C1 only in the
+  head). Chosen over the paper's online pass because that is order-dependent: an
+  arbitrary processing order would have to be declared and results would depend on
+  it — a free parameter with no benefit under the declared batch-deployment
+  assumption; deviation declared in the report. AdaBN fixed as reset + cumulative
+  full-pass BN re-estimation (`momentum=None`, batch 256, inventory order, weights
+  untouched) — momentum updates weight recent batches exponentially (order-
+  sensitive). t-SNE figure pinned to **train features** — the only split with all
+  6 AR-sets and both environments (val: 9 traces, 5 AR-sets, AR-3 absent; test =
+  single domain S7 → no cross-domain structure to show); same declared scope as
+  the §7 train-feature diagnostics, zero test contact.
+- **Housekeeping: scratch `C1_smoke` folder deleted from Drive** (2026-07-17). Note:
+  so far each collaborator manages run folders on their own Drive — the final test
+  session needs Editor shortcuts to EVERY run folder (incl. new `C1_s43`/`C2_s43` and
+  the S6-out folder) from one account; verify before the session day.
+
 ## In progress
 
 - **E1 replicates ready to launch:** owner A → `C2_s43`, other owner → `C1_s43`
   (notebooks in `notebooks/e1_seed_replicates/`, ~2.3 h each, parallel sessions OK).
+- Local prep for the v5.2 tail: S6-out split generation (own μ/σ, pins, asserts),
+  NCM/kNN/concat diagnostics script, T3A + AdaBN (harness addition, cross-review
+  required), `viz.plot_embeddings` (declared PCA+t-SNE recipe).
 
 ## Next steps (in order)
 
 1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-2. **Team discussion — the GRL premise, not λ_max.** The old item here was "pick λ_max
-   for C4"; it is moot — no λ removes information that is already absent. Evidence is
-   now complete (C1 + C2 domain diagnostics in Done). What needs deciding: (a) does the
-   GRL branch survive at all, (b) what §7 reports now that its key figure cannot exist,
-   (c) whether C4 (~7 h) is still worth launching. Proposed framing: not "the GRL
-   failed" but "on this dataset a plain CE encoder already yields features with no
-   readable environment — the GRL is redundant, and we showed it".
-3. **C4: launch-or-close decision** (evidence complete, see the C3 diagnostic in Done —
-   the "SupCon may retain domain" hypothesis is measured and false). If launched, it is
-   a pre-registered negative control, not a candidate improvement; if closed, the report
-   declares the branch closed on evidence and the final table has one fewer stream.
-4. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
-   val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
-   evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
-   `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
-   the archived notebook (§0.5: <~2 points = "comparable"). Whoever runs it needs
-   Editor-shortcut access to EVERY run folder (C0…C4) from one account, as done for C3.
-5. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
+2. **Launch E1 replicates** (`C1_s43`, `C2_s43`; parallel sessions, push before
+   launch). On completion: archive + STATUS line, cache `C1_s43` features (they are
+   the C1⊕C1′ concat control).
+3. **E2′ living-out:** generate + freeze the S6-out split on Git (own μ/σ, rare-cell
+   pins, blocking asserts; inspect and declare the new rotation's contingency BEFORE
+   launch), then C1 S6-out (~2.3 h, seed 42), then the domain-diagnostic replication
+   on its train features (first train with a whole non-bedroom environment).
+   Pre-declared names (§10.3): `splits/p2_living.json`, `configs/c1_ce_s6out.yaml`,
+   Drive folder `C1_s6out`.
+4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
+   priori): NCM + kNN (k=20) for C1/C2/C3, concat C1⊕C3 + control C1⊕C1′ —
+   diagnostics-style notebook, `probe.py` untouched, no test contact.
+5. **Implement + cross-review before code freeze:** T3A (numpy, on cached test
+   features — §9 pinned spec: declared batch variant, M=20; cross-review must also
+   confirm the paper's filter grid {1,5,20,50,100,∞} against the official repo),
+   AdaBN (harness addition — §9 pinned spec: reset + cumulative full-pass BN
+   re-estimation, `momentum=None`, batch 256, inventory order),
+   `viz.plot_embeddings` (train features, L2-norm, 8 windows/trace, PCA-50 →
+   t-SNE, seed 42); extend the notebook 05 template with the pre-registered
+   transductive rows + post-AdaBN feature caching + the hard-coded frozen
+   row-list readiness assert (§0.7).
+6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+   val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
+   (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
+   (unconditional, §9), plus the S6-out rotation's C1) — evaluate_c0, evaluate, evaluate_features,
+   `viz.metrics_table` + confusions; commit `reports/final/` (per-AR-set CSVs +
+   `test_invocations.jsonl`) in the same commit as the archived notebook. Editor
+   shortcuts to EVERY run folder from one account, verified beforehand.
+7. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
+   2026-07-28 (deadline 2026-07-30); PCA+t-SNE figure C1 vs C3, domain-diagnostics
+   table as the §9 key figure.
 
 ## Blockers / open decisions
 
-- **Does the GRL branch (C2/C4) survive?** — BLOCKS C4, does not block C3 or phase B.
-  Evidence is now complete (Done above): the domain is not readable from a plain CE
-  encoder (no target for the adversary), the C2 encoder is no more invariant than C1's,
-  and the GRL measurably cost both train fit (`y` control 0.893 vs 1.000) and val
-  macro-F1 (−4.6 pts). Team call, not a solo tune (§7 is the doc: a discrepancy gets
-  discussed, never silently resolved).
-  Scope note for the call (2026-07-17 split audit): on this protocol the ar_set target
-  is dominated by within-environment session distinctions (5 of 6 train domains are the
-  same bedroom; AR-1/AR-2 metadata-identical), `ambiente` ≡ AR-6 membership (one
-  living-room set, 85/15 windows), and the test environment is outside the adversary's
-  label space by LOEO construction — so retargeting the adversary to `ambiente` would
-  not rescue C4 either. The negative result is dataset/protocol-scoped, not a general
-  claim about GRL.
-- **What does §7 report?** — its ar_set probe cannot support the committed claim in
-  either direction on this split. Options: (a) declare it underpowered and rest §9 on
-  the diagnostic above, (b) re-target the probe (`ambiente`, or AR-1/AR-2 merged) — a
-  change of target vs the doc, so team call. Note the deeper limit no probe fixes: val
-  is in-domain by construction, and the unseen environment (S7) is test, closed until
-  §0.7's single session.
+- None blocking. Both former open calls closed 2026-07-17 by the v5.2 team decisions
+  (GRL branch: C4 never runs; §7: underpowered, §9 rests on the domain diagnostics).
+- Minor, non-blocking: seed 44 was floated in planning but the committed E1
+  amendment deliberately stops at one replicate per config (n=2 → observed range,
+  no significance claims) — adding s44 would be a new explicit call. (The former
+  note (ii), the CHANGELOG E-label collision, was fixed in the 2026-07-17 doc
+  refinement pass.)

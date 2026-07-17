@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-WiFi CSI Human Activity Recognition on the SHARP Doppler dataset, evaluated under a Leave-One-Environment-Out protocol. Five experimental configurations (C0 reproduction, C1 CE baseline, C2 CE+GRL, C3 SupCon, C4 SupCon+GRL) share one backbone, one data pipeline, and one evaluation harness.
+WiFi CSI Human Activity Recognition on the SHARP Doppler dataset, evaluated under a Leave-One-Environment-Out protocol. Five experimental configurations (C0 reproduction, C1 CE baseline, C2 CE+GRL, C3 SupCon, C4 SupCon+GRL) share one backbone, one data pipeline, and one evaluation harness. **C4 was closed on evidence without being run** (2026-07-17, pipeline doc v5.2: the GRL has no readable domain target under either loss family); the v5.2 tail adds seed-43 replicates, a living-out rotation for C1, val-only NCM/kNN/concat diagnostics, and pre-registered transductive test rows (AdaBN/T3A on C1).
 
 **Dataset reality (v5.1 errata):** the shared Drive copy holds the SHARP TMC dataset — sets S1–S7 (internally named AR-1…AR-7, 1:1), 12 campaigns (S1a/b/c, S2a/b, S3a, S4a/b, S5a, S6a/b, S7a), 3 environments (bedroom S1–S5, living room S6, laboratory S7), 3 persons, identical hardware everywhere. AR-8/AR-9 do not exist. Primary P2 rotation = leave-S7-out (`splits/p2_lab.json`); C0 uses the paper's 5-class set. Training data comes exclusively from the shared Drive folder — never re-download from IEEE DataPort.
 

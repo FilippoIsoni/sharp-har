@@ -46,8 +46,9 @@ themselves are never touched.
   empirical calibration of the §0.5 band (reported as an observed
   range, no significance claims from n=2); (ii) robustness of the C2
   findings to initialization (adversary at the train majority floor,
-  val cost vs C1); (iii) C1_s43's cached features double as the E2
-  concat ensemble control C1⊕C1′.
+  val cost vs C1); (iii) C1_s43's cached features double as the §7
+  concat ensemble control C1⊕C1′ (label fixed 2026-07-17: originally
+  written "E2", colliding with the E2′ living-out label of §10.3).
 - **Budget:** 2 × ~2.3 h ≈ 4.6 h ≤ the freed C4 budget (§8.4 amendment,
   net negative). Each replicate adds ONE pre-registered test row
   (mean±range cell with its seed-42 sibling in the report); probes,
