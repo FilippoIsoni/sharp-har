@@ -57,3 +57,18 @@ themselves are never touched.
   replicated across encoders/machines; the flat 40/50/60 grid — 0.7 pt
   span — already evidences representation stability; declared
   single-seed in the report).
+
+## 2026-07-18 — E1 addendum: pre-registered seed-44 trigger rule (+ label fix)
+
+- **Seed-44 rule (pre-registered before reading the s43 results):**
+  `C1_s44`/`C2_s44` are launched ONLY if the s43 results make the
+  headline claim ambiguous — i.e. a seed twin lands outside the §0.5
+  ~2-point band from its seed-42 sibling (val macro-F1, fused), or the
+  C1–C2 gap crosses the band. Decision due by table-freeze day and its
+  outcome recorded in STATUS either way; otherwise E1 stays at n=2,
+  declared. Configs may be prepared in advance; a launch requires the
+  trigger, not spare capacity.
+- **Label fix:** the 2026-07-17 entry above says C1_s43's features
+  "double as the E2 concat ensemble control" — read "concat ensemble
+  control C1⊕C1′ (§7 v5.2 val-only diagnostics)". "E2′" in pipeline
+  §10.3 is the living-out rotation, unrelated to the concat control.

@@ -345,8 +345,13 @@
 
 ## In progress
 
-- **E1 replicates ready to launch:** owner A → `C2_s43`, other owner → `C1_s43`
-  (notebooks in `notebooks/e1_seed_replicates/`, ~2.3 h each, parallel sessions OK).
+- **E1 replicates in flight (launched 2026-07-18):** owner A → `C2_s43`, other
+  owner → `C1_s43` (notebooks in `notebooks/e1_seed_replicates/`, ~2.3 h each,
+  parallel sessions OK). On completion: verbatim archive of both executed
+  notebooks + Done line with best val macro-F1 (same commit); apply the
+  pre-registered s44 trigger rule (`splits/CHANGELOG.md` 2026-07-18) and record
+  the outcome; cache `C1_s43` train+val features (input of the C1⊕C1′ concat
+  control). No solo s43 probes — probes/diagnostics stay on seed 42 (declared).
 - Local prep for the v5.2 tail: S6-out split generation (own μ/σ, pins, asserts),
   NCM/kNN/concat diagnostics script, T3A + AdaBN (harness addition, cross-review
   required), `viz.plot_embeddings` (declared PCA+t-SNE recipe).
@@ -355,9 +360,9 @@
 
 1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-2. **Launch E1 replicates** (`C1_s43`, `C2_s43`; parallel sessions, push before
-   launch). On completion: archive + STATUS line, cache `C1_s43` features (they are
-   the C1⊕C1′ concat control).
+2. **E1 tail:** archive both executed s43 notebooks verbatim + STATUS line (same
+   commit); apply the s44 trigger rule (CHANGELOG 2026-07-18) against the seed-42
+   siblings and record the outcome; cache `C1_s43` features (C1⊕C1′ control input).
 3. **E2′ living-out:** generate + freeze the S6-out split on Git (own μ/σ, rare-cell
    pins, blocking asserts; inspect and declare the new rotation's contingency BEFORE
    launch), then C1 S6-out (~2.3 h, seed 42), then the domain-diagnostic replication
