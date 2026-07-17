@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0/C1/C2 done, C3 to launch; GRL evidence complete — team call pending)**
+**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0/C1/C2/C3 done; phase B next; GRL/C4 team call pending)**
 
 ## Done
 
@@ -241,15 +241,28 @@
     (1 leftover trace after rare-cell pinning → round(0.15·1) = 0). Selection noise on
     top of the declared in-domain-only limitation.
 
+- **C3 (SupCon phase A) run complete** (2026-07-17, Colab T4, 60/60 epochs over three
+  sessions — epochs 1-25, 26-42, 43-60 — with two clean auto-resumes): train loss
+  5.914 → 4.430, smooth decrease, plateaued on the annealed tail (last ~6 epochs within
+  ±0.004). Throughput 1.03-1.05 s/step vs the gate's 1.373 projection → ≈5.5 h GPU total,
+  well inside the ≤8 h budget. §4.2 sampler invariants hold in every logged epoch
+  (300 batches, min reuse offset 400 ≥ 340). No in-loop selection by design (§6-C3,
+  `best_val_macro_f1` = -1): deliverables are **epoch40/50/60.ckpt** on Drive under `C3/`
+  (grid epochs all completed; confirm the three files exist before phase B). Archived as
+  `notebooks/runs/2026-07-17_c3_supcon_part1.ipynb` (epochs 26-42), `_part2.ipynb`
+  (epochs 43-60; full 60-epoch history in its final dict) + `_part1_history.csv`
+  (epochs 1-42 snapshot — the first session's notebook was not saved, declared C0-style
+  exception; CSV vs part-2 dict verified to ≤3.3e-13 relative, float truncation only).
+
 ## In progress
 
-- Currently running C3 (see below).
+- Nothing running; next is phase B on C3's grid checkpoints (see below).
 
 ## Next steps (in order)
 
-1. **Launch C3 (owner B)** via notebook `03` — ≈ 6.9 h (phase A: no val metric, no
-   best.ckpt; deliverables are epoch40/50/60.ckpt). Use the template on `main` as-is
-   (download the executed copy at the end; do NOT "Save to GitHub" over the template).
+1. **Phase B (owner B)** via notebook `04`: `probe_encoder` on C3's epoch40/50/60 →
+   `select_phase_b` → `phase_b_selection.json` (val-only; not blocked by the GRL call).
+   First confirm epoch40/50/60.ckpt exist on Drive under `C3/`.
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
 3. **Team discussion — the GRL premise, not λ_max.** The old item here was "pick λ_max
@@ -259,9 +272,7 @@
    (c) whether C4 (~7 h) is still worth launching. Proposed framing: not "the GRL
    failed" but "on this dataset a plain CE encoder already yields features with no
    readable environment — the GRL is redundant, and we showed it".
-4. After C3 (and the GRL decision): **phase B grid** via notebook `04` (`select_phase_b`
-   on C3's epoch40/50/60 → `phase_b_selection.json`); **C4 only if the branch survives
-   step 3**, then its phase B.
+4. **C4 only if the branch survives step 3**, then its phase A + phase B.
 5. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
    evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
