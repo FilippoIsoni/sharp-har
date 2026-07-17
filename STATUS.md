@@ -243,7 +243,7 @@
 
 ## In progress
 
-- Nothing running; next launch is C3 (see below).
+- Currently running C3 (see below).
 
 ## Next steps (in order)
 
@@ -290,9 +290,3 @@
   change of target vs the doc, so team call. Note the deeper limit no probe fixes: val
   is in-domain by construction, and the unseen environment (S7) is test, closed until
   §0.7's single session.
-
-- **Restore the deleted CPU-attempt notebook?** (owner A's call, does not block
-  anything) — `2026-07-16_c0_sharp.ipynb` (interrupted @11/60) was deleted by
-  `ac3217d` against the never-remove convention; recoverable from `562c145`.
-  This is the only piece left of the "C0 rerun archive format" decision: the
-  part1/part2 rename + index + consistency check were applied 2026-07-17 (see Done).
