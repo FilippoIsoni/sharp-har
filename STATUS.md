@@ -220,6 +220,23 @@
   - Evidence for the GRL team call is now complete and symmetric: no readable domain in
     CE features, no extra invariance in GRL features, measured fit + val cost.
 
+- **Split audit complete** (2026-07-17, code-only reread of frozen artifacts + split/data/
+  harness code — no run needed): `p2_lab.json` is **correct**. Verified programmatically:
+  train/val/test trace-disjoint (81/9/11; 101 traces × 4 antennas + excluded LOS = the 408
+  inventoried streams), windows never cross traces, all 4 antennas of a trace on one side,
+  μ/σ train-only, test = all of AR-7, and the dual-archive duplicates (`S4a_L`/`S4a_Lalt`,
+  `S5a_L`/`S5a_Lalt`) all sit in train — no quasi-leakage. Two criticalities found,
+  neither invalidating C1/C2 (identical split, metric and protocol → the contrast stands):
+  - **val contains no C, E, S traces** (5 of 8 classes present; 4/9 traces are J):
+    checkpoint selection is blind to 3 classes, and val macro-F1 is a **5-class** number
+    (harness `macro_f1` averages over classes present in y_true, declared via the
+    `absent_classes` CSV column) — NOT scale-comparable to the 8-class test macro-F1;
+    expect test to read lower for this reason alone.
+  - val is small and skewed by construction: 9 traces / 349 fused windows (H = one trace,
+    25 windows, yet 1/5 of the macro-F1); AR-3's absence is deterministic, not bad luck
+    (1 leftover trace after rare-cell pinning → round(0.15·1) = 0). Selection noise on
+    top of the declared in-domain-only limitation.
+
 ## In progress
 
 - Nothing running; next launch is C3 (see below).
@@ -256,6 +273,13 @@
   and the GRL measurably cost both train fit (`y` control 0.893 vs 1.000) and val
   macro-F1 (−4.6 pts). Team call, not a solo tune (§7 is the doc: a discrepancy gets
   discussed, never silently resolved).
+  Scope note for the call (2026-07-17 split audit): on this protocol the ar_set target
+  is dominated by within-environment session distinctions (5 of 6 train domains are the
+  same bedroom; AR-1/AR-2 metadata-identical), `ambiente` ≡ AR-6 membership (one
+  living-room set, 85/15 windows), and the test environment is outside the adversary's
+  label space by LOEO construction — so retargeting the adversary to `ambiente` would
+  not rescue C4 either. The negative result is dataset/protocol-scoped, not a general
+  claim about GRL.
 - **What does §7 report?** — its ar_set probe cannot support the committed claim in
   either direction on this split. Options: (a) declare it underpowered and rest §9 on
   the diagnostic above, (b) re-target the probe (`ambiente`, or AR-1/AR-2 merged) — a
