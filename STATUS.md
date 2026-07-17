@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0–C3 done incl. C3 phase B; C4 gate diagnostic in flight)**
+**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0–C3 done; C4 gate CLOSED by evidence — launch-or-close team call, then the single test session)**
 
 ## Done
 
@@ -266,11 +266,27 @@
   same instrument-limited result. Only `epoch40.ckpt` + `probe_head_epoch40.npz` go to
   the final test session.
 
+- **C3 domain diagnostic complete — the C4 gate closes** (2026-07-17, owner A,
+  executed copy committed over the template in `notebooks/diagnostics/`, commit
+  `1124a12` — archived without this STATUS/README line, added right after):
+  - Control `y` = 0.995/0.993/0.996 over epoch40/50/60 (SupCon never trained a
+    classifier, yet activities are ~99.5% linearly separable on seen traces).
+  - **Every domain target at or below its majority baseline on all three grid
+    checkpoints**; `ambiente`/`persona` are the exact constant predictors (0.4606 /
+    0.4500 — third replication of the instrument across machines and encoders).
+  - No maturity trend 40→60: the compression hypothesis does not hold for domain.
+    Structural reading: P×K deliberately mixes AR-sets within each class and SupCon
+    pulls same-class views together, so domain suppression is built into the phase-A
+    objective itself — no adversary needed.
+  - **Consequence: the GRL has no target under either loss family (CE or SupCon).**
+    C4's expected outcome is "C3 plus noise" (C2 precedent: or worse). The remaining
+    team call is between skipping C4 (~7 h saved, negative result reported with
+    complete evidence) and running it as a pre-registered negative control — there is
+    no remaining scenario in which C4 is promising.
+
 ## In progress
 
-- **C3 domain diagnostic (the C4 gate)** running (owner A): template
-  `notebooks/diagnostics/2026-07-17_c3_supcon_domain_probe.ipynb` on the phase-B
-  feature caches — do SupCon features retain the domain CE discards?
+- Nothing running; next is the GRL/C4 team decision (evidence complete).
 
 ## Next steps (in order)
 
@@ -283,9 +299,10 @@
    (c) whether C4 (~7 h) is still worth launching. Proposed framing: not "the GRL
    failed" but "on this dataset a plain CE encoder already yields features with no
    readable environment — the GRL is redundant, and we showed it".
-3. **C4 only if the branch survives step 2** (the in-flight C3 domain diagnostic is
-   that call's last evidence: SupCon compresses less than CE, so the GRL premise may be
-   alive for C4 even though it was dead for C2), then its phase A + phase B.
+3. **C4: launch-or-close decision** (evidence complete, see the C3 diagnostic in Done —
+   the "SupCon may retain domain" hypothesis is measured and false). If launched, it is
+   a pre-registered negative control, not a candidate improvement; if closed, the report
+   declares the branch closed on evidence and the final table has one fewer stream.
 4. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
    evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
