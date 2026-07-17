@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0/C1/C2 done, C3 to launch; §7/GRL premise under review)**
+**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0/C1/C2 done, C3 to launch; GRL evidence complete — team call pending)**
 
 ## Done
 
@@ -206,6 +206,20 @@
     AR-set** (AR-6 living room; AR-1…AR-5 all bedroom). There is no second living-room
     set to generalise to, so environment-invariance is barely definable on this train.
 
+- **Confirmatory domain diagnostic on C2 train features complete** (2026-07-17, archived
+  as `notebooks/diagnostics/2026-07-17_c2_grl_domain_probe.ipynb` — identical code to the
+  C1 session, run where only C2's cache was staged):
+  - Every domain target sits at its majority baseline on C2 too (ar_set −0.030,
+    direct_path +0.008, monitor +0.015; `ambiente`/`persona` are the exact same constant
+    predictors as C1) → the adversary removed nothing; on macro-F1 the domain is even
+    slightly *more* readable than C1 (ar_set 0.144 vs 0.066) — noise, but in the
+    opposite direction to the GRL's purpose.
+  - **`y` control: 0.893 on traces the encoder trained on, vs C1's 1.000** → the GRL
+    cost train fit itself, not just transfer (memorization gap: C2 0.893→0.8415 val,
+    C1 1.000→0.8835 val). Answers the fit-vs-transfer question left open above.
+  - Evidence for the GRL team call is now complete and symmetric: no readable domain in
+    CE features, no extra invariance in GRL features, measured fit + val cost.
+
 ## In progress
 
 - Nothing running; next launch is C3 (see below).
@@ -218,32 +232,30 @@
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
 3. **Team discussion — the GRL premise, not λ_max.** The old item here was "pick λ_max
-   for C4"; it is moot — no λ removes information that is already absent. What needs
-   deciding: (a) does the GRL branch survive at all, (b) what §7 reports now that its
-   key figure cannot exist, (c) whether C4 (~7 h) is still worth launching. Proposed
-   framing: not "the GRL failed" but "on this dataset a plain CE encoder already yields
-   features with no readable environment — the GRL is redundant, and we showed it".
-4. **Confirmatory only:** same domain diagnostic on C2's cached train features (owner B
-   has them; the inner split is deterministic from the frozen trace list, so nothing
-   needs coordinating). It cannot overturn the verdict — C1 without any adversary
-   already shows the domain unreadable — but C2's `y` control would tell whether the
-   GRL cost transfer only, or train fit too.
-5. After C3 (and the GRL decision): **phase B grid** via notebook `04` (`select_phase_b`
+   for C4"; it is moot — no λ removes information that is already absent. Evidence is
+   now complete (C1 + C2 domain diagnostics in Done). What needs deciding: (a) does the
+   GRL branch survive at all, (b) what §7 reports now that its key figure cannot exist,
+   (c) whether C4 (~7 h) is still worth launching. Proposed framing: not "the GRL
+   failed" but "on this dataset a plain CE encoder already yields features with no
+   readable environment — the GRL is redundant, and we showed it".
+4. After C3 (and the GRL decision): **phase B grid** via notebook `04` (`select_phase_b`
    on C3's epoch40/50/60 → `phase_b_selection.json`); **C4 only if the branch survives
    step 3**, then its phase B.
-6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+5. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
    evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook (§0.5: <~2 points = "comparable").
-7. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
+6. Housekeeping: delete the scratch `C1_smoke` folder on Drive (still pending).
 
 ## Blockers / open decisions
 
 - **Does the GRL branch (C2/C4) survive?** — BLOCKS C4, does not block C3 or phase B.
-  Evidence is in Done above: the domain is not readable from a plain CE encoder, so the
-  adversary has no target; C2 measurably paid for it. Team call, not a solo tune (§7 is
-  the doc: a discrepancy gets discussed, never silently resolved).
+  Evidence is now complete (Done above): the domain is not readable from a plain CE
+  encoder (no target for the adversary), the C2 encoder is no more invariant than C1's,
+  and the GRL measurably cost both train fit (`y` control 0.893 vs 1.000) and val
+  macro-F1 (−4.6 pts). Team call, not a solo tune (§7 is the doc: a discrepancy gets
+  discussed, never silently resolved).
 - **What does §7 report?** — its ar_set probe cannot support the committed claim in
   either direction on this split. Options: (a) declare it underpowered and rest §9 on
   the diagnostic above, (b) re-target the probe (`ambiente`, or AR-1/AR-2 merged) — a
