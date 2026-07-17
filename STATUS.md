@@ -284,9 +284,18 @@
     complete evidence) and running it as a pre-registered negative control — there is
     no remaining scenario in which C4 is promising.
 
+- **E1 setup committed (2026-07-17):** rule-5 amendment recorded in
+  `splits/CHANGELOG.md`; configs `c1_ce_s43`/`c2_grl_s43` (byte-identical to the
+  seed-42 originals except name/seed) + pre-configured runner notebooks in
+  `notebooks/e1_seed_replicates/` (RUN pinned, GPU sanity cell). Measures the §0.5
+  seed noise floor + C2-findings robustness; C1_s43 features double as the E2
+  concat control. C3 deliberately not replicated (declared). One pre-registered
+  test row each; probes/techniques stay on seed 42.
+
 ## In progress
 
-- Nothing running; next is the GRL/C4 team decision (evidence complete).
+- **E1 replicates ready to launch:** owner A → `C2_s43`, other owner → `C1_s43`
+  (notebooks in `notebooks/e1_seed_replicates/`, ~2.3 h each, parallel sessions OK).
 
 ## Next steps (in order)
 

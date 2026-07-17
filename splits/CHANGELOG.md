@@ -29,3 +29,30 @@ themselves are never touched.
   phase A should land under the 6.87 h projection.
 - **Memory (§5.2 verification):** peak 8.57 GiB allocated / 11.37 GiB
   reserved on T4 — activation checkpointing NOT needed.
+
+## 2026-07-17 — E1: seed replicates of C1 and C2 (amendment to §0 rule 5)
+
+- **Trigger:** the C4 gate closed on evidence (GRL has no target under
+  either loss family — see STATUS 2026-07-17), freeing C4's ~7 h budget.
+  Every comparison in the final table leans on the §0.5 "~2 points =
+  comparable" band, which was assumed, never measured.
+- **Action:** rule 5 ("single seed 42 everywhere") amended — seed 42
+  stays the primary seed for every stream and every technique/probe;
+  two pre-registered replicates `C1_s43` / `C2_s43` are added
+  (`configs/c1_ce_s43.yaml`, `configs/c2_grl_s43.yaml`, byte-identical
+  to the originals except `name`/`seed`; runner notebooks in
+  `notebooks/e1_seed_replicates/`).
+- **What they measure:** (i) the pipeline's seed noise floor — the
+  empirical calibration of the §0.5 band (reported as an observed
+  range, no significance claims from n=2); (ii) robustness of the C2
+  findings to initialization (adversary at the train majority floor,
+  val cost vs C1); (iii) C1_s43's cached features double as the E2
+  concat ensemble control C1⊕C1′.
+- **Budget:** 2 × ~2.3 h ≈ 4.6 h ≤ the freed C4 budget (§8.4 amendment,
+  net negative). Each replicate adds ONE pre-registered test row
+  (mean±range cell with its seed-42 sibling in the report); probes,
+  diagnostics and techniques stay on seed 42 only.
+- **Not replicated:** C3 (3× the cost; its findings are already
+  replicated across encoders/machines; the flat 40/50/60 grid — 0.7 pt
+  span — already evidences representation stability; declared
+  single-seed in the report).
