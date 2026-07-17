@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-16 · **Phase: §10.2 runs (C0/C1/C2 done, C3 to launch, probes unblocked)**
+**Last update:** 2026-07-17 · **Phase: §10.2 runs (C0/C1/C2 done, C3 to launch; §7/GRL premise under review)**
 
 ## Done
 
@@ -119,12 +119,15 @@
   landed one commit late, with C2's).
 - **C2 run complete** (2026-07-16, Colab GPU): best val macro-F1 **0.8415 @ epoch 13**,
   early stop at 23/40 (patience 10) — stopped mid-schedule (lr ≈ 4.8e-4), unlike C1
-  whose best came at the annealed tail; protocol-consistent, declared. §6-C2 monitoring:
-  arset_train_acc plateaued ~0.30 at λ=1.0 (chance 1/6 ≈ 0.167) — held down but not at
-  chance; val macro-F1 did NOT collapse. Val gap to C1 is ~4.6 pts (> §0.5's ~2-pt
-  comparability band) but val is 9 traces / 1396 samples → noisy; verdict deferred to
-  the C1-lin/C2-lin probes (§7) and the single final test. Executed notebook archived
-  as `notebooks/runs/2026-07-16_c2_grl.ipynb`.
+  whose best came at the annealed tail; protocol-consistent, declared. Val gap to C1 is
+  ~4.6 pts (> §0.5's ~2-pt comparability band). Executed notebook archived as
+  `notebooks/runs/2026-07-16_c2_grl.ipynb`.
+  **§6-C2 monitoring — reading CORRECTED 2026-07-17:** arset_train_acc sat at ~0.30 for
+  the whole run. The original line read this against 1/6 ≈ 0.167 ("held down but not at
+  chance"); the reference is the **majority baseline = 0.2969** (AR-1's share of train
+  windows), i.e. 0.30 IS the floor — the adversary only ever learned the class prior.
+  It was already there at epoch 1-2 with λ still at 0.25-0.46, so it never became a
+  discriminator at all. Same 1/n-vs-majority error the `probe.py` docstring warns against.
 
 - **C0 rerun complete on GPU** (2026-07-16, owner A): fresh start from epoch 1
   (Drive `C0` folder cleared — epoch-1 losses differ from the CPU attempt, no mixed
@@ -144,12 +147,64 @@
   `notebooks/runs/2026-07-16_c2_grl_probe.ipynb`, heads/caches on Drive under `C2/`):
   - C2-lin (frozen encoder, §5.3 recipe on `best.ckpt`): **val macro-F1 0.8410**,
     val accuracy 0.8023 — ≈ the end-to-end 0.8415, features linearly separable.
-  - **ar_set probe: val accuracy 0.352 vs majority baseline 0.390** (macro-F1 0.116,
-    ≈ majority-level) — environment is linearly unreadable from C2 features: first
-    half of the §9 invariance evidence. **Pending the C1 reference probe** (C1 entry
-    was commented out in the session) before calling the GRL verdict.
+  - **ar_set probe: val accuracy 0.352 vs majority baseline 0.390** (macro-F1 0.116).
+    Originally recorded as "first half of the §9 invariance evidence" — **that reading
+    is withdrawn (2026-07-17)**: C1, with no adversary at all, scores 0.287 on the same
+    probe, i.e. lower. The contrast the §9 claim needs does not exist.
   - persona probe: 0.928 = majority baseline exactly (val is 92.8% one person →
     uninformative here; qualitative as declared, §7).
+
+- **C1-lin probe + C1 §7 diagnostics complete** (2026-07-16, heads/caches on Drive
+  under `C1/`): C1-lin **val macro-F1 0.8835** (≈ the end-to-end 0.8871 → features
+  linearly separable, encoder/cache confirmed correct); **ar_set 0.287 vs majority
+  baseline 0.390**; persona 0.928 = baseline exactly. Executed notebook archived as
+  `notebooks/runs/2026-07-17_c1_ce_probe.ipynb` (commit `79e8034`).
+
+- **§7 ar_set probe is structurally unfit on the p2_lab val split** (found 2026-07-17,
+  inspectable from the frozen artifacts, no run needed):
+  - val = 9 traces over 5 AR-sets (**AR-3 absent**, AR-5 has 1 trace) → effective n is
+    9, not 349 windows: 0.287 / 0.352 / 0.390 are the same number statistically;
+  - **AR-1 and AR-2 are identical in every `AR_SET_METADATA` attribute** (P1, bedroom,
+    M1, LOS — they differ only by campaign), and together they are 55% of val windows.
+    The probe is asked to separate two physically indistinguishable sessions, so the
+    majority baseline is unreachable by construction — hence the below-baseline scores.
+  - Consequence: the §7 "grafico chiave" cannot be produced as designed, in either
+    direction. Not a bug; the doc's expectation ("alto in C1/C3, verso la baseline in
+    C2/C4") is contradicted by the data.
+
+- **Domain-readability diagnostic on C1 train features** (2026-07-17, archived as
+  `notebooks/diagnostics/2026-07-17_c1_ce_domain_probe.ipynb` — a new folder for
+  investigation sessions, see its README; imports the frozen §5.3 recipe, does NOT
+  modify `probe.py`;
+  train features only, no val selection, no test contact §0.7). Inner **trace-disjoint**
+  stratified split of the 81 train traces (55 fit / 26 eval, all 6 AR-sets present),
+  probed for several targets against each target's own majority baseline:
+
+  | target | acc | baseline | delta |
+  |---|---|---|---|
+  | **y (positive control)** | **1.000** | 0.197 | **+0.803** |
+  | ar_set | 0.196 | 0.286 | −0.090 |
+  | ambiente | 0.854 | 0.854 | +0.000 |
+  | direct_path | 0.633 | 0.731 | −0.098 |
+  | persona | 0.818 | 0.818 | +0.000 |
+  | monitor | 0.499 | 0.584 | −0.086 |
+
+  - `ambiente`/`persona` are **exactly** constant predictors (macro-F1 0.4606 and 0.4500
+    match the constant-predictor arithmetic to 4 digits) and select epoch 1: nothing
+    beats predicting the majority.
+  - The `y` control validates the plumbing but **saturates**: the eval traces are still
+    *train* for the encoder, so 1.000 is C1's train accuracy, not generalization. The
+    val probe (unseen traces) gives 0.8835 — that gap is the declared memorization
+    confound, quantified.
+  - **Reading:** on the same traces, with the same features, activity reads at 100% and
+    domain reads at nothing. C1's features are a near-pure activity code — the CE
+    objective never needed the environment, so the encoder never kept it.
+  - **Verdict: the GRL had nothing to remove.** C2 paid 4.6 val pts + early stop for a
+    regulariser with no target. Honest scope: "not *linearly* readable, on traces the
+    encoder has seen" — though the adversary's own MLP (256→128→6) failed too.
+  - Root cause is structural: **train has 2 environments, one of which is a single
+    AR-set** (AR-6 living room; AR-1…AR-5 all bedroom). There is no second living-room
+    set to generalise to, so environment-invariance is barely definable on this train.
 
 ## In progress
 
@@ -162,15 +217,20 @@
    (download the executed copy at the end; do NOT "Save to GitHub" over the template).
 2. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-3. **C1-lin probe + C1 §7 diagnostics** via notebook `04` (cell 6 with `c1_ce`, cell 8
-   with the C1 entry) — the missing reference for the GRL verdict: C2's ar_set probe is
-   already at majority level, the claim needs C1's to be clearly above it.
-4. **Team discussion (don't tune solo):** λ_max for C4 — evidence so far favors keeping
-   1.0 (C2 ar_set probe ≈ majority baseline, val macro-F1 intact at 0.84); confirm once
-   the C1 reference probe is in.
-5. After C3 (and the GRL discussion): **phase B grid** via notebook `04` (`select_phase_b` on
-   C3's epoch40/50/60 → `phase_b_selection.json`); only then **launch C4** (inherits any
-   GRL contingency), then its phase B.
+3. **Team discussion — the GRL premise, not λ_max.** The old item here was "pick λ_max
+   for C4"; it is moot — no λ removes information that is already absent. What needs
+   deciding: (a) does the GRL branch survive at all, (b) what §7 reports now that its
+   key figure cannot exist, (c) whether C4 (~7 h) is still worth launching. Proposed
+   framing: not "the GRL failed" but "on this dataset a plain CE encoder already yields
+   features with no readable environment — the GRL is redundant, and we showed it".
+4. **Confirmatory only:** same domain diagnostic on C2's cached train features (owner B
+   has them; the inner split is deterministic from the frozen trace list, so nothing
+   needs coordinating). It cannot overturn the verdict — C1 without any adversary
+   already shows the domain unreadable — but C2's `y` control would tell whether the
+   GRL cost transfer only, or train fit too.
+5. After C3 (and the GRL decision): **phase B grid** via notebook `04` (`select_phase_b`
+   on C3's epoch40/50/60 → `phase_b_selection.json`); **C4 only if the branch survives
+   step 3**, then its phase B.
 6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert, then evaluate_c0 (C0), evaluate (C1/C2),
    evaluate_features (C1-lin/C2-lin/C3/C4), `viz.metrics_table` + confusions; commit
@@ -180,10 +240,29 @@
 
 ## Blockers / open decisions
 
-- **C0 rerun archive format** (stopgap in place): owner A asked whether the executed
-  `.ipynb` of the GPU rerun still exists. If yes → commit it as
-  `notebooks/runs/2026-07-16_c0_sharp.ipynb` and remove `2026-07-16_c0_sharp.htm` +
-  `2026-07-16_c0_sharp_history.csv` in the same commit. If lost → keep the HTML+CSV
-  pair as the declared measured record (this line becomes the declaration). Also
-  decide whether to restore the deleted CPU-attempt notebook (see Done note).
+- **Does the GRL branch (C2/C4) survive?** — BLOCKS C4, does not block C3 or phase B.
+  Evidence is in Done above: the domain is not readable from a plain CE encoder, so the
+  adversary has no target; C2 measurably paid for it. Team call, not a solo tune (§7 is
+  the doc: a discrepancy gets discussed, never silently resolved).
+- **What does §7 report?** — its ar_set probe cannot support the committed claim in
+  either direction on this split. Options: (a) declare it underpowered and rest §9 on
+  the diagnostic above, (b) re-target the probe (`ambiente`, or AR-1/AR-2 merged) — a
+  change of target vs the doc, so team call. Note the deeper limit no probe fixes: val
+  is in-domain by construction, and the unseen environment (S7) is test, closed until
+  §0.7's single session.
+
+- **C0 rerun archive format** — partially answered 2026-07-17, needs owner A's call.
+  An executed `.ipynb` of the GPU rerun **is already committed**, as
+  `notebooks/runs/c0_sharp_train.ipynb` (added by `fbb8fa0` "Add files via upload",
+  not listed in the `runs/README.md` index). Two things to settle:
+  - It is **not the whole run**: its log opens with `resumed C0 ... at epoch 31` and
+    covers epoch 31 only (the `Train run finished` dict does carry the full 31-epoch
+    history). So it is the resumed tail, and the `.htm` export is the record of
+    epochs 1-30 → per the `runs/README.md` multi-session rule this is a `_part2`,
+    and dropping the HTML would lose epochs 1-30.
+  - Name does not follow `YYYY-MM-DD_<config>.ipynb`.
+  Proposal (not applied): rename to `2026-07-16_c0_sharp_part2.ipynb`, keep the `.htm`
+  as `_part1` with a declaration that part 1 is an HTML export, index both.
+  Also note STATUS said "early stop at 30/60"; the log says **epoch 31**.
+  Also decide whether to restore the deleted CPU-attempt notebook (see Done note).
   Does not block C3/probes/phase B.
