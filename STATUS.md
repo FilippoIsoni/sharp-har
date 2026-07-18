@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1_s43 cache + C1 S6-out runs next** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1_s43 cache + C1 S6-out next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -566,8 +566,44 @@
 
 ## Blockers / open decisions
 
-- None blocking. Both former open calls closed 2026-07-17 by the v5.2 team decisions
-  (GRL branch: C4 never runs; §7: underpowered, §9 rests on the domain diagnostics).
+- **Team call requested (2026-07-18, owner A): a "fair-shot" SupCon extension?**
+  Question raised after the C3 verdict (loses to C1 on all three readouts):
+  can a re-designed SupCon stream reach comparable-or-better val? Options were
+  surveyed with literature (see the session record; sources incl. GradCache,
+  SupCon+CE joint fine-tuning) and the field narrows to ONE recommended
+  candidate, the rest excluded on evidence:
+  - **Candidate A — CE fine-tuning of C3's encoder ("C3-ft"):** init the CE run
+    from `C3/epoch40.ckpt`, full-network fine-tune, ~2 h. Answers the reviewer
+    question the report will face anyway ("was the linear probe unfair to
+    SupCon?") with a protected floor (worst case ≈ a CE from a different init).
+    Expected outcome: comparable to C1 (±1 pt) — success is pre-defined as
+    "comparable", not "beats". Needs: init-from-checkpoint wiring in `train.py`
+    (small, cross-review), `c3_ft.yaml`, §8.4 budget line, **§0.7 frozen
+    row-list amendment** (13th row — the list can be amended only by a team
+    call BEFORE the single test session opens), hypothesis pre-registered.
+  - **Candidate B — joint CE+SupCon (single encoder) — downgraded to future
+    work, not recommended as a run:** of its two payoff channels, the
+    information-capture channel is empirically weakened (error-overlap C1 vs
+    C3: 16/349 rescue windows, unstructured — the encoders are largely
+    redundant), leaving only the modest regularization channel; plus extra
+    wiring, an α fixed blind, and the C2 precedent that a second gradient on
+    the CE encoder is never free. Propose as a future-work sentence with the
+    concat number in it.
+  - **Excluded on evidence (not preference):** longer training (grid 40/50/60
+    flat-to-declining; C3 already had more gradient steps than C1); bigger
+    batch in any form (phase-A optimization shows zero starvation symptoms —
+    glass-smooth loss, ±0.004 tail, one-fused-window grid spread, y-control
+    99.5%: the objective's optimum is the problem, not the optimization;
+    additionally the SupCon large-batch lever targets many-class regimes —
+    with 8 classes P×K already yields ~64 views/class/batch); GradCache
+    (mathematically invalid with BatchNorm); memory banks/queues (same
+    saturation + review burden); τ/augmentation tuning (no selection budget on
+    a 9-trace val; §3 frozen).
+  - Timing: decision needed within ~2 days — the run + review must land before
+    the 2026-07-28 freeze and before the test session's row list is final.
+- None else blocking. Both former open calls closed 2026-07-17 by the v5.2 team
+  decisions (GRL branch: C4 never runs; §7: underpowered, §9 rests on the
+  domain diagnostics).
 - Resolved 2026-07-18 (was: S6-out twin quasi-leakage): closed by the
   pre-registered twin-binding amendment (`splits/CHANGELOG.md` 2026-07-18) —
   see the E2′ review pass in Done. Nothing left to ratify beyond confirming the
