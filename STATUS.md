@@ -417,12 +417,52 @@
   Jupyter auto-display (bare `fig` as the last expression re-triggers Out[]
   on top of pyplot's own draw); fixed with the trailing-`;` convention already
   used in `03_train.ipynb`/`05_test_final.ipynb`. `sharp_har/viz.plot_embeddings`
-  is package code — **still needs cross-review before freeze**, like T3A/AdaBN
-  (CLAUDE.md: no logic in notebooks).
+  is package code — cross-review CLOSED 2026-07-18 (see the review pass below);
+  T3A/AdaBN still pending theirs (CLAUDE.md: no logic in notebooks).
+
+- **NCM/kNN + embeddings cross-review pass (2026-07-18, code+doc, local):**
+  - **NCM/kNN scorers promoted** from the diagnostics notebook to
+    `sharp_har/diagnostics.py` (declared deviation from the "diagnostics-style
+    notebook" plan line): they are pre-registered §7 metrics with doc-declared
+    hyperparameters, re-run across sessions (C3 rerun queued, C2 when unblocked,
+    C1_s43 footnote) → pipeline code per the thin-notebook rule, not a one-off;
+    the diagnostics README's dividing line is sharpened accordingly. Math
+    verified **byte-identical** to the notebook-local cell that produced the C1
+    numbers (synthetic equivalence check: NCM and kNN score arrays exactly
+    equal; tie-break epsilon bound verified < 1/(4k) granularity) — **the
+    recorded C1 rows stand**; owner A's executed C1 session still archives
+    verbatim with the pre-promotion cell (declared). Blocking asserts added
+    per project philosophy (zero-norm feature rows, train class coverage,
+    n_train > k). `probe.py` untouched, as declared.
+  - **kNN/NCM reference pool declared in §7** (refinement 2026-07-18): single
+    train pool of (window, antenna) samples across the 4 antennas; the declared
+    fusion operates query-side only. Was implicit in the first execution; kept
+    (switching to per-antenna neighbors would invalidate the recorded C1 rows
+    for no statistical benefit), now declared.
+  - **§9 t-SNE recipe wording fixed:** "8 campioni (finestra, antenna) per
+    trace" — the cache row unit, the semantics the committed figure was
+    produced with — not "8 finestre" (ambiguous vs windows ×4 antennas).
+    Sample-counting serves the declared anti-near-duplicate motivation better
+    than 8 windows × 4 correlated antenna views; regenerating the figure under
+    the other reading would cost a session for zero qualitative gain.
+    `viz.plot_embeddings`: param renamed `samples_per_trace`, suptitle updated,
+    `learning_rate="auto"` pinned explicitly (= sklearn ≥1.2 default; recipe
+    can't drift with library defaults). **plot_embeddings cross-review closed**
+    (recipe conformance §9, per-encoder determinism of the subsample, PCA guard,
+    train-only assert all verified). Committed PNG untouched (measured artifact;
+    its title says "windows/trace" — superseded wording, declared here).
+  - Choices reviewed and deliberately KEPT (would-be changes = post-hoc tuning
+    or churn): k=20, cosine/L2 metric, vote-fraction scores, perplexity 30
+    (n≈650 points/encoder), PCA-50, init="pca", hardcoded declared linear-probe
+    reference prints, majors-only dependency pins (stock-Colab philosophy).
+    `umap-learn` dropped from requirements (never imported; §9's "t-SNE/UMAP"
+    resolved to t-SNE, declared in the figure title).
 
 ## In progress
 
 - **NCM/kNN (§7 v5.2) partial: C1 done, C2 blocked, C3 pending.**
+  *(2026-07-18: scorers now live in `sharp_har.diagnostics` — reruns must pull
+  the updated template/repo; numbers unchanged, see the cross-review pass.)*
   `notebooks/diagnostics/2026-07-18_ncm_knn_c1_c2_c3.ipynb` run by owner A:
   **C1 — NCM acc 0.8653/macro-F1 0.8888, kNN acc 0.8453/macro-F1 0.8563**
   (both close to the linear-probe reference 0.8711/0.8835 — activity structure
@@ -478,9 +518,9 @@
    features — §9 pinned spec: declared batch variant, M=20; cross-review must also
    confirm the paper's filter grid {1,5,20,50,100,∞} against the official repo),
    AdaBN (harness addition — §9 pinned spec: reset + cumulative full-pass BN
-   re-estimation, `momentum=None`, batch 256, inventory order),
-   `viz.plot_embeddings` (train features, L2-norm, 8 windows/trace, PCA-50 →
-   t-SNE, seed 42); extend the notebook 05 template with the pre-registered
+   re-estimation, `momentum=None`, batch 256, inventory order).
+   (`viz.plot_embeddings` implemented AND cross-reviewed — closed 2026-07-18,
+   see the review pass in Done.) Extend the notebook 05 template with the pre-registered
    transductive rows + post-AdaBN feature caching + the hard-coded frozen
    row-list readiness assert (§0.7).
 6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a

@@ -14,4 +14,5 @@ torch>=2.4,<3.0
 torchvision>=0.16,<1.0
 scikit-learn>=1.3,<2.0
 matplotlib>=3.7,<4.0
-umap-learn>=0.5,<1.0
+# umap-learn removed 2026-07-18: never imported — §9's "t-SNE/UMAP" option
+# resolved to t-SNE (viz.plot_embeddings, declared in the figure title).

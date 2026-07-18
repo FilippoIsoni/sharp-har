@@ -243,7 +243,7 @@ def metrics_table(
 def plot_embeddings(
     feature_caches: Mapping[str, str | Path],
     *,
-    windows_per_trace: int = 8,
+    samples_per_trace: int = 8,
     pca_components: int = 50,
     perplexity: float = 30.0,
     seed: int = 42,
@@ -257,10 +257,13 @@ def plot_embeddings(
     Declared recipe, identical across encoders so panels are
     comparable (§9): features L2-normalized (SupCon optimizes angles,
     not scale — same treatment for CE keeps the comparison
-    apples-to-apples); subsampled to `windows_per_trace` windows per
-    trace, all if fewer (bounds how much a single long recording's
-    near-duplicate windows can dominate the picture); PCA-50 -> t-SNE
-    perplexity 30, seed 42.
+    apples-to-apples); subsampled to `samples_per_trace` (window,
+    antenna) samples per trace — the cache row unit — all if fewer
+    (bounds how much a single long recording's near-duplicate windows
+    can dominate the picture; counting samples rather than windows
+    keeps the per-trace cap at 8 points and avoids systematically
+    including the 4 correlated antenna views of every kept window —
+    §9 refinement 2026-07-18); PCA-50 -> t-SNE perplexity 30, seed 42.
 
     TRAIN features only: the only split with every AR-set and both
     environments present (val is 9 traces / 5 AR-sets, AR-3 absent;
@@ -293,8 +296,8 @@ def plot_embeddings(
         keep = []
         for tid in sorted(set(trace_id.tolist())):
             idx = np.flatnonzero(trace_id == tid)
-            if len(idx) > windows_per_trace:
-                idx = rng.choice(idx, size=windows_per_trace, replace=False)
+            if len(idx) > samples_per_trace:
+                idx = rng.choice(idx, size=samples_per_trace, replace=False)
             keep.append(idx)
         keep = np.concatenate(keep)
 
@@ -302,8 +305,11 @@ def plot_embeddings(
         x = x / np.linalg.norm(x, axis=1, keepdims=True)
         n_comp = min(pca_components, x.shape[0] - 1, x.shape[1])
         x_pca = PCA(n_components=n_comp, random_state=seed).fit_transform(x)
+        # learning_rate pinned explicitly (= the sklearn >=1.2 default) so
+        # the declared §9 recipe cannot drift with future library defaults.
         emb = TSNE(
             n_components=2, perplexity=perplexity, random_state=seed, init="pca",
+            learning_rate="auto",
         ).fit_transform(x_pca)
 
         for col, (values, all_labels, title) in enumerate((
@@ -328,7 +334,8 @@ def plot_embeddings(
 
     fig.suptitle(
         f"t-SNE of train features (PCA-{pca_components}, perplexity {perplexity}, "
-        f"seed {seed}, {windows_per_trace} windows/trace)", fontsize=11, color=_INK,
+        f"seed {seed}, {samples_per_trace} (window, antenna) samples/trace)",
+        fontsize=11, color=_INK,
     )
     fig.tight_layout()
     if save_path is not None:
