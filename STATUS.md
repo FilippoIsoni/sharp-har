@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1 S6-out run done (domain-diag runner ready); ALL remaining code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); C1_s43 cache next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); concat run + C3-ft (recipe TBD) + cross-review + notebook-05 = the last prep before the single test session** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -555,30 +555,66 @@
     a list that may legitimately change within days. Still on the §10.4 freeze
     checklist, with the report.
 
+- **C1_s43 feature cache landed** (2026-07-18, owner B/Melissa on Colab, executed
+  copy `notebooks/runs/2026-07-18_c1_s43_feature_cache.ipynb`): `cache_features` on
+  `C1_s43/best.ckpt` → train **53400** + val **1396** (d=256) npz on Drive `C1_s43`,
+  sample-count asserts passed. Unblocks the C1⊕C1′ concat control and the C1_s43
+  NCM/kNN footnote (both now runnable).
+
+- **E2′ S6-out domain diagnostic complete — structural verdict replicates on a
+  second rotation** (2026-07-18, executed `notebooks/diagnostics/2026_07_18_probe_c1_s6out.ipynb`;
+  caches `C1_s6out` TRAIN features over p2_living, 50948 samples pinned by assert,
+  then `diagnostics.domain_probe`, inner trace-disjoint split 53 fit / 27 eval):
+  - **Control `y` (8 cls) passes: acc 0.870, baseline 0.210, delta +0.660**, macro-F1
+    0.852 — lower than the S7-rotation controls (1.000 / 0.893 / 0.995) because this
+    inner split's eval traces are held-out *within train* (trace-disjoint), so 0.870
+    is generalization, not memorization; large positive delta, plumbing sound.
+  - **Every domain target at or below its majority baseline:** ar_set +0.011,
+    ambiente +0.000, direct_path -0.029, persona +0.000, monitor +0.002 -
+    `ambiente`/`persona` are again exact constant predictors. The "no readable domain
+    in CE features" finding now holds on a rotation whose train second environment is
+    the **laboratory** (S7), not living-room S6 - the fourth replication and the one
+    E2′ existed to produce. No counterexample: the GRL-has-no-target verdict is not an
+    artifact of the primary rotation's composition.
+
+- **NCM/kNN §7 complete for C1/C2/C3/C1_s43** (2026-07-18, executed
+  `notebooks/diagnostics/2026-07-18_ncm_knn_c1_c2_c3(1).ipynb` - Melissa now has the
+  C2/C3 shortcuts that blocked the earlier owner-A run; `(1)` suffix from the upload,
+  the owner-A C1-only run stays archived as `...c1_c2_c3.ipynb`). Val, cached features,
+  frozen §7 hyperparameters. Majority baseline 0.3209 throughout:
+  | run | NCM acc / F1 | kNN acc / F1 | linear ref (F1) |
+  |---|---|---|---|
+  | C1 | 0.8653 / 0.8888 | 0.8453 / 0.8563 | 0.8835 |
+  | C2 | 0.7765 / 0.8176 | 0.8424 / 0.8663 | 0.8410 |
+  | C3 | 0.6963 / 0.7178 | 0.7937 / 0.8047 | 0.8190 |
+  | C1_s43 | 0.8567 / 0.8707 | 0.8281 / 0.8497 | (0.8784 e2e) |
+  - **C3 readout question resolved:** kNN (0.7937 acc) sharply beats NCM (0.6963) -
+    the t-SNE chaining showed up as a non-linear-readout gain - but kNN macro-F1 0.8047
+    still sits **under** C3's linear probe 0.8190. So the linear recipe did NOT
+    understate SupCon: C3 is lowest under every readout tried. Report line stands.
+  - **C1 robust to readout** (NCM/kNN within ~2 pts of linear); **C1_s43 footnote
+    confirms seed robustness on NCM/kNN too** (within ~1 pt of C1 seed-42). C2 is the
+    noisy one across readouts (NCM 0.7765 / kNN 0.8424).
+
 ## In progress
 
-- **NCM/kNN (§7 v5.2) partial: C1 done, C2 blocked, C3 pending.**
-  *(2026-07-18: scorers now live in `sharp_har.diagnostics` — reruns must pull
-  the updated template/repo; numbers unchanged, see the cross-review pass.)*
-  `notebooks/diagnostics/2026-07-18_ncm_knn_c1_c2_c3.ipynb` run by owner A:
-  **C1 — NCM acc 0.8653/macro-F1 0.8888, kNN acc 0.8453/macro-F1 0.8563**
-  (both close to the linear-probe reference 0.8711/0.8835 — activity structure
-  is robust to readout choice on C1). **C2 SKIP**: owner A has no Drive
-  shortcut into the C2 owner's folder — declared, not pursuing right now (a
-  read-only shortcut would unblock it later, same fix as the C3 phase-B
-  write-shortcut). **C3**: rerun with `STEMS` reduced to C1+C3 queued, not
-  yet reported — this is the more interesting number given the t-SNE chaining
-  observation above (does kNN recover what the linear probe misses on C3?).
-- **`C1_s43` cache session READY TO RUN** (owner A, on return):
-  `notebooks/e1_seed_replicates/04_cache_c1_s43_features.ipynb` — full-staging
-  preamble, `cache_features` on `C1_s43/best.ckpt` for train+val, sample-count
-  asserts (53400/1396, d=256), ~2 min of forwards on a T4. Unblocks the C1⊕C1′
-  concat control + the pre-declared NCM/kNN footnote (that notebook's SKIP entry
-  resolves itself once the cache lands). Executed copy → `notebooks/runs/` as
-  `YYYY-MM-DD_c1_s43_feature_cache.ipynb` + STATUS line, same commit.
-- **Seed-44 decision — SEMI-FINAL: no s44 runs, E1′ stays at n=2** (owner A,
-  2026-07-18; pending routine team confirmation, then this line becomes final).
-  Rationale: the open question the trigger was held for ("pipeline-wide or
+- **Concat §7 session — READY, one step left in val-only diagnostics.** The C1_s43
+  cache landed, so both rows are runnable: C1⊕C3 (redundancy control, error-overlap
+  story) and the C1⊕C1′ ensemble control. **The template already existed**
+  (`2026-07-18_concat_c1_c3.ipynb`, pre-freeze pass); the uploaded
+  `2026-07-19_concat_c1_c3.ipynb` is a **byte-identical UNEXECUTED copy** (0 outputs)
+  — a spurious duplicate to delete until the real run lands (then `git mv` the
+  template to the run date, commit with outputs). Review of the solution before the
+  run: alignment asserts and recipe-frozen approach are correct; **one caveat to add
+  before executing** — the "linear head absorbs scale" note is imprecise under the
+  probe's `wd=1e-4`, and the scale asymmetry differs between candidate (CE⊕SupCon)
+  and control (CE⊕CE, norm-matched by construction), so the control does NOT fully
+  neutralize a possible C1-vs-C3 feature-norm mismatch (the failure mode is a
+  *spurious positive* — false complementarity). Cheap coherent fix: print per-block
+  train feature norms (diagnostic only, NOT a recipe change). `probe.py` untouched,
+  no test contact.
+- **Seed-44 decision — FINAL (team-confirmed 2026-07-19): no s44 runs, E1′ closed
+  at n=2.** Rationale: the open question the trigger was held for ("pipeline-wide or
   GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
   is directional and already closed (no GRL target ×3 diagnostics; C1 stable
   0.87 pts; every C1 value > every C2 value, min gap 3.69 > band) — an s44 would
@@ -587,6 +623,17 @@
   2026-07-18), so no pair-clause deviation is needed. **Standing constraint for
   the report: the GRL val cost is stated as a RANGE (≈3.7–10 pts, n=2), never as
   the single seed-42 number (−4.6).**
+- **C3-ft (approved 2026-07-19) — implementation to be specified before wiring.**
+  Decided: run it. Open sub-decisions (all need pre-registration BEFORE the run, §0):
+  (i) init scope — full-network fine-tune from `C3/epoch40.ckpt` vs encoder-frozen +
+  new head; (ii) head init — reuse C3's probe head vs fresh `ActivityHead`;
+  (iii) horizon/LR — same 40-epoch cosine as C1 vs a shorter warm-restart tail, and
+  whether LR is reduced given a pre-trained init; (iv) augmentation — inherit the C1
+  "ce" profile (recommended, keeps it a fair CE run). Then: `train.py`
+  init-from-checkpoint wiring (small, cross-review), `c3_ft.yaml` (byte-diff from
+  `c1_ce.yaml` = name + init_ckpt + horizon), §8.4 budget line (~2 h), pre-registered
+  hypothesis ("comparable to C1, ±1 pt; success = comparable, not beats"), §0.7 13th
+  row. Protected floor: worst case ≈ a CE from a different init.
 - **Cross-review of the pre-freeze implementation pass** (T3A `transductive.py`,
   harness `adapt_bn`, `diagnostics.domain_probe`/`concat_caches`/`fused_head_scores`,
   the two new templates) — required before the single test session (§10.4). The
@@ -599,45 +646,46 @@
 
 1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-2. **E1 tail (remaining):** run `04_cache_c1_s43_features.ipynb` (ready, see In
-   progress; owner A on return) — archives, trigger analysis and the semi-final
-   no-s44 decision are done; team confirmation of the s44 decision closes E1′.
-3. **E2′ living-out:** split frozen + C1 S6-out run done (best val 0.7761 @12, see
-   Done). Remaining: run `04_domain_probe_c1_s6out.ipynb` (READY — caches the train
-   features and runs the promoted `diagnostics.domain_probe`; GPU session ~staging +
-   2 min of forwards; executed copy → `notebooks/diagnostics/`). The `best.ckpt` is
-   ready for the single §0.7 test row.
-4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
-   priori): NCM + kNN reruns (C3 queued, C2 on the Drive shortcut, C1_s43 footnote —
-   see In progress) and the concat session via `2026-07-18_concat_c1_c3.ipynb`
-   (READY — C1⊕C3 runnable now, the C1⊕C1′ control un-SKIPs once the C1_s43 cache
-   lands; `git mv` to the run date if executed later). `probe.py` untouched, no test
-   contact.
-5. **Cross-review before code freeze** (implementation DONE 2026-07-18, see Done):
+2. **E1 tail — DONE** (C1_s43 cache landed, see Done); only routine team
+   confirmation of the semi-final no-s44 decision remains to close E1′ on paper.
+3. **E2′ living-out — DONE** (split frozen + C1 S6-out run + S6-out domain
+   diagnostic all complete, see Done; verdict replicates with the lab as 2nd env).
+   The `best.ckpt` on Drive `C1_s6out` is ready for the single §0.7 test row.
+4. **Val-only diagnostics — nearly done:** NCM/kNN complete for C1/C2/C3/C1_s43
+   (see Done). **Remaining: run the concat session** — delete the spurious
+   unexecuted `2026-07-19_concat_c1_c3.ipynb`, add the per-block feature-norm print
+   (review caveat, diagnostic-only), execute the `2026-07-18` template, then `git mv`
+   it to the run date and commit with outputs. `probe.py` untouched, no test contact.
+5. **C3-ft (approved 2026-07-19):** specify the training recipe (In progress), wire
+   init-from-checkpoint in `train.py` + `c3_ft.yaml` + §8.4 budget + pre-registered
+   hypothesis, run (~2 h), archive to `notebooks/runs/`, §0.7 row-list amendment to
+   13 rows. Cross-review the wiring with the rest of the pre-freeze pass (step 6).
+6. **Cross-review before code freeze** (implementation DONE 2026-07-18, see Done):
    T3A (`transductive.py`), AdaBN (harness `adapt_bn`), `diagnostics.domain_probe`/
-   `concat_caches`. Then, once the SupCon fair-shot call resolves the final row list:
-   extend the notebook 05 template with the pre-registered transductive rows +
-   post-AdaBN feature caching + the hard-coded frozen row-list readiness assert
-   (§0.7) — deliberately deferred, see Done.
-6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+   `concat_caches` + the new C3-ft init wiring. Then, with the FINAL row list fixed
+   (now includes C3-ft): extend the notebook 05 template with the pre-registered
+   transductive rows + post-AdaBN feature caching + the hard-coded frozen row-list
+   readiness assert (§0.7) — deliberately deferred, see Done.
+7. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
-   (unconditional, §9), plus the S6-out rotation's C1) — evaluate_c0, evaluate, evaluate_features,
-   `viz.metrics_table` + confusions; commit `reports/final/` (per-AR-set CSVs +
-   `test_invocations.jsonl`) in the same commit as the archived notebook. Editor
-   shortcuts to EVERY run folder from one account, verified beforehand.
-7. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
+   (unconditional, §9), the S6-out rotation's C1, **+ C3-ft (13th)**) — evaluate_c0,
+   evaluate, evaluate_features, `viz.metrics_table` + confusions; commit
+   `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
+   the archived notebook. Editor shortcuts to EVERY run folder from one account,
+   verified beforehand.
+8. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
    2026-07-28 (deadline 2026-07-30); PCA+t-SNE figure C1 vs C3, domain-diagnostics
    table as the §9 key figure.
 
 ## Blockers / open decisions
 
-- **Team call requested (2026-07-18, owner A): a "fair-shot" SupCon extension?**
-  Question raised after the C3 verdict (loses to C1 on all three readouts):
-  can a re-designed SupCon stream reach comparable-or-better val? Options were
-  surveyed with literature (see the session record; sources incl. GradCache,
-  SupCon+CE joint fine-tuning) and the field narrows to ONE recommended
-  candidate, the rest excluded on evidence:
+- **DECIDED (team, 2026-07-19): the "fair-shot" SupCon extension = C3-ft (Candidate
+  A) IS RUN; implementation to be specified (see "In progress"). Seed 44 is NOT run
+  (E1′ final at n=2, above).** The C3-ft decision opens the §0.7 row-list amendment
+  window (13th row) and now gates the notebook-05 readiness assert — the assert must
+  be written against the list *including* C3-ft. Record of the call that led here
+  (candidate survey after the C3 verdict — loses to C1 on all three readouts):
   - **Candidate A — CE fine-tuning of C3's encoder ("C3-ft"):** init the CE run
     from `C3/epoch40.ckpt`, full-network fine-tune, ~2 h. Answers the reviewer
     question the report will face anyway ("was the linear probe unfair to
@@ -665,8 +713,11 @@
     (mathematically invalid with BatchNorm); memory banks/queues (same
     saturation + review burden); τ/augmentation tuning (no selection budget on
     a 9-trace val; §3 frozen).
-  - Timing: decision needed within ~2 days — the run + review must land before
-    the 2026-07-28 freeze and before the test session's row list is final.
+  - Timing: DECIDED 2026-07-19. The C3-ft run + init-from-checkpoint cross-review
+    + `c3_ft.yaml` + §8.4 budget line + §0.7 row-list amendment (13th row) +
+    pre-registered hypothesis must all land before the 2026-07-28 freeze and before
+    the single test session opens. Open sub-decision: the C3-ft *training recipe*
+    (see "In progress").
 - None else blocking. Both former open calls closed 2026-07-17 by the v5.2 team
   decisions (GRL branch: C4 never runs; §7: underpowered, §9 rests on the
   domain diagnostics).
