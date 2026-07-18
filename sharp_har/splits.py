@@ -12,7 +12,7 @@ from typing import Any
 
 import pandas as pd
 
-from .inventory import C0_PAPER_CLASSES, trace_table
+from .inventory import C0_PAPER_CLASSES, DUPLICATE_TRACE_SUFFIX, trace_table
 from .utils import get_logger, read_json, write_json
 from .windowing import EVAL_STRIDE, TRAIN_STRIDE, accumulate_moments
 
@@ -136,6 +136,7 @@ def build_p2_rotation(
     seed: int = SPLIT_SEED,
     labels: list[str] | None = None,
     reference: str | Path | None = None,
+    bind_alt_twins: bool = True,
 ) -> dict[str, Any]:
     """Leave-one-set-out rotation (§2.2). Primary rotation (defaults):
     test = all AR-7 (laboratory, S7) traces, train = S1-S6. The E2′
@@ -150,7 +151,19 @@ def build_p2_rotation(
     against it: identical trace universe (before μ/σ are computed, so a
     diverged inventory fails fast) and identical axes/window/classes
     metadata, plus own — not copied — μ/σ (after). The frozen reference
-    itself is only read, never written."""
+    itself is only read, never written.
+
+    `bind_alt_twins` (amendment 2026-07-18, splits/CHANGELOG.md): the
+    dual-archive twins (S4a_L/S4a_Lalt, S5a_L/S5a_Lalt) are two
+    recordings of the same physical session, so §0 rule 2's rationale —
+    correlated units must not straddle a split boundary — applies to
+    them at the recording level. When True, an `*alt` trace is not an
+    independent split unit: it is removed from the stratification pool
+    and assigned to the same side as its base trace. The frozen
+    p2_lab.json already satisfies this invariant by draw (all four
+    twins in train); it predates the amendment, so regenerating it
+    byte-identically requires bind_alt_twins=False (the exclusion
+    shifts the seed-42 draw stream)."""
     rng = random.Random(seed)
     traces = trace_table(inventory_df)
 
@@ -158,8 +171,32 @@ def build_p2_rotation(
     train_pool = traces[traces["ar_set"] != test_ar_set]
     assert not test_traces.empty, f"no traces found for test set {test_ar_set!r}"
 
+    alt_to_base: dict[str, str] = {}
+    if bind_alt_twins:
+        is_alt = train_pool["trace_id"].str.endswith(DUPLICATE_TRACE_SUFFIX)
+        alt_to_base = {
+            t: t[: -len(DUPLICATE_TRACE_SUFFIX)]
+            for t in train_pool.loc[is_alt, "trace_id"]
+        }
+        pool_ids = set(train_pool["trace_id"])
+        orphans = [t for t, base in alt_to_base.items() if base not in pool_ids]
+        assert not orphans, (
+            f"alt twin(s) with no base trace in the pool: {orphans} — "
+            "cannot bind, investigate (test rotation on AR-4/AR-5 would "
+            "put both twins in test via the ar_set filter instead)."
+        )
+        train_pool = train_pool[~is_alt]
+
     train_ids, val_ids, pinned_ids = _stratified_val_split(train_pool, VAL_FRACTION, rng)
     test_ids = test_traces["trace_id"].tolist()
+
+    for alt_id in sorted(alt_to_base):
+        side = train_ids if alt_to_base[alt_id] in set(train_ids) else val_ids
+        side.append(alt_id)
+        logger.info(
+            "twin binding: %s follows its base %s into %s",
+            alt_id, alt_to_base[alt_id], "train" if side is train_ids else "val",
+        )
 
     reference_payload: dict[str, Any] | None = None
     if reference is not None:

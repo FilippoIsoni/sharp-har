@@ -72,3 +72,33 @@ themselves are never touched.
   "double as the E2 concat ensemble control" — read "concat ensemble
   control C1⊕C1′ (§7 v5.2 val-only diagnostics)". "E2′" in pipeline
   §10.3 is the living-out rotation, unrelated to the concat control.
+
+## 2026-07-18 — E2′ amendment: dual-archive twins are bound split units
+
+- **Rule (pre-registered before the `p2_living.json` freeze):** the
+  dual-archive twin pairs (`S4a_L`/`S4a_Lalt`, `S5a_L`/`S5a_Lalt`) are
+  two recordings of the same physical session (day-1 finding). §0
+  rule 2's rationale — correlated units must never straddle a split
+  boundary — applies to them at the recording level, so an `*alt` trace
+  is **not an independent split unit**: it is removed from the
+  stratification pool and assigned to the same side as its base trace
+  (`build_p2_rotation(bind_alt_twins=True)`, the default from this
+  date). Trigger: the first S6-out dry-run drew `S4a_Lalt` into val
+  with `S4a_L` in train — a selection-side quasi-leakage (test = S6,
+  untouched either way).
+- **No retroactive discrepancy:** the frozen `p2_lab.json` already
+  satisfies the invariant by draw (all four twins in train) and is
+  never regenerated; it predates the amendment, so reproducing it
+  byte-identically requires `bind_alt_twins=False` (excluding the alts
+  from the pool shifts the seed-42 draw stream).
+- **Validation record (local dry-run on the frozen trace universe,
+  2026-07-18):** (i) with `bind_alt_twins=False`, the AR-7 rotation
+  reproduces the frozen p2_lab partition exactly (train/val/test/
+  pinned) — the dry-run methodology predicts the real session; (ii)
+  amended AR-6 partition: **train=80 val=6 test=15 pinned=41**, both
+  twin pairs in train, val = S1b_E, S1b_J2, S1c_S, S2a_R, S4a_C2,
+  S4b_J1 (AR-1/2/4; classes {C, E, J, R, S} — **H, L, W absent from
+  val**, accepted per §2.2's explicit rare-cell clause, same caveat
+  family as p2_lab's 5-class val; selection is within-run, so a
+  k-class val metric stays valid for checkpoint selection and is
+  never compared across scales).

@@ -39,20 +39,32 @@ folder `C1_s6out`.
 
 The id assignment depends only on the trace ids and seed 42 (never on
 data values), so a local dry-run on the frozen universe predicts the
-real partition exactly; only μ/σ are new in the Colab session. Expected:
-**train=79, val=7, test=15, pinned=41**, with:
+real partition exactly; only μ/σ are new in the Colab session. The same
+dry-run validated the methodology by reproducing the frozen p2_lab
+partition exactly under the pre-amendment mechanics. Expected:
+**train=80, val=6, test=15, pinned=41**, with:
 
-- **val = 7 traces over AR-1/2/4/5 only** (AR-3 absent as in p2_lab;
-  AR-6 is the test; AR-7's single campaign is fully absorbed into
-  train) — selection is noisy by construction, declared;
-- **val classes = {E, H, J, L, R, S}: C and W absent** → this
-  rotation's val macro-F1 is a **6-class** number, not scale-comparable
-  to p2_lab val (5-class) nor to the 8-class test macro-F1;
-- **dual-archive twin pair split across sides: S4a_L in train,
-  S4a_Lalt in val** — two distinct recordings of the same session, so a
-  declared selection-side quasi-leakage; the S6 test set is untouched
-  (in p2_lab all four twins sat in train — this rotation is the first
-  where the pair separates);
+- **twin-binding amendment applied** (`splits/CHANGELOG.md` 2026-07-18,
+  pre-registered before the freeze): the dual-archive `*alt` twins —
+  two recordings of the same physical session — are not independent
+  split units and follow their base trace's side (§0 rule 2's rationale
+  at the recording level). The first dry-run had drawn S4a_Lalt into
+  val with S4a_L in train, a selection-side quasi-leakage; under the
+  amendment **both twin pairs land in train with their bases**. p2_lab
+  already satisfies the invariant by draw (all four twins in train), so
+  the amendment introduces no cross-rotation inconsistency;
+- **val = S1b_E, S1b_J2, S1c_S, S2a_R, S4a_C2, S4b_J1** (AR-1 ×3,
+  AR-2 ×1, AR-4 ×2; AR-3/5/7 absent, AR-6 is the test) — selection is
+  noisy by construction, declared;
+- **val classes = {C, E, J, R, S}: H, L and W absent** → this
+  rotation's val macro-F1 is a **5-class** number, not scale-comparable
+  to p2_lab val (itself 5-class, different classes) nor to the 8-class
+  test macro-F1. Accepted, not amended: §2.2 explicitly pre-accepts
+  rare cells missing from val ("la macro-F1 di val è comunque definita
+  sulle classi presenti"), and checkpoint selection is a within-run
+  comparison where a k-class metric stays valid — forcing class
+  coverage in val would change the §2.2 stratification itself, and the
+  doc wins;
 - test = all 15 AR-6 traces (S6a ×9, S6b ×6), single domain.
 
 ## Scope guards

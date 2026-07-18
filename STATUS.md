@@ -354,6 +354,26 @@
   and W → this rotation's val macro-F1 is a **6-class** number; the dual-archive
   twin pair separates — **S4a_L in train, S4a_Lalt in val** — a selection-side
   quasi-leakage (S6 test untouched); AR-7 (11 traces) entirely in train.
+  *(Partition numbers and both caveats superseded by the review pass below.)*
+- **E2′ review pass — declared caveats resolved (2026-07-18, before the freeze):**
+  - **Twin quasi-leakage AMENDED away** (`splits/CHANGELOG.md` 2026-07-18,
+    pre-registered): dual-archive `*alt` twins are two recordings of the same
+    physical session → not independent split units; `build_p2_rotation` now binds
+    them to their base's side (`bind_alt_twins=True` default). No retroactive
+    inconsistency: p2_lab already satisfies the invariant by draw (all four twins
+    in train) and is never regenerated (byte-identical regeneration would need
+    `bind_alt_twins=False`, declared in the docstring).
+  - **Validation:** the dry-run reproduces the frozen p2_lab partition EXACTLY
+    (train/val/test/pinned) under pre-amendment mechanics — the methodology
+    predicts the real session. Amended AR-6 partition: **train=80 val=6 test=15
+    pinned=41**, both twin pairs in train, val = S1b_E, S1b_J2, S1c_S, S2a_R,
+    S4a_C2, S4b_J1 (AR-1/2/4).
+  - **Val class absence ACCEPTED per doc, not amended:** the amended draw gives
+    val classes {C, E, J, R, S} (**H, L, W absent** → 5-class val macro-F1, same
+    caveat family as p2_lab's 5-class val). §2.2 explicitly pre-accepts rare
+    cells missing from val, and selection is within-run, where a k-class metric
+    stays valid; forcing class coverage would change the §2.2 stratification
+    itself (doc wins). Runner notebooks + README updated to the amended numbers.
 - **Housekeeping: scratch `C1_smoke` folder deleted from Drive** (2026-07-17). Note:
   so far each collaborator manages run folders on their own Drive — the final test
   session needs Editor shortcuts to EVERY run folder (incl. new `C1_s43`/`C2_s43` and
@@ -443,9 +463,10 @@
    siblings and record the outcome; cache `C1_s43` features (C1⊕C1′ control input).
 3. **E2′ living-out:** generate + freeze the S6-out split on Git via
    `notebooks/e2_living_out/01_s6out_split.ipynb` (own μ/σ, rare-cell pins,
-   blocking asserts + frozen-reference consistency check; inspect the contingency
-   and ratify the declared caveats — 6-class val, S4a_L/S4a_Lalt twin split —
-   BEFORE launch), then C1 S6-out (~2.3 h, seed 42, pinned runner), then the
+   blocking asserts + frozen-reference consistency check + twin-binding
+   amendment, CHANGELOG 2026-07-18; inspect the contingency and confirm the
+   expected partition — train=80 val=6 test=15, 5-class val declared — BEFORE
+   launch), then C1 S6-out (~2.3 h, seed 42, pinned runner), then the
    domain-diagnostic replication on its train features. Pre-declared names
    (§10.3): `splits/p2_living.json`, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`.
 4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
@@ -477,11 +498,10 @@
 
 - None blocking. Both former open calls closed 2026-07-17 by the v5.2 team decisions
   (GRL branch: C4 never runs; §7: underpowered, §9 rests on the domain diagnostics).
-- Minor, non-blocking: the S6-out dry-run separates the dual-archive twin pair
-  (S4a_L → train, S4a_Lalt → val): a selection-side quasi-leakage, S6 test
-  untouched. It falls out of the frozen §2.2 mechanics (same code, seed 42) —
-  accept-and-declare is the default; changing the mechanics for one rotation
-  would be a new team call. Ratify at the split-freeze session.
+- Resolved 2026-07-18 (was: S6-out twin quasi-leakage): closed by the
+  pre-registered twin-binding amendment (`splits/CHANGELOG.md` 2026-07-18) —
+  see the E2′ review pass in Done. Nothing left to ratify beyond confirming the
+  expected partition printout at the freeze session.
 - Minor, non-blocking: seed 44 was floated in planning but the committed E1
   amendment deliberately stops at one replicate per config (n=2 → observed range,
   no significance claims) — adding s44 would be a new explicit call. (The former
