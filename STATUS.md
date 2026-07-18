@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ complete (C1 seed-stable, C2 not: instability is GRL-specific); C1 S6-out run next; s44 team call framed** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1_s43 cache + C1 S6-out runs next** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -504,17 +504,24 @@
   write-shortcut). **C3**: rerun with `STEMS` reduced to C1+C3 queued, not
   yet reported — this is the more interesting number given the t-SNE chaining
   observation above (does kNN recover what the linear probe misses on C3?).
-- **`C1_s43` cache session pending** (unblocks the C1⊕C1′ concat control + the
-  pre-declared NCM/kNN seed-robustness footnote): cache train+val features from
-  `C1_s43/best.ckpt` on Drive (probe-session pattern, minutes on GPU). No solo
-  s43 probes beyond the declared footnote — probes/diagnostics stay on seed 42.
-- **Seed-44 decision now fully framed, team call pending** (rule: CHANGELOG
-  2026-07-18; due by table-freeze day): the trigger fired on C2 only (5.45 pts)
-  while C1's twin landed inside the band (0.87 pts). Proposal on the table:
-  skip `C1_s44` (two concordant seeds, low marginal value), launch **`C2_s44`
-  only** (the ambiguity is all on C2: is 0.7870 a typical draw or an unlucky
-  one?) — a deviation from the pre-registered pair clause, so it needs its own
-  CHANGELOG line with this rationale if ratified.
+- **`C1_s43` cache session READY TO RUN** (owner A, on return):
+  `notebooks/e1_seed_replicates/04_cache_c1_s43_features.ipynb` — full-staging
+  preamble, `cache_features` on `C1_s43/best.ckpt` for train+val, sample-count
+  asserts (53400/1396, d=256), ~2 min of forwards on a T4. Unblocks the C1⊕C1′
+  concat control + the pre-declared NCM/kNN footnote (that notebook's SKIP entry
+  resolves itself once the cache lands). Executed copy → `notebooks/runs/` as
+  `YYYY-MM-DD_c1_s43_feature_cache.ipynb` + STATUS line, same commit.
+- **Seed-44 decision — SEMI-FINAL: no s44 runs, E1′ stays at n=2** (owner A,
+  2026-07-18; pending routine team confirmation, then this line becomes final).
+  Rationale: the open question the trigger was held for ("pipeline-wide or
+  GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
+  is directional and already closed (no GRL target ×3 diagnostics; C1 stable
+  0.87 pts; every C1 value > every C2 value, min gap 3.69 > band) — an s44 would
+  only sharpen the magnitude interval, which no report claim uses. This is the
+  rule's own default branch ("otherwise E1 stays at n=2, declared" — CHANGELOG
+  2026-07-18), so no pair-clause deviation is needed. **Standing constraint for
+  the report: the GRL val cost is stated as a RANGE (≈3.7–10 pts, n=2), never as
+  the single seed-42 number (−4.6).**
 - Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
   `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out split
   now frozen (see Done) — only the C1 run + train-feature domain diagnostic
@@ -524,9 +531,9 @@
 
 1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-2. **E1 tail (remaining):** cache `C1_s43` train+val features on Drive (C1⊕C1′
-   control input; probe-session pattern, minutes) — archives and trigger analysis
-   are done (see Done); the s44 team call is framed in In progress.
+2. **E1 tail (remaining):** run `04_cache_c1_s43_features.ipynb` (ready, see In
+   progress; owner A on return) — archives, trigger analysis and the semi-final
+   no-s44 decision are done; team confirmation of the s44 decision closes E1′.
 3. **E2′ living-out:** split frozen (`splits/p2_living.json`, see Done).
    Remaining: run C1 S6-out via `notebooks/e2_living_out/03_train_c1_ce_s6out.ipynb`
    (~2.3 h, seed 42, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`; readiness cell
