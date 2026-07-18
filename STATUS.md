@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — core closed (C0–C3 run, C4 closed without running); extensions E1′/E2′ + transductive-row prep, then the single test session** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — C2_s43 in (seed-44 trigger fired, decision held for C1_s43); E1′/E2′ + transductive-row prep continue** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -343,15 +343,39 @@
   session needs Editor shortcuts to EVERY run folder (incl. new `C1_s43`/`C2_s43` and
   the S6-out folder) from one account; verify before the session day.
 
+- **C2_s43 run complete** (2026-07-18, executed notebook committed in place at
+  `notebooks/e1_seed_replicates/03_train_c2_grl_s43.ipynb` — kept there, not moved to
+  `notebooks/runs/`, declared deviation from that folder's stated convention): best val
+  macro-F1 **0.7870 @ epoch 6**, early stop at 16/40 (patience 10, clean single session,
+  no resume). Two readings:
+  - **§6-C2 finding CONFIRMED, robust to init:** `arset_train_acc` sits at 0.30–0.32
+    across all 16 epochs (epoch 1: 0.257, epoch 16: 0.303) — the same majority-floor
+    plateau as the seed-42 run, reproduced with an independent initialization. The
+    adversary-learns-nothing finding does not depend on which seed drew it.
+  - **§0.5 seed-noise floor MEASURED, and it changes what can be claimed:**
+    |0.7870 − 0.8415| = **5.45 points** between C2 and C2_s43 — bigger than the
+    "GRL costs −4.6 pts vs C1" gap this whole extension was built to calibrate. A
+    same-config seed swing (5.45 pts) exceeding the cross-config gap (4.6 pts) means
+    that gap is **not currently distinguishable from seed noise** on val macro-F1
+    alone (the domain-diagnostic verdict on C4 is unaffected — it never relied on this
+    gap, see the C1/C2/C3 train-feature diagnostics above).
+  - **Pre-registered seed-44 trigger CONDITION MET** (`splits/CHANGELOG.md`
+    2026-07-18 addendum: "a seed twin lands outside the §0.5 ~2-point band from its
+    seed-42 sibling"): 5.45 pts is that case. Per the rule this makes `C2_s44` (and by
+    the pair clause, `C1_s44`) launch-eligible — **decision deliberately held** pending
+    `C1_s43` (does C1 show the same seed sensitivity, or is it C2/GRL-specific?),
+    due by table-freeze day regardless of outcome.
+
 ## In progress
 
-- **E1 replicates in flight (launched 2026-07-18):** owner A → `C2_s43`, other
-  owner → `C1_s43` (notebooks in `notebooks/e1_seed_replicates/`, ~2.3 h each,
-  parallel sessions OK). On completion: verbatim archive of both executed
-  notebooks + Done line with best val macro-F1 (same commit); apply the
-  pre-registered s44 trigger rule (`splits/CHANGELOG.md` 2026-07-18) and record
-  the outcome; cache `C1_s43` train+val features (input of the C1⊕C1′ concat
-  control). No solo s43 probes — probes/diagnostics stay on seed 42 (declared).
+- **Waiting on `C1_s43`** (other owner; same notebook pattern, `notebooks/e1_seed_replicates/`).
+  On completion: verbatim archive + Done line; compare against C1 (seed 42, 0.8871) —
+  if C1_s43 also lands outside ~2 pts, the noise floor is pipeline-wide, not GRL-specific;
+  if C1_s43 stays close to 0.8871, the C2 seed sensitivity is a GRL-specific finding worth
+  its own line. Either way: **apply the seed-44 trigger rule and record the decision**
+  (already met on C2 alone, per above) — team call, not automatic from spare capacity.
+  Cache `C1_s43` train+val features (input of the C1⊕C1′ concat control) once done.
+  No solo s43 probes — probes/diagnostics stay on seed 42 (declared).
 - Local prep for the v5.2 tail: S6-out split generation (own μ/σ, pins, asserts),
   NCM/kNN/concat diagnostics script, T3A + AdaBN (harness addition, cross-review
   required), `viz.plot_embeddings` (declared PCA+t-SNE recipe).
