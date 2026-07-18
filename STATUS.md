@@ -473,6 +473,14 @@
   yet reported — this is the more interesting number given the t-SNE chaining
   observation above (does kNN recover what the linear probe misses on C3?).
 - **Waiting on `C1_s43`** (other owner; same notebook pattern, `notebooks/e1_seed_replicates/`).
+  *Partial session landed 2026-07-18 (`03_train_c1_ce_s43_epoch31.ipynb`, web upload):
+  resumed from epoch 9, Colab disconnect after epoch 31/40 (no early stop — best
+  reset at 31), best-so-far **0.8533 @ 31**, still rising on the annealed tail
+  (C1 seed-42's best came @ 37) — one more resume session needed. At completion,
+  regularize the archive per the multi-session rule and the folder README's own
+  convention: parts to `notebooks/runs/` as `YYYY-MM-DD_c1_ce_s43_partN.ipynb`,
+  and `git mv` the C2_s43 archive alongside in the same commit (closes the
+  declared in-place deviation instead of compounding it).*
   On completion: verbatim archive + Done line; compare against C1 (seed 42, 0.8871) —
   if C1_s43 also lands outside ~2 pts, the noise floor is pipeline-wide, not GRL-specific;
   if C1_s43 stays close to 0.8871, the C2 seed sensitivity is a GRL-specific finding worth
