@@ -18,6 +18,9 @@ the same function covers every config:
                                       §6-C2 monitoring pair (both in
                                       [0, 1], shared axis)
 - lr, s_per_step                   -> always (the gates read s_per_step)
+
+`plot_embeddings` is the one exception to the history.csv contract: it
+reads a `harness.cache_features` .npz directly (§9 v5.2 key figure).
 """
 from __future__ import annotations
 
@@ -29,6 +32,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
 # Fixed categorical order (assigned by position, never cycled); recessive
 # chrome for grid/axes so the data ink dominates.
@@ -233,6 +238,102 @@ def metrics_table(
     table = pd.DataFrame(rows).pivot(index="run", columns="ar_set", values=metric)
     cols = ["ALL"] + sorted(c for c in table.columns if c != "ALL")
     return table.reindex(index=list(metrics_csvs), columns=cols)
+
+
+def plot_embeddings(
+    feature_caches: Mapping[str, str | Path],
+    *,
+    windows_per_trace: int = 8,
+    pca_components: int = 50,
+    perplexity: float = 30.0,
+    seed: int = 42,
+    save_path: str | Path | None = None,
+) -> Figure:
+    """PCA(50) -> t-SNE of TRAIN features (§9 v5.2 key figure, replaces
+    the underpowered §7 ar_set probe as the qualitative invariance
+    picture): one row per encoder (e.g. {"C1": ..., "C3": ...}), two
+    panels each — colored by activity and by AR-set.
+
+    Declared recipe, identical across encoders so panels are
+    comparable (§9): features L2-normalized (SupCon optimizes angles,
+    not scale — same treatment for CE keeps the comparison
+    apples-to-apples); subsampled to `windows_per_trace` windows per
+    trace, all if fewer (bounds how much a single long recording's
+    near-duplicate windows can dominate the picture); PCA-50 -> t-SNE
+    perplexity 30, seed 42.
+
+    TRAIN features only: the only split with every AR-set and both
+    environments present (val is 9 traces / 5 AR-sets, AR-3 absent;
+    test is a single domain, S7) — same declared scope as the §7
+    train-feature domain diagnostics, memorization confound included.
+    No test contact.
+
+    Qualitative figure, read alongside the probe/diagnostic numbers,
+    never a standalone claim: t-SNE preserves local neighborhoods, not
+    global inter-cluster distances or cluster sizes.
+
+    `feature_caches`: {label: path to a harness.cache_features "*_train.npz"}.
+    """
+    rows = list(feature_caches.items())
+    fig, axes = plt.subplots(len(rows), 2, figsize=(10, 4.6 * len(rows)), squeeze=False)
+
+    for row_idx, (label, path) in enumerate(rows):
+        data = np.load(path, allow_pickle=False)
+        trace_id = data["trace_id"]
+        y = data["y"]
+        ar = data["ar_set"]
+        assert (y >= 0).all() and (ar >= 0).all(), (
+            f"{label}: negative label on TRAIN features (held-out sentinel?) — "
+            "plot_embeddings is train-only by design (§9)."
+        )
+        act_labels = [str(l) for l in data["labels"]]
+        arset_labels = [str(l) for l in data["arset_labels"]]
+
+        rng = np.random.default_rng(seed)
+        keep = []
+        for tid in sorted(set(trace_id.tolist())):
+            idx = np.flatnonzero(trace_id == tid)
+            if len(idx) > windows_per_trace:
+                idx = rng.choice(idx, size=windows_per_trace, replace=False)
+            keep.append(idx)
+        keep = np.concatenate(keep)
+
+        x = data["features"][keep].astype(np.float64)
+        x = x / np.linalg.norm(x, axis=1, keepdims=True)
+        n_comp = min(pca_components, x.shape[0] - 1, x.shape[1])
+        x_pca = PCA(n_components=n_comp, random_state=seed).fit_transform(x)
+        emb = TSNE(
+            n_components=2, perplexity=perplexity, random_state=seed, init="pca",
+        ).fit_transform(x_pca)
+
+        for col, (values, all_labels, title) in enumerate((
+            (y[keep], act_labels, "by activity"),
+            (ar[keep], arset_labels, "by AR-set"),
+        )):
+            ax = axes[row_idx][col]
+            for k, cls_name in enumerate(all_labels):
+                m = values == k
+                if not m.any():
+                    continue
+                ax.scatter(
+                    emb[m, 0], emb[m, 1], s=10, alpha=0.75, linewidths=0,
+                    color=PALETTE[k % len(PALETTE)], label=cls_name,
+                )
+            ax.legend(fontsize=7, frameon=False, markerscale=1.5, ncol=2)
+            ax.set_title(f"{label} — {title}", fontsize=10, color=_INK)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for spine in ax.spines.values():
+                spine.set_color(_GRID)
+
+    fig.suptitle(
+        f"t-SNE of train features (PCA-{pca_components}, perplexity {perplexity}, "
+        f"seed {seed}, {windows_per_trace} windows/trace)", fontsize=11, color=_INK,
+    )
+    fig.tight_layout()
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+    return fig
 
 
 def _demo(argv: list[str]) -> None:  # pragma: no cover

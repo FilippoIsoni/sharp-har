@@ -376,9 +376,26 @@
   (already met on C2 alone, per above) — team call, not automatic from spare capacity.
   Cache `C1_s43` train+val features (input of the C1⊕C1′ concat control) once done.
   No solo s43 probes — probes/diagnostics stay on seed 42 (declared).
-- Local prep for the v5.2 tail: S6-out split generation (own μ/σ, pins, asserts),
-  NCM/kNN/concat diagnostics script, T3A + AdaBN (harness addition, cross-review
-  required), `viz.plot_embeddings` (declared PCA+t-SNE recipe).
+- **NCM/kNN + embeddings templates ready to run (2026-07-18, code-only, not
+  blocked by `C1_s43`):**
+  - `sharp_har/viz.plot_embeddings` added (PCA-50 → t-SNE, declared §9 recipe,
+    L2-norm + 8 windows/trace subsampling, identical hyperparameters across
+    encoders) — **package code, needs cross-review before freeze** like
+    T3A/AdaBN (CLAUDE.md: no logic in notebooks). Thin caller notebook
+    `notebooks/diagnostics/2026-07-18_embeddings_c1_vs_c3.ipynb` (C1 vs C3
+    only, train features — declared scope, see the notebook's own note on
+    why C2/C4 are excluded).
+  - `notebooks/diagnostics/2026-07-18_ncm_knn_c1_c2_c3.ipynb`: NCM
+    (re-normalized centroids) + kNN (k=20, similarity tie-break) on C1/C2/C3's
+    already-cached features, reusing `harness.fuse_windows`/`macro_f1` and
+    `probe.majority_baseline` unchanged — stays notebook-local per §7 v5.2
+    (not added to `probe.py`), printed against the frozen linear-probe
+    numbers already on record. Both templates committed output-free; ready
+    to run whenever, on CPU, no data staging.
+- Still local prep for the v5.2 tail: S6-out split generation (own μ/σ, pins,
+  asserts — design choice pending: restage from Drive vs reuse the committed
+  `reports/inventory.csv`), the C1⊕C3 concat diagnostic (blocked on
+  `C1_s43`), T3A + AdaBN (harness addition, cross-review required).
 
 ## Next steps (in order)
 
