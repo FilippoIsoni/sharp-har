@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E2′ P2-living split frozen (C1 S6-out run next); C2_s43 in (seed-44 trigger fired, decision held for C1_s43); transductive-row prep continues** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1_s43 cache + C1 S6-out next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -402,6 +402,27 @@
     `C1_s43` (does C1 show the same seed sensitivity, or is it C2/GRL-specific?),
     due by table-freeze day regardless of outcome.
 
+- **C1_s43 run complete — E1′ measurements done** (2026-07-18, three sessions:
+  epochs 1-8 launched by owner B (notebook not saved — declared C0-style exception),
+  9-32 (snapshot archived as `notebooks/runs/2026-07-18_c1_ce_s43_part1.ipynb`, log
+  through 31), 33-40 finished by owner A (`_part2.ipynb`, full 40-epoch history in its
+  final dict — verified against part-1's log lines to print precision, ≤4.9e-05)):
+  **best val macro-F1 0.8784 @ epoch 37**, full 40/40, no early stop — the same
+  late-cosine-tail best epoch as C1 seed-42 (0.8871 @ 37).
+  - **Seed swing on C1: 0.87 pts — inside the §0.5 band. The E1′ instability is
+    C2/GRL-specific, not pipeline-wide**: C1 reproduces both the score (±0.9) and
+    the training shape (best @ 37) across seeds; C2 swung 5.45 pts with a different
+    best epoch (13 vs 6). The GRL doesn't just cost performance — it destabilizes
+    training run-to-run, coherent with the noisy val trajectory and early stops
+    already on record.
+  - **The C1–C2 val gap direction now holds across seeds**: every C1 value
+    {0.8871, 0.8784} beats every C2 value {0.8415, 0.7870}; the smallest
+    cross-pair gap is 3.69 pts > the 2-pt band. n=2 per config — direction robust,
+    magnitude uncertain (3.7 to 10 pts); report it as a range, not a number.
+  - Archive regularized per the recorded plan: both parts + `2026-07-18_c2_grl_s43.ipynb`
+    moved to `notebooks/runs/` (indexed), clean C2_s43 template restored in
+    `notebooks/e1_seed_replicates/` from `8aa804b`.
+
 - **§9 key figure produced** (2026-07-18, `notebooks/diagnostics/2026-07-18_embeddings_c1_vs_c3.ipynb`,
   asset `reports/embeddings_c1_vs_c3.png`): PCA-50→t-SNE on train features, C1
   (CE) vs C3 (SupCon), colored by activity and by AR-set. **By-activity:** 8
@@ -483,28 +504,24 @@
   write-shortcut). **C3**: rerun with `STEMS` reduced to C1+C3 queued, not
   yet reported — this is the more interesting number given the t-SNE chaining
   observation above (does kNN recover what the linear probe misses on C3?).
-- **Waiting on `C1_s43`** (other owner; same notebook pattern, `notebooks/e1_seed_replicates/`).
-  *Partial session landed 2026-07-18 (`03_train_c1_ce_s43_epoch31.ipynb`, web upload):
-  resumed from epoch 9, Colab disconnect after epoch 31/40 (no early stop — best
-  reset at 31), best-so-far **0.8533 @ 31**, still rising on the annealed tail
-  (C1 seed-42's best came @ 37) — one more resume session needed. At completion,
-  regularize the archive per the multi-session rule and the folder README's own
-  convention: parts to `notebooks/runs/` as `YYYY-MM-DD_c1_ce_s43_partN.ipynb`,
-  and `git mv` the C2_s43 archive alongside in the same commit (closes the
-  declared in-place deviation instead of compounding it).*
-  On completion: verbatim archive + Done line; compare against C1 (seed 42, 0.8871) —
-  if C1_s43 also lands outside ~2 pts, the noise floor is pipeline-wide, not GRL-specific;
-  if C1_s43 stays close to 0.8871, the C2 seed sensitivity is a GRL-specific finding worth
-  its own line. Either way: **apply the seed-44 trigger rule and record the decision**
-  (already met on C2 alone, per above) — team call, not automatic from spare capacity.
-  Cache `C1_s43` train+val features (input of the C1⊕C1′ concat control) once done.
-  No solo s43 probes — probes/diagnostics stay on seed 42 (declared), with ONE
-  pre-declared exception (2026-07-18, declared before any s43 feature exists):
-  NCM + kNN are re-run on `C1_s43`'s cached features as a seed-robustness
-  footnote — CPU-only on a cache the concat control already requires, no extra
-  GPU session. Declared asymmetry: C1 only (C2_s43/C3 features are not cached
-  for any other purpose, and the domain finding is already replicated
-  cross-encoder). Reported as a footnote to the seed-42 numbers, not a new row.
+- **`C1_s43` cache session READY TO RUN** (owner A, on return):
+  `notebooks/e1_seed_replicates/04_cache_c1_s43_features.ipynb` — full-staging
+  preamble, `cache_features` on `C1_s43/best.ckpt` for train+val, sample-count
+  asserts (53400/1396, d=256), ~2 min of forwards on a T4. Unblocks the C1⊕C1′
+  concat control + the pre-declared NCM/kNN footnote (that notebook's SKIP entry
+  resolves itself once the cache lands). Executed copy → `notebooks/runs/` as
+  `YYYY-MM-DD_c1_s43_feature_cache.ipynb` + STATUS line, same commit.
+- **Seed-44 decision — SEMI-FINAL: no s44 runs, E1′ stays at n=2** (owner A,
+  2026-07-18; pending routine team confirmation, then this line becomes final).
+  Rationale: the open question the trigger was held for ("pipeline-wide or
+  GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
+  is directional and already closed (no GRL target ×3 diagnostics; C1 stable
+  0.87 pts; every C1 value > every C2 value, min gap 3.69 > band) — an s44 would
+  only sharpen the magnitude interval, which no report claim uses. This is the
+  rule's own default branch ("otherwise E1 stays at n=2, declared" — CHANGELOG
+  2026-07-18), so no pair-clause deviation is needed. **Standing constraint for
+  the report: the GRL val cost is stated as a RANGE (≈3.7–10 pts, n=2), never as
+  the single seed-42 number (−4.6).**
 - Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
   `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out split
   now frozen (see Done) — only the C1 run + train-feature domain diagnostic
@@ -514,9 +531,9 @@
 
 1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-2. **E1 tail:** archive both executed s43 notebooks verbatim + STATUS line (same
-   commit); apply the s44 trigger rule (CHANGELOG 2026-07-18) against the seed-42
-   siblings and record the outcome; cache `C1_s43` features (C1⊕C1′ control input).
+2. **E1 tail (remaining):** run `04_cache_c1_s43_features.ipynb` (ready, see In
+   progress; owner A on return) — archives, trigger analysis and the semi-final
+   no-s44 decision are done; team confirmation of the s44 decision closes E1′.
 3. **E2′ living-out:** split frozen (`splits/p2_living.json`, see Done).
    Remaining: run C1 S6-out via `notebooks/e2_living_out/03_train_c1_ce_s6out.ipynb`
    (~2.3 h, seed 42, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`; readiness cell
@@ -549,8 +566,44 @@
 
 ## Blockers / open decisions
 
-- None blocking. Both former open calls closed 2026-07-17 by the v5.2 team decisions
-  (GRL branch: C4 never runs; §7: underpowered, §9 rests on the domain diagnostics).
+- **Team call requested (2026-07-18, owner A): a "fair-shot" SupCon extension?**
+  Question raised after the C3 verdict (loses to C1 on all three readouts):
+  can a re-designed SupCon stream reach comparable-or-better val? Options were
+  surveyed with literature (see the session record; sources incl. GradCache,
+  SupCon+CE joint fine-tuning) and the field narrows to ONE recommended
+  candidate, the rest excluded on evidence:
+  - **Candidate A — CE fine-tuning of C3's encoder ("C3-ft"):** init the CE run
+    from `C3/epoch40.ckpt`, full-network fine-tune, ~2 h. Answers the reviewer
+    question the report will face anyway ("was the linear probe unfair to
+    SupCon?") with a protected floor (worst case ≈ a CE from a different init).
+    Expected outcome: comparable to C1 (±1 pt) — success is pre-defined as
+    "comparable", not "beats". Needs: init-from-checkpoint wiring in `train.py`
+    (small, cross-review), `c3_ft.yaml`, §8.4 budget line, **§0.7 frozen
+    row-list amendment** (13th row — the list can be amended only by a team
+    call BEFORE the single test session opens), hypothesis pre-registered.
+  - **Candidate B — joint CE+SupCon (single encoder) — downgraded to future
+    work, not recommended as a run:** of its two payoff channels, the
+    information-capture channel is empirically weakened (error-overlap C1 vs
+    C3: 16/349 rescue windows, unstructured — the encoders are largely
+    redundant), leaving only the modest regularization channel; plus extra
+    wiring, an α fixed blind, and the C2 precedent that a second gradient on
+    the CE encoder is never free. Propose as a future-work sentence with the
+    concat number in it.
+  - **Excluded on evidence (not preference):** longer training (grid 40/50/60
+    flat-to-declining; C3 already had more gradient steps than C1); bigger
+    batch in any form (phase-A optimization shows zero starvation symptoms —
+    glass-smooth loss, ±0.004 tail, one-fused-window grid spread, y-control
+    99.5%: the objective's optimum is the problem, not the optimization;
+    additionally the SupCon large-batch lever targets many-class regimes —
+    with 8 classes P×K already yields ~64 views/class/batch); GradCache
+    (mathematically invalid with BatchNorm); memory banks/queues (same
+    saturation + review burden); τ/augmentation tuning (no selection budget on
+    a 9-trace val; §3 frozen).
+  - Timing: decision needed within ~2 days — the run + review must land before
+    the 2026-07-28 freeze and before the test session's row list is final.
+- None else blocking. Both former open calls closed 2026-07-17 by the v5.2 team
+  decisions (GRL branch: C4 never runs; §7: underpowered, §9 rests on the
+  domain diagnostics).
 - Resolved 2026-07-18 (was: S6-out twin quasi-leakage): closed by the
   pre-registered twin-binding amendment (`splits/CHANGELOG.md` 2026-07-18) —
   see the E2′ review pass in Done. Nothing left to ratify beyond confirming the
