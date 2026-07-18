@@ -391,7 +391,13 @@
   its own line. Either way: **apply the seed-44 trigger rule and record the decision**
   (already met on C2 alone, per above) — team call, not automatic from spare capacity.
   Cache `C1_s43` train+val features (input of the C1⊕C1′ concat control) once done.
-  No solo s43 probes — probes/diagnostics stay on seed 42 (declared).
+  No solo s43 probes — probes/diagnostics stay on seed 42 (declared), with ONE
+  pre-declared exception (2026-07-18, declared before any s43 feature exists):
+  NCM + kNN are re-run on `C1_s43`'s cached features as a seed-robustness
+  footnote — CPU-only on a cache the concat control already requires, no extra
+  GPU session. Declared asymmetry: C1 only (C2_s43/C3 features are not cached
+  for any other purpose, and the domain finding is already replicated
+  cross-encoder). Reported as a footnote to the seed-42 numbers, not a new row.
 - **NCM/kNN + embeddings templates ready to run (2026-07-18, code-only, not
   blocked by `C1_s43`):**
   - `sharp_har/viz.plot_embeddings` added (PCA-50 → t-SNE, declared §9 recipe,
@@ -432,7 +438,9 @@
    (§10.3): `splits/p2_living.json`, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`.
 4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
    priori): NCM + kNN (k=20) for C1/C2/C3, concat C1⊕C3 + control C1⊕C1′ —
-   diagnostics-style notebook, `probe.py` untouched, no test contact.
+   diagnostics-style notebook, `probe.py` untouched, no test contact. Plus the
+   pre-declared robustness footnote: NCM/kNN repeated on `C1_s43`'s cached
+   features (see In progress — C1 only, declared asymmetry, footnote not row).
 5. **Implement + cross-review before code freeze:** T3A (numpy, on cached test
    features — §9 pinned spec: declared batch variant, M=20; cross-review must also
    confirm the paper's filter grid {1,5,20,50,100,∞} against the official repo),
