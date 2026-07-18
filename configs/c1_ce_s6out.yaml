@@ -1,0 +1,37 @@
+# C1_s6out — E2' living-out rotation of C1 (cross-entropy, V-B backbone,
+# P2-living protocol). Byte-identical to c1_ce.yaml except `name`,
+# `protocol` and `split_file`: same loss, backbone, optimizer, budget and
+# seed (42, the default), so the only variable vs C1 is the rotation
+# (test = S6 living room, train = S1-S5 + S7). Ref. §2.2, §10.3 (v5.2).
+# Launch requires splits/p2_living.json frozen on Git first (§0.1); that
+# split carries its own train-only mu/sigma (§0.3). Drive folder: C1_s6out.
+name: C1_s6out
+protocol: P2-living
+split_file: splits/p2_living.json
+backbone: resnet_vb
+d_enc: 256
+n_att: 8
+loss:
+  type: ce
+  label_smoothing: 0.1
+adversary:
+  type: null
+  target: ar_set
+  lambda_max: null
+  beta: null
+optim:
+  name: adamw
+  lr: 1.0e-3
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 40
+  batch_size: 256
+  sampler: uniform
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10

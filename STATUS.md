@@ -338,6 +338,22 @@
   6 AR-sets and both environments (val: 9 traces, 5 AR-sets, AR-3 absent; test =
   single domain S7 → no cross-domain structure to show); same declared scope as
   the §7 train-feature diagnostics, zero test contact.
+- **E2′ setup committed (2026-07-18, code-only — the freeze itself happens in the
+  Colab session):** `build_p2_rotation` gains a blocking `reference` consistency
+  check against the frozen primary rotation (identical trace universe — checked
+  before μ/σ so a diverged inventory fails fast — identical axes/window/classes,
+  and own non-copied μ/σ; any failure aborts before the JSON is written; negative
+  paths verified locally); config `c1_ce_s6out.yaml` (byte-identical to C1 except
+  name/protocol/split_file, seed 42, Drive folder `C1_s6out`) + pinned runners in
+  `notebooks/e2_living_out/` (one-shot split session with day-1 gates, session
+  scratch reports, contingency inspection and a §0.1 freeze guard; training
+  runner gated on the frozen split being in the clone). **Local dry-run on the
+  frozen universe predicts the exact partition** (assignment depends only on
+  trace ids + seed 42, data values only enter μ/σ): train=79 val=7 test=15
+  pinned=41. Declared: val = AR-1/2/4/5 only (no AR-3/6/7); val classes miss C
+  and W → this rotation's val macro-F1 is a **6-class** number; the dual-archive
+  twin pair separates — **S4a_L in train, S4a_Lalt in val** — a selection-side
+  quasi-leakage (S6 test untouched); AR-7 (11 traces) entirely in train.
 - **Housekeeping: scratch `C1_smoke` folder deleted from Drive** (2026-07-17). Note:
   so far each collaborator manages run folders on their own Drive — the final test
   session needs Editor shortcuts to EVERY run folder (incl. new `C1_s43`/`C2_s43` and
@@ -392,10 +408,13 @@
     (not added to `probe.py`), printed against the frozen linear-probe
     numbers already on record. Both templates committed output-free; ready
     to run whenever, on CPU, no data staging.
-- Still local prep for the v5.2 tail: S6-out split generation (own μ/σ, pins,
-  asserts — design choice pending: restage from Drive vs reuse the committed
-  `reports/inventory.csv`), the C1⊕C3 concat diagnostic (blocked on
-  `C1_s43`), T3A + AdaBN (harness addition, cross-review required).
+- Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
+  `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out
+  generation prep is done (2026-07-18, see Done); the pending restage-vs-reuse
+  design choice is resolved as **restage + rebuild the inventory in-session**
+  (μ/σ need the staged data regardless, so reusing the committed CSV saves
+  nothing), with the new frozen-reference universe check turning any divergence
+  from the day-1 trace set into a blocking failure before anything is written.
 
 ## Next steps (in order)
 
@@ -404,12 +423,13 @@
 2. **E1 tail:** archive both executed s43 notebooks verbatim + STATUS line (same
    commit); apply the s44 trigger rule (CHANGELOG 2026-07-18) against the seed-42
    siblings and record the outcome; cache `C1_s43` features (C1⊕C1′ control input).
-3. **E2′ living-out:** generate + freeze the S6-out split on Git (own μ/σ, rare-cell
-   pins, blocking asserts; inspect and declare the new rotation's contingency BEFORE
-   launch), then C1 S6-out (~2.3 h, seed 42), then the domain-diagnostic replication
-   on its train features (first train with a whole non-bedroom environment).
-   Pre-declared names (§10.3): `splits/p2_living.json`, `configs/c1_ce_s6out.yaml`,
-   Drive folder `C1_s6out`.
+3. **E2′ living-out:** generate + freeze the S6-out split on Git via
+   `notebooks/e2_living_out/01_s6out_split.ipynb` (own μ/σ, rare-cell pins,
+   blocking asserts + frozen-reference consistency check; inspect the contingency
+   and ratify the declared caveats — 6-class val, S4a_L/S4a_Lalt twin split —
+   BEFORE launch), then C1 S6-out (~2.3 h, seed 42, pinned runner), then the
+   domain-diagnostic replication on its train features. Pre-declared names
+   (§10.3): `splits/p2_living.json`, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`.
 4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
    priori): NCM + kNN (k=20) for C1/C2/C3, concat C1⊕C3 + control C1⊕C1′ —
    diagnostics-style notebook, `probe.py` untouched, no test contact.
@@ -437,6 +457,11 @@
 
 - None blocking. Both former open calls closed 2026-07-17 by the v5.2 team decisions
   (GRL branch: C4 never runs; §7: underpowered, §9 rests on the domain diagnostics).
+- Minor, non-blocking: the S6-out dry-run separates the dual-archive twin pair
+  (S4a_L → train, S4a_Lalt → val): a selection-side quasi-leakage, S6 test
+  untouched. It falls out of the frozen §2.2 mechanics (same code, seed 42) —
+  accept-and-declare is the default; changing the mechanics for one rotation
+  would be a new team call. Ratify at the split-freeze session.
 - Minor, non-blocking: seed 44 was floated in planning but the committed E1
   amendment deliberately stops at one replicate per config (n=2 → observed range,
   no significance claims) — adding s44 would be a new explicit call. (The former

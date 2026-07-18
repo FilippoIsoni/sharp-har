@@ -13,7 +13,7 @@ from typing import Any
 import pandas as pd
 
 from .inventory import C0_PAPER_CLASSES, trace_table
-from .utils import get_logger, write_json
+from .utils import get_logger, read_json, write_json
 from .windowing import EVAL_STRIDE, TRAIN_STRIDE, accumulate_moments
 
 logger = get_logger(__name__)
@@ -88,6 +88,46 @@ def _stratified_val_split(
     return train_ids, val_ids, pinned_ids
 
 
+def _assert_reference_universe(
+    ids: set[str], reference: dict[str, Any], reference_name: str
+) -> None:
+    """The new rotation must partition exactly the trace universe
+    (train ∪ val ∪ test) of the frozen reference rotation: same day-1
+    inventory, same exclusions, only the assignment differs (§10.3 E2′).
+    A mismatch means the session's inventory diverged from day 1 —
+    blocker, investigate before freezing anything."""
+    ref_universe = set(reference["train"]) | set(reference["val"]) | set(reference["test"])
+    missing = ref_universe - ids
+    extra = ids - ref_universe
+    assert not missing and not extra, (
+        f"trace universe differs from the frozen {reference_name}: "
+        f"missing={sorted(missing)[:5]} extra={sorted(extra)[:5]} — "
+        "build_p2_rotation aborted, no JSON written."
+    )
+
+
+def _assert_reference_metadata(
+    payload: dict[str, Any], reference: dict[str, Any], reference_name: str
+) -> None:
+    """Frozen metadata must carry over identically to an additional
+    rotation — axes, window strides and class set are dataset facts, not
+    rotation choices — while μ/σ must NOT: each rotation computes its own
+    train-only moments (§0.3), so values equal to the reference's at full
+    float precision can only mean the reference's stats were reused by
+    mistake. Any failure aborts before the JSON is written."""
+    for key in ("axes", "window", "classes"):
+        assert payload[key] == reference[key], (
+            f"{key!r} differs from the frozen {reference_name}: "
+            f"{payload[key]!r} != {reference[key]!r} — "
+            "build_p2_rotation aborted, no JSON written."
+        )
+    assert payload["norm"] != reference["norm"], (
+        f"norm (mu/sigma) is identical to the frozen {reference_name}'s: "
+        "each rotation must compute its own train-only moments (§0.3) — "
+        "build_p2_rotation aborted, no JSON written."
+    )
+
+
 def build_p2_rotation(
     inventory_df: pd.DataFrame,
     test_ar_set: str = P2_PRIMARY_TEST_AR_SET,
@@ -95,14 +135,22 @@ def build_p2_rotation(
     out_path: str | Path = "splits/p2_lab.json",
     seed: int = SPLIT_SEED,
     labels: list[str] | None = None,
+    reference: str | Path | None = None,
 ) -> dict[str, Any]:
     """Leave-one-set-out rotation (§2.2). Primary rotation (defaults):
-    test = all AR-7 (laboratory, S7) traces, train = S1-S6. The E2
-    extension reuses this with test_ar_set="AR-6" (living room),
-    protocol="P2-living", its own out_path and its own mu/sigma. Val =
-    15% of train, stratified by (ar_set, attivita), with rare cells
-    pinned. Raises if the per-cell coverage assert fails, in which case
-    the JSON is NOT written."""
+    test = all AR-7 (laboratory, S7) traces, train = S1-S6. The E2′
+    extension (v5.2 §10.3, C1 only) reuses this with test_ar_set="AR-6"
+    (living room), protocol="P2-living", out_path="splits/p2_living.json"
+    and its own mu/sigma (§0.3). Val = 15% of train, stratified by
+    (ar_set, attivita), with rare cells pinned. Raises if the per-cell
+    coverage assert fails, in which case the JSON is NOT written.
+
+    `reference`: path to the frozen primary rotation's JSON — pass it
+    when building any additional rotation. Blocking consistency checks
+    against it: identical trace universe (before μ/σ are computed, so a
+    diverged inventory fails fast) and identical axes/window/classes
+    metadata, plus own — not copied — μ/σ (after). The frozen reference
+    itself is only read, never written."""
     rng = random.Random(seed)
     traces = trace_table(inventory_df)
 
@@ -112,6 +160,14 @@ def build_p2_rotation(
 
     train_ids, val_ids, pinned_ids = _stratified_val_split(train_pool, VAL_FRACTION, rng)
     test_ids = test_traces["trace_id"].tolist()
+
+    reference_payload: dict[str, Any] | None = None
+    if reference is not None:
+        reference_payload = read_json(reference)
+        _assert_reference_universe(
+            set(train_ids) | set(val_ids) | set(test_ids),
+            reference_payload, Path(reference).name,
+        )
 
     # blocking assert: an empty val makes early stopping / checkpoint
     # selection impossible (§2.2 val = 15% of train) — never freeze it
@@ -151,6 +207,8 @@ def build_p2_rotation(
         "test": sorted(test_ids),
         "norm": {"mu": mu, "sigma": sigma},
     }
+    if reference_payload is not None:
+        _assert_reference_metadata(payload, reference_payload, Path(reference).name)
     write_json(out_path, payload)
     logger.info(
         "%s written (%s): train=%d val=%d test=%d pinned=%d",
