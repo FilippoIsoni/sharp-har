@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E2′ P2-living split frozen (C1 S6-out run next); C2_s43 in (seed-44 trigger fired, decision held for C1_s43); transductive-row prep continues** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ complete (C1 seed-stable, C2 not: instability is GRL-specific); C1 S6-out run next; s44 team call framed** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -402,6 +402,27 @@
     `C1_s43` (does C1 show the same seed sensitivity, or is it C2/GRL-specific?),
     due by table-freeze day regardless of outcome.
 
+- **C1_s43 run complete — E1′ measurements done** (2026-07-18, three sessions:
+  epochs 1-8 launched by owner B (notebook not saved — declared C0-style exception),
+  9-32 (snapshot archived as `notebooks/runs/2026-07-18_c1_ce_s43_part1.ipynb`, log
+  through 31), 33-40 finished by owner A (`_part2.ipynb`, full 40-epoch history in its
+  final dict — verified against part-1's log lines to print precision, ≤4.9e-05)):
+  **best val macro-F1 0.8784 @ epoch 37**, full 40/40, no early stop — the same
+  late-cosine-tail best epoch as C1 seed-42 (0.8871 @ 37).
+  - **Seed swing on C1: 0.87 pts — inside the §0.5 band. The E1′ instability is
+    C2/GRL-specific, not pipeline-wide**: C1 reproduces both the score (±0.9) and
+    the training shape (best @ 37) across seeds; C2 swung 5.45 pts with a different
+    best epoch (13 vs 6). The GRL doesn't just cost performance — it destabilizes
+    training run-to-run, coherent with the noisy val trajectory and early stops
+    already on record.
+  - **The C1–C2 val gap direction now holds across seeds**: every C1 value
+    {0.8871, 0.8784} beats every C2 value {0.8415, 0.7870}; the smallest
+    cross-pair gap is 3.69 pts > the 2-pt band. n=2 per config — direction robust,
+    magnitude uncertain (3.7 to 10 pts); report it as a range, not a number.
+  - Archive regularized per the recorded plan: both parts + `2026-07-18_c2_grl_s43.ipynb`
+    moved to `notebooks/runs/` (indexed), clean C2_s43 template restored in
+    `notebooks/e1_seed_replicates/` from `8aa804b`.
+
 - **§9 key figure produced** (2026-07-18, `notebooks/diagnostics/2026-07-18_embeddings_c1_vs_c3.ipynb`,
   asset `reports/embeddings_c1_vs_c3.png`): PCA-50→t-SNE on train features, C1
   (CE) vs C3 (SupCon), colored by activity and by AR-set. **By-activity:** 8
@@ -483,28 +504,17 @@
   write-shortcut). **C3**: rerun with `STEMS` reduced to C1+C3 queued, not
   yet reported — this is the more interesting number given the t-SNE chaining
   observation above (does kNN recover what the linear probe misses on C3?).
-- **Waiting on `C1_s43`** (other owner; same notebook pattern, `notebooks/e1_seed_replicates/`).
-  *Partial session landed 2026-07-18 (`03_train_c1_ce_s43_epoch31.ipynb`, web upload):
-  resumed from epoch 9, Colab disconnect after epoch 31/40 (no early stop — best
-  reset at 31), best-so-far **0.8533 @ 31**, still rising on the annealed tail
-  (C1 seed-42's best came @ 37) — one more resume session needed. At completion,
-  regularize the archive per the multi-session rule and the folder README's own
-  convention: parts to `notebooks/runs/` as `YYYY-MM-DD_c1_ce_s43_partN.ipynb`,
-  and `git mv` the C2_s43 archive alongside in the same commit (closes the
-  declared in-place deviation instead of compounding it).*
-  On completion: verbatim archive + Done line; compare against C1 (seed 42, 0.8871) —
-  if C1_s43 also lands outside ~2 pts, the noise floor is pipeline-wide, not GRL-specific;
-  if C1_s43 stays close to 0.8871, the C2 seed sensitivity is a GRL-specific finding worth
-  its own line. Either way: **apply the seed-44 trigger rule and record the decision**
-  (already met on C2 alone, per above) — team call, not automatic from spare capacity.
-  Cache `C1_s43` train+val features (input of the C1⊕C1′ concat control) once done.
-  No solo s43 probes — probes/diagnostics stay on seed 42 (declared), with ONE
-  pre-declared exception (2026-07-18, declared before any s43 feature exists):
-  NCM + kNN are re-run on `C1_s43`'s cached features as a seed-robustness
-  footnote — CPU-only on a cache the concat control already requires, no extra
-  GPU session. Declared asymmetry: C1 only (C2_s43/C3 features are not cached
-  for any other purpose, and the domain finding is already replicated
-  cross-encoder). Reported as a footnote to the seed-42 numbers, not a new row.
+- **`C1_s43` cache session pending** (unblocks the C1⊕C1′ concat control + the
+  pre-declared NCM/kNN seed-robustness footnote): cache train+val features from
+  `C1_s43/best.ckpt` on Drive (probe-session pattern, minutes on GPU). No solo
+  s43 probes beyond the declared footnote — probes/diagnostics stay on seed 42.
+- **Seed-44 decision now fully framed, team call pending** (rule: CHANGELOG
+  2026-07-18; due by table-freeze day): the trigger fired on C2 only (5.45 pts)
+  while C1's twin landed inside the band (0.87 pts). Proposal on the table:
+  skip `C1_s44` (two concordant seeds, low marginal value), launch **`C2_s44`
+  only** (the ambiguity is all on C2: is 0.7870 a typical draw or an unlucky
+  one?) — a deviation from the pre-registered pair clause, so it needs its own
+  CHANGELOG line with this rationale if ratified.
 - Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
   `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out split
   now frozen (see Done) — only the C1 run + train-feature domain diagnostic
@@ -514,9 +524,9 @@
 
 1. Every finished run: executed notebook committed verbatim to `notebooks/runs/`
    (`YYYY-MM-DD_<config>.ipynb`) + STATUS line, same commit. Val only, never test.
-2. **E1 tail:** archive both executed s43 notebooks verbatim + STATUS line (same
-   commit); apply the s44 trigger rule (CHANGELOG 2026-07-18) against the seed-42
-   siblings and record the outcome; cache `C1_s43` features (C1⊕C1′ control input).
+2. **E1 tail (remaining):** cache `C1_s43` train+val features on Drive (C1⊕C1′
+   control input; probe-session pattern, minutes) — archives and trigger analysis
+   are done (see Done); the s44 team call is framed in In progress.
 3. **E2′ living-out:** split frozen (`splits/p2_living.json`, see Done).
    Remaining: run C1 S6-out via `notebooks/e2_living_out/03_train_c1_ce_s6out.ipynb`
    (~2.3 h, seed 42, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`; readiness cell
