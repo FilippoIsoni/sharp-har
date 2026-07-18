@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1 S6-out run done (domain-diag remaining); C1_s43 cache next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1 S6-out run done (domain-diag runner ready); ALL remaining code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); C1_s43 cache next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -509,6 +509,52 @@
   - Remaining on this rotation: the domain-diagnostic replication on its **train**
     features (9, the other reason E2' exists — 2nd environment is the lab here).
 
+- **Pre-freeze implementation pass — every remaining code deliverable implemented**
+  (2026-07-18, code+templates, local; **cross-review PENDING**, required §10.4):
+  - **T3A** in new `sharp_har/transductive.py` (`t3a_head` + `head_weight_from_checkpoint`):
+    §9 pinned batch variant, pure numpy on cached features; returns an
+    `evaluate_features`-compatible head (adjusted prototypes, bias 0) → the C1+T3A row
+    differs from C1 only in the head, as declared. Official-repo pre-check done (the
+    cross-review item): filter grid {1,5,20,50,100,∞(-1)} confirmed; supports
+    L2-normalized before averaging (official math, now explicit in §9); two declared
+    deviations made explicit in doc+docstring — bias-free pseudo-labeling (official
+    scores with the biased classifier) and initial prototype never filtered (official
+    filters warmup supports too). Placement: test-row technique ≠ val-only diagnostic,
+    so NOT in `diagnostics.py`.
+  - **AdaBN** as `adapt_bn=True` on `harness.evaluate`/`cache_features` (the doc's
+    "harness addition"): deterministic full-pass cumulative BN re-estimation
+    (`momentum=None`, only BatchNorm modules in train mode, weights untouched),
+    `_adabn`-infixed stems/filenames so the plain C1 artifacts can never be overwritten
+    inside the single session, flag recorded in the §0.7 JSONL log + CSV/npz metadata,
+    `ADAPT_BN_BATCH=256` enforced by assert; `evaluate_c0` refuses the flag (no C0+AdaBN
+    row exists). §9 "ordine di inventario" wording refined: operative order = the eval
+    loader's deterministic dataset order (declared, not silently resolved).
+  - **Domain-probe instrument promoted** to `diagnostics.domain_probe`
+    (+ `inner_trace_split`, `build_domain_targets`, `fused_head_scores`): the
+    pre-registered S6-out replication makes it re-run pipeline code — same criterion as
+    the NCM/kNN promotion. Math verified **byte-identical** to the executed C1/C2/C3
+    notebook cell (full-row equality on synthetic data): the recorded rows stand; the
+    three archived sessions predate the promotion (declared in the diagnostics README).
+  - **`diagnostics.concat_caches`**: alignment-asserted concatenation for the §7 concat
+    rows (per-row trace/window/antenna/y + labels/set_name contract asserts — a
+    mismatch is a wrong-file error, never a reorder to repair).
+  - **Templates committed:** `notebooks/e2_living_out/04_domain_probe_c1_s6out.ipynb`
+    (one session: cache `C1_s6out` TRAIN features over p2_living — 50948 samples pinned
+    by assert — then `domain_probe`; executed copy → `notebooks/diagnostics/`) and
+    `notebooks/diagnostics/2026-07-18_concat_c1_c3.ipynb` (C1⊕C3 + C1⊕C1′ control,
+    frozen probe recipe unchanged, SKIP-with-note while the C1_s43 cache is missing).
+  - **Synthetic verification 25/25 PASS** (local suite): T3A ≡ an independent naive
+    transcription of the §9 formula, bitwise determinism, empty-class/under-M edges,
+    blocking asserts; AdaBN weights bitwise untouched, first-BN running_mean ≡ global
+    channel mean (cumulative estimator), bitwise deterministic, eval mode restored;
+    domain-probe full-row byte-equivalence; concat hstack + assert firing.
+  - Deliberately deferred (not forgotten): the notebook-05 template extension
+    (transductive rows + post-AdaBN caching + hard-coded row-list readiness assert) —
+    the OPEN SupCon fair-shot call can still amend the frozen row list (a C3-ft row),
+    and the assert must be written against the FINAL list; extending now would bake in
+    a list that may legitimately change within days. Still on the §10.4 freeze
+    checklist, with the report.
+
 ## In progress
 
 - **NCM/kNN (§7 v5.2) partial: C1 done, C2 blocked, C3 pending.**
@@ -541,10 +587,13 @@
   2026-07-18), so no pair-clause deviation is needed. **Standing constraint for
   the report: the GRL val cost is stated as a RANGE (≈3.7–10 pts, n=2), never as
   the single seed-42 number (−4.6).**
-- Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
-  `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out split
-  frozen + C1 run done (see Done) — only the train-feature domain diagnostic
-  remains on that rotation.
+- **Cross-review of the pre-freeze implementation pass** (T3A `transductive.py`,
+  harness `adapt_bn`, `diagnostics.domain_probe`/`concat_caches`/`fused_head_scores`,
+  the two new templates) — required before the single test session (§10.4). The
+  official-repo grid/math pre-check and the 25/25 synthetic suite are recorded in
+  Done; the reviewer re-confirms rather than starts from zero. All v5.2-tail local
+  prep is now implemented — what remains on the rotations is running sessions, not
+  writing code.
 
 ## Next steps (in order)
 
@@ -554,24 +603,22 @@
    progress; owner A on return) — archives, trigger analysis and the semi-final
    no-s44 decision are done; team confirmation of the s44 decision closes E1′.
 3. **E2′ living-out:** split frozen + C1 S6-out run done (best val 0.7761 @12, see
-   Done). Remaining: the domain-diagnostic replication on this run's **train**
-   features (frozen §5.3 recipe, no val selection, no test contact §0.7) — same
-   code as the C1/C2/C3 train-feature diagnostics, run where only `C1_s6out`'s
-   cache is staged. The `best.ckpt` is ready for the single §0.7 test row.
+   Done). Remaining: run `04_domain_probe_c1_s6out.ipynb` (READY — caches the train
+   features and runs the promoted `diagnostics.domain_probe`; GPU session ~staging +
+   2 min of forwards; executed copy → `notebooks/diagnostics/`). The `best.ckpt` is
+   ready for the single §0.7 test row.
 4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
-   priori): NCM + kNN (k=20) for C1/C2/C3, concat C1⊕C3 + control C1⊕C1′ —
-   diagnostics-style notebook, `probe.py` untouched, no test contact. Plus the
-   pre-declared robustness footnote: NCM/kNN repeated on `C1_s43`'s cached
-   features (see In progress — C1 only, declared asymmetry, footnote not row).
-5. **Implement + cross-review before code freeze:** T3A (numpy, on cached test
-   features — §9 pinned spec: declared batch variant, M=20; cross-review must also
-   confirm the paper's filter grid {1,5,20,50,100,∞} against the official repo),
-   AdaBN (harness addition — §9 pinned spec: reset + cumulative full-pass BN
-   re-estimation, `momentum=None`, batch 256, inventory order).
-   (`viz.plot_embeddings` implemented AND cross-reviewed — closed 2026-07-18,
-   see the review pass in Done.) Extend the notebook 05 template with the pre-registered
-   transductive rows + post-AdaBN feature caching + the hard-coded frozen
-   row-list readiness assert (§0.7).
+   priori): NCM + kNN reruns (C3 queued, C2 on the Drive shortcut, C1_s43 footnote —
+   see In progress) and the concat session via `2026-07-18_concat_c1_c3.ipynb`
+   (READY — C1⊕C3 runnable now, the C1⊕C1′ control un-SKIPs once the C1_s43 cache
+   lands; `git mv` to the run date if executed later). `probe.py` untouched, no test
+   contact.
+5. **Cross-review before code freeze** (implementation DONE 2026-07-18, see Done):
+   T3A (`transductive.py`), AdaBN (harness `adapt_bn`), `diagnostics.domain_probe`/
+   `concat_caches`. Then, once the SupCon fair-shot call resolves the final row list:
+   extend the notebook 05 template with the pre-registered transductive rows +
+   post-AdaBN feature caching + the hard-coded frozen row-list readiness assert
+   (§0.7) — deliberately deferred, see Done.
 6. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both

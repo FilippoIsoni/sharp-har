@@ -31,9 +31,16 @@ folder `C1_s6out`.
 2. **`03_train_c1_ce_s6out.ipynb`** — C1 S6-out (~2.3 h, seed 42);
    its readiness cell asserts the frozen split is present in the clone.
    Archive the executed copy per the usual convention.
-3. Domain-diagnostic replication on the run's **train** features
-   (separate diagnostics session, frozen §5.3 recipe, no val selection,
-   no test contact).
+3. **`04_domain_probe_c1_s6out.ipynb`** — domain-diagnostic replication
+   on the run's **train** features: caches `C1_s6out/best.ckpt` train
+   features over the frozen `p2_living` split (50948 samples — no
+   probe session exists on this rotation, so the cache is produced
+   here), then runs `diagnostics.domain_probe` (the instrument
+   promoted 2026-07-18, byte-identical to the three executed
+   C1/C2/C3 sessions). Frozen §5.3 recipe, no val selection, no test
+   contact. Executed copy →
+   `notebooks/diagnostics/YYYY-MM-DD_c1_s6out_domain_probe.ipynb`
+   (next to the other domain-probe sessions).
 
 ## Declared expectations and caveats (local dry-run, 2026-07-18)
 
@@ -75,4 +82,7 @@ final test session needs an Editor shortcut to the `C1_s6out` Drive
 folder from the session account — verify before the session day.
 
 Executed copies go to `notebooks/runs/` (`YYYY-MM-DD_s6out_split.ipynb`,
-`YYYY-MM-DD_c1_ce_s6out.ipynb`). These templates stay output-free.
+`YYYY-MM-DD_c1_ce_s6out.ipynb`) — except the domain probe (`04`), whose
+executed copy goes to `notebooks/diagnostics/` with the other three
+domain-probe sessions (it is an investigation, not a protocol run).
+These templates stay output-free.

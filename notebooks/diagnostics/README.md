@@ -23,12 +23,17 @@ Rules:
   package like any other `viz.py` function, with cross-review before
   freeze (CLAUDE.md: no logic in notebooks) — the notebook stays thin
   and only calls it. The dividing line (sharpened 2026-07-18): truly
-  one-off probes that only *import* frozen recipes (the domain
-  diagnostics) stay notebook-local; anything with its own new math
+  one-off probes stay notebook-local; anything with its own new math
   whose numbers enter the report and that is re-run across sessions is
   pipeline code — the NCM/kNN scorers were promoted to
   `sharp_har/diagnostics.py` on this basis (cross-review recorded in
-  STATUS, math verified identical to the notebook-local original).
+  STATUS, math verified identical to the notebook-local original), and
+  the domain-probe instrument followed the same day
+  (`diagnostics.domain_probe`): the pre-registered E2′ S6-out
+  replication (§10.3) turned it from a one-off into a re-run
+  instrument. The three executed domain-probe sessions predate the
+  promotion, stay archived verbatim, and their recorded rows stand
+  (math verified byte-identical on synthetic data).
 - Train/val only. A diagnostic never touches the test set (§0.7); if one
   ever needs to, it goes through the logging harness like everything else.
 - Findings that change the plan land in `STATUS.md`; the notebook is the
@@ -42,4 +47,5 @@ Rules:
 | `2026-07-17_c3_supcon_domain_probe.ipynb` | The C4 gate: do SupCon features retain the domain that CE discards? Same instrument as the C1/C2 sessions (stem parametrized — C3 has no `best.ckpt`), run on the phase-B feature caches over the full epoch40/50/60 grid (maturity sweep, compression hypothesis). Requires `phase_b_selection.json`. | **Gate closed: no.** Control `y` = 0.995/0.993/0.996 across the grid; every domain target at or below its majority baseline on all three checkpoints (`ambiente`/`persona` are the exact constant predictors, third replication). No maturity trend — the compression hypothesis does not hold for domain. Coherent with the objective: P×K puts same-class views from different AR-sets in every batch and SupCon pulls them together, so domain suppression is built in. The C4 GRL has no target under either loss family. |
 | `2026-07-17_c2_grl_domain_probe.ipynb` | Confirmatory: the same diagnostic (identical code) on C2's cached train features — is the GRL encoder any more domain-invariant than plain CE, and did the GRL's 4.6-pt val cost come from transfer only or from train fit too? Run in a session where only C2's cache was staged (C1 SKIP; the C1 session above covers it). | **Verdict confirmed.** Every domain target sits at its majority baseline on C2 too (largest delta +0.015; `ambiente`/`persona` are the exact same constant predictors as C1) — the adversary removed nothing; on macro-F1 the domain is even slightly *more* readable than C1 (ar_set 0.144 vs 0.066). New finding: `y` control = 0.893 on traces the encoder trained on, vs C1's 1.000 → the GRL cost train fit itself, not just transfer. |
 | `2026-07-18_ncm_knn_c1_c2_c3.ipynb` | §7 v5.2: are C1/C2/C3's activity features robust to readout choice? NCM (per-class re-normalized centroids) and kNN (k=20, vote-fraction + similarity tie-break) on the same cached features the linear probes used, scorers imported from `sharp_har.diagnostics` (promoted 2026-07-18; first C1 numbers came from the byte-identical notebook-local cell), fused via `harness.fuse_windows` (reused, not reimplemented), printed against the frozen linear-probe numbers already on record. | *(partial — C1 on record in STATUS: NCM 0.8653/0.8888, kNN 0.8453/0.8563, both ≈ the linear probe → readout-robust; C2 blocked on a Drive shortcut, C3 rerun queued; executed copy pending archive)* |
+| `2026-07-18_concat_c1_c3.ipynb` | §7 v5.2 concat: does SupCon capture activity information CE misses (C1⊕C3, 512-d, frozen §5.3 probe recipe unchanged) or does any second encoder help the same way (control C1⊕C1′ = seed 42 ⊕ seed 43)? Alignment across caches asserted by `diagnostics.concat_caches`, never repaired. | *(template 2026-07-18, output-free — not yet run; the control pair is blocked on the `C1_s43` feature-cache session, the C1⊕C3 pair is runnable now and SKIP logic handles the rest)* |
 | `2026-07-18_embeddings_c1_vs_c3.ipynb` | §9 v5.2 key figure: qualitative PCA→t-SNE picture of C1 (CE) vs C3 (SupCon) train-feature geometry, colored by activity and by AR-set. Thin notebook — logic lives in `viz.plot_embeddings` (package code, cross-review pending). C1 vs C3 only (C2's story is already the diagnostic table; C4 never trained) — declared scope, not a default to extend without a team call. | **Visual match to the diagnostic table.** By-activity: 8 tight clusters in both encoders (consistent with C1-lin 0.8835 / C3 0.8190); C3's L/S/E clusters visibly chain into one continuous shape rather than 3 discrete blobs, a plausible geometric reading of why a *linear* probe scores lower on C3 even though the structure is arguably still there. By-AR-set: colors are uniformly mixed within every cluster, in BOTH encoders — no visible domain sub-structure, echoing the delta≈0 diagnostic result qualitatively. Train-only/seen-traces caveat applies (declared). Asset: `reports/embeddings_c1_vs_c3.png`. |

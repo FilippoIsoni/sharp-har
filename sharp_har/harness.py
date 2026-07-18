@@ -24,6 +24,16 @@ Also here (§5.3): cache_features — frozen encoder, features extracted
 once WITHOUT augmentation (declared, §5.3 note i) and cached as .npz for
 the linear probes — and evaluate_features, the probe-side twin of
 evaluate() for phase B / C1-lin / C2-lin test runs.
+
+AdaBN (§9 v5.2 transductive rows, spec pinned 2026-07-18) is a flag on
+the two checkpoint-loading entry points, not a separate path:
+evaluate(..., adapt_bn=True) is the C1+AdaBN row, cache_features(...,
+adapt_bn=True) is the post-AdaBN cache the C1+AdaBN+T3A row consumes
+(composition order AdaBN -> T3A). The flag re-estimates BN statistics
+on the SAME set it then evaluates/caches (unlabeled inputs only),
+enters the §0.7 audit log and the CSV meta, and switches the output
+stems ("<ckpt>_adabn_...") so the plain C1 artifacts are never
+overwritten. T3A itself lives in transductive.py (numpy on caches).
 """
 from __future__ import annotations
 
@@ -47,6 +57,7 @@ logger = get_logger(__name__)
 
 TEST_LOG_FILENAME = "test_invocations.jsonl"
 FUSION_METHODS = ("softmax_avg", "sharp_c0")
+ADAPT_BN_BATCH = 256  # §9 AdaBN spec: adaptation batch size fixed a priori
 
 Fusion = Literal["softmax_avg", "sharp_c0"]
 
@@ -155,6 +166,40 @@ def fuse_windows(
         "y_pred": np.array(y_pred),
         "probs": np.stack(fused),
     }
+
+
+def _adapt_bn(backbone: nn.Module, loader: DataLoader, device: torch.device, amp: bool) -> int:
+    """AdaBN re-estimation (§9, spec pinned 2026-07-18): reset every
+    BatchNorm running statistic, then ONE full no-grad pass over the
+    loader with only the _BatchNorm modules in train mode and
+    momentum=None — the cumulative-mean AdaBN estimator; the default
+    exponential momentum would weight recent batches arbitrarily by
+    order. Weights are untouched; every non-BN module stays in eval
+    (deterministic — no dropout-style stochasticity can leak in). The
+    loader must be the deterministic eval loader (shuffle=False -> the
+    dataset's sorted-trace, ascending antenna/temporal-window order, the
+    declared order) at ADAPT_BN_BATCH. Returns the number of adapted BN
+    modules; the caller re-uses the same loader for the actual
+    eval/caching pass, statistics frozen (backbone back in full eval).
+    """
+    bns = [m for m in backbone.modules() if isinstance(m, nn.modules.batchnorm._BatchNorm)]
+    assert bns, "AdaBN on a backbone without BatchNorm modules — nothing to adapt (wrong model?)"
+    backbone.eval()
+    for m in bns:
+        m.reset_running_stats()
+        m.momentum = None  # cumulative moving average over the full pass
+        m.train()
+    with torch.no_grad():
+        for batch in loader:
+            x = batch["x"].to(device, non_blocking=True)
+            with torch.autocast(device_type=device.type, enabled=amp and device.type == "cuda"):
+                backbone(x)
+    backbone.eval()
+    logger.info(
+        "AdaBN: re-estimated running stats of %d BatchNorm modules over %d samples",
+        len(bns), len(loader.dataset),
+    )
+    return len(bns)
 
 
 # ------------------------------------------------------------- audit trail
@@ -278,11 +323,19 @@ def evaluate(
     num_workers: int = 2,
     device: str | None = None,
     amp: bool = True,
+    adapt_bn: bool = False,
 ) -> Path:
     """Evaluates an end-to-end (CE) checkpoint on one set of a frozen
     split and writes windows/metrics/confusion CSVs next to the
     checkpoint (or in `out_dir`). Antenna fusion per §1.3/§9 —
     "sharp_c0" only via evaluate_c0(). Returns the metrics CSV path.
+
+    adapt_bn=True is the AdaBN row (§9 transductive spec): BN running
+    statistics re-estimated on this same set's unlabeled inputs via
+    _adapt_bn BEFORE the prediction pass — weights untouched, output
+    stem "<ckpt>_adabn_<set>_<fusion>" so the plain row's CSVs are
+    never overwritten. Pre-registered use: C1 on test, in the single
+    §0.7 session (a val run would only be a code smoke check).
 
     Every set_name="test" invocation is logged to test_invocations.jsonl
     BEFORE the data is read (§0.7): one final test eval per stream, with
@@ -293,12 +346,16 @@ def evaluate(
     out = Path(out_dir) if out_dir is not None else checkpoint.parent
     backbone, head, cfg = _load_end_to_end(checkpoint)
     labels = labels if labels is not None else cfg.get("labels")
+    if adapt_bn:
+        assert batch_size == ADAPT_BN_BATCH, (
+            f"AdaBN batch size is fixed a priori at {ADAPT_BN_BATCH} (§9), got {batch_size}"
+        )
 
     if set_name == "test":
         _log_test_invocation(out, {
             "kind": "evaluate", "checkpoint": str(checkpoint), "split_file": str(split_file),
-            "set_name": set_name, "fusion": fusion, "config_name": cfg.get("name"),
-            "git_hash": get_git_hash(repo_dir),
+            "set_name": set_name, "fusion": fusion, "adapt_bn": adapt_bn,
+            "config_name": cfg.get("name"), "git_hash": get_git_hash(repo_dir),
         })
 
     dev = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
@@ -307,10 +364,15 @@ def evaluate(
     dataset, loader = _make_loader(
         split_file, set_name, stage_dir, repo_dir, labels, batch_size, num_workers, dev.type == "cuda"
     )
+    if adapt_bn:
+        _adapt_bn(backbone, loader, dev, amp)
     res = predict(backbone, head, loader, dev, amp)
     arset_of_trace = {t: info["ar_set"] for t, info in dataset.trace_info.items()}
-    stem = f"{checkpoint.stem}_{set_name}_{fusion}"
-    meta = {"checkpoint": str(checkpoint), "git_hash": get_git_hash(repo_dir), "fusion": fusion}
+    stem = f"{checkpoint.stem}{'_adabn' if adapt_bn else ''}_{set_name}_{fusion}"
+    meta = {
+        "checkpoint": str(checkpoint), "git_hash": get_git_hash(repo_dir),
+        "fusion": fusion, "adapt_bn": adapt_bn,
+    }
     return _write_reports(res, arset_of_trace, dataset.labels, out, stem, set_name, fusion, meta)
 
 
@@ -323,6 +385,9 @@ def evaluate_c0(
     averaging. This wrapper IS the §0.7 requirement that C0's eval has
     no test access path outside the common logger."""
     assert "fusion" not in kwargs, "evaluate_c0 fixes fusion='sharp_c0' (§2.1) — don't override"
+    assert not kwargs.get("adapt_bn"), (
+        "AdaBN is pre-registered on C1 only (§9 frozen row list) — no C0+AdaBN row exists"
+    )
     return evaluate(checkpoint, split_file, set_name, fusion="sharp_c0", **kwargs)
 
 
@@ -337,6 +402,7 @@ def cache_features(
     num_workers: int = 2,
     device: str | None = None,
     amp: bool = True,
+    adapt_bn: bool = False,
 ) -> Path:
     """Extracts d_enc features from a checkpoint's FROZEN encoder over
     one set, WITHOUT augmentation (§5.3, declared note i), and caches
@@ -344,23 +410,37 @@ def cache_features(
     C2-lin, C3/C4 phase B, §7 diagnostics) reuses the file. Test-set
     caching is a test access: logged (§0.7).
 
+    adapt_bn=True is the post-AdaBN cache (§9: input of the
+    C1+AdaBN+T3A row, composition AdaBN -> T3A): BN statistics
+    re-estimated on this same set via _adapt_bn before extraction;
+    default filename gains an "_adabn" infix so the plain cache is
+    never overwritten. The adaptation is deterministic (same loader
+    order, cumulative estimator), so the encoder here is identical to
+    the one evaluate(adapt_bn=True) predicts with.
+
     The .npz holds: features (N, d_enc) float32, y, ar_set (train-domain
     index, -1 for held-out), antenna, window_start, trace_id, arset_name
-    (per sample), plus labels/arset_labels/checkpoint/git_hash metadata.
+    (per sample), plus labels/arset_labels/checkpoint/git_hash/adapt_bn
+    metadata.
     """
     checkpoint = Path(checkpoint)
+    infix = "_adabn" if adapt_bn else ""
     out_path = (
         Path(out_path) if out_path is not None
-        else checkpoint.parent / f"features_{checkpoint.stem}_{set_name}.npz"
+        else checkpoint.parent / f"features_{checkpoint.stem}{infix}_{set_name}.npz"
     )
     ckpt = torch.load(checkpoint, map_location="cpu", weights_only=False)
     cfg = ckpt["config"]
     labels = labels if labels is not None else cfg.get("labels")
+    if adapt_bn:
+        assert batch_size == ADAPT_BN_BATCH, (
+            f"AdaBN batch size is fixed a priori at {ADAPT_BN_BATCH} (§9), got {batch_size}"
+        )
 
     if set_name == "test":
         _log_test_invocation(out_path.parent, {
             "kind": "cache_features", "checkpoint": str(checkpoint),
-            "split_file": str(split_file), "set_name": set_name,
+            "split_file": str(split_file), "set_name": set_name, "adapt_bn": adapt_bn,
             "config_name": cfg.get("name"), "git_hash": get_git_hash(repo_dir),
         })
 
@@ -373,6 +453,8 @@ def cache_features(
     dataset, loader = _make_loader(
         split_file, set_name, stage_dir, repo_dir, labels, batch_size, num_workers, dev.type == "cuda"
     )
+    if adapt_bn:
+        _adapt_bn(backbone, loader, dev, amp)
     feats, ys, arsets, ants, starts, tids = [], [], [], [], [], []
     with torch.no_grad():
         for batch in loader:
@@ -402,6 +484,7 @@ def cache_features(
         checkpoint=np.array(str(checkpoint)),
         git_hash=np.array(get_git_hash(repo_dir)),
         set_name=np.array(set_name),
+        adapt_bn=np.array(adapt_bn),
     )
     logger.info("cached %d features (d=%d) -> %s", len(np.concatenate(ys)), feats[0].shape[1], out_path)
     return out_path
