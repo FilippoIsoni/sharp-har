@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); concat run + C3-ft (recipe TBD) + cross-review + notebook-05 = the last prep before the single test session** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft (recipe TBD) + cross-review + notebook-05 = the last prep before the single test session. All val-only diagnostics complete.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -542,7 +542,9 @@
     (one session: cache `C1_s6out` TRAIN features over p2_living — 50948 samples pinned
     by assert — then `domain_probe`; executed copy → `notebooks/diagnostics/`) and
     `notebooks/diagnostics/2026-07-18_concat_c1_c3.ipynb` (C1⊕C3 + C1⊕C1′ control,
-    frozen probe recipe unchanged, SKIP-with-note while the C1_s43 cache is missing).
+    frozen probe recipe unchanged, SKIP-with-note while the C1_s43 cache is missing)
+    — this template was consumed by its executed run, archived as
+    `2026-07-19_concat_c1_c3.ipynb` (2026-07-19 repo cosmesis).
   - **Synthetic verification 25/25 PASS** (local suite): T3A ≡ an independent naive
     transcription of the §9 formula, bitwise determinism, empty-class/under-M edges,
     blocking asserts; AdaBN weights bitwise untouched, first-BN running_mean ≡ global
@@ -562,7 +564,7 @@
   NCM/kNN footnote (both now runnable).
 
 - **E2′ S6-out domain diagnostic complete — structural verdict replicates on a
-  second rotation** (2026-07-18, executed `notebooks/diagnostics/2026_07_18_probe_c1_s6out.ipynb`;
+  second rotation** (2026-07-18, executed `notebooks/diagnostics/2026-07-18_probe_c1_s6out.ipynb`;
   caches `C1_s6out` TRAIN features over p2_living, 50948 samples pinned by assert,
   then `diagnostics.domain_probe`, inner trace-disjoint split 53 fit / 27 eval):
   - **Control `y` (8 cls) passes: acc 0.870, baseline 0.210, delta +0.660**, macro-F1
@@ -578,9 +580,10 @@
     artifact of the primary rotation's composition.
 
 - **NCM/kNN §7 complete for C1/C2/C3/C1_s43** (2026-07-18, executed
-  `notebooks/diagnostics/2026-07-18_ncm_knn_c1_c2_c3(1).ipynb` - Melissa now has the
-  C2/C3 shortcuts that blocked the earlier owner-A run; `(1)` suffix from the upload,
-  the owner-A C1-only run stays archived as `...c1_c2_c3.ipynb`). Val, cached features,
+  `notebooks/diagnostics/2026-07-18_ncm_knn_c1_c2_c3_full.ipynb` - Melissa now has the
+  C2/C3 shortcuts that blocked the earlier owner-A run; renamed from the upload's
+  `(1)` suffix during the 2026-07-19 repo cosmesis, the owner-A C1-only run stays
+  archived as `...c1_c2_c3.ipynb`). Val, cached features,
   frozen §7 hyperparameters. Majority baseline 0.3209 throughout:
   | run | NCM acc / F1 | kNN acc / F1 | linear ref (F1) |
   |---|---|---|---|
@@ -596,23 +599,27 @@
     confirms seed robustness on NCM/kNN too** (within ~1 pt of C1 seed-42). C2 is the
     noisy one across readouts (NCM 0.7765 / kNN 0.8424).
 
+- **§7 concat diagnostic complete — no CE↔SupCon complementarity** (2026-07-19,
+  executed `notebooks/diagnostics/2026-07-19_concat_c1_c3.ipynb`; frozen §5.3 probe
+  recipe unchanged, `diagnostics.concat_caches` alignment-asserted, val-only, no test
+  contact). Both pairs ran (the control un-SKIPped once the C1_s43 cache landed):
+  - **C1⊕C3 val macro-F1 0.8684** (−0.0151 vs C1-lin 0.8835); **control C1⊕C1′
+    0.8882** (+0.0047 vs C1-lin); **candidate − control = −0.0197**, needed > +0.02
+    (§0.5 band). A second CE encoder (the seed-43 twin) gives the small generic
+    ensemble bump; **C3 does WORSE than that** — SupCon is not merely redundant with
+    CE, it's a worse concat partner than a same-loss twin. Coherent with C3 losing on
+    every readout (linear 0.8190, kNN 0.8047, NCM 0.7178) and the 16/349 error-overlap.
+  - Caveats: both probes select epoch 1/6 on the fragile 9-trace/5-class val → the
+    −0.0197 magnitude is noisy, but the direction is robust across all C3 evidence.
+    The per-block feature-norm print (review caveat) was not added — moot here: the
+    result is a null/negative and the norm-matched control took its expected bump, so
+    the scale-asymmetry "spurious positive" risk demonstrably did not occur.
+  - **Consequence:** Candidate B (joint CE+SupCon) stays future-work with a negative
+    concat number, exactly as pre-declared; third convergent answer to "was the probe
+    unfair to SupCon?" (no). Closes the last val-only §7 diagnostic.
+
 ## In progress
 
-- **Concat §7 session — READY, one step left in val-only diagnostics.** The C1_s43
-  cache landed, so both rows are runnable: C1⊕C3 (redundancy control, error-overlap
-  story) and the C1⊕C1′ ensemble control. **The template already existed**
-  (`2026-07-18_concat_c1_c3.ipynb`, pre-freeze pass); the uploaded
-  `2026-07-19_concat_c1_c3.ipynb` is a **byte-identical UNEXECUTED copy** (0 outputs)
-  — a spurious duplicate to delete until the real run lands (then `git mv` the
-  template to the run date, commit with outputs). Review of the solution before the
-  run: alignment asserts and recipe-frozen approach are correct; **one caveat to add
-  before executing** — the "linear head absorbs scale" note is imprecise under the
-  probe's `wd=1e-4`, and the scale asymmetry differs between candidate (CE⊕SupCon)
-  and control (CE⊕CE, norm-matched by construction), so the control does NOT fully
-  neutralize a possible C1-vs-C3 feature-norm mismatch (the failure mode is a
-  *spurious positive* — false complementarity). Cheap coherent fix: print per-block
-  train feature norms (diagnostic only, NOT a recipe change). `probe.py` untouched,
-  no test contact.
 - **Seed-44 decision — FINAL (team-confirmed 2026-07-19): no s44 runs, E1′ closed
   at n=2.** Rationale: the open question the trigger was held for ("pipeline-wide or
   GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
@@ -651,11 +658,9 @@
 3. **E2′ living-out — DONE** (split frozen + C1 S6-out run + S6-out domain
    diagnostic all complete, see Done; verdict replicates with the lab as 2nd env).
    The `best.ckpt` on Drive `C1_s6out` is ready for the single §0.7 test row.
-4. **Val-only diagnostics — nearly done:** NCM/kNN complete for C1/C2/C3/C1_s43
-   (see Done). **Remaining: run the concat session** — delete the spurious
-   unexecuted `2026-07-19_concat_c1_c3.ipynb`, add the per-block feature-norm print
-   (review caveat, diagnostic-only), execute the `2026-07-18` template, then `git mv`
-   it to the run date and commit with outputs. `probe.py` untouched, no test contact.
+4. **Val-only diagnostics — COMPLETE:** NCM/kNN (C1/C2/C3/C1_s43) and the §7 concat
+   (C1⊕C3 vs C1⊕C1′ → no complementarity) all done and archived, see Done. Nothing
+   left on this line before the single test session.
 5. **C3-ft (approved 2026-07-19):** specify the training recipe (In progress), wire
    init-from-checkpoint in `train.py` + `c3_ft.yaml` + §8.4 budget + pre-registered
    hypothesis, run (~2 h), archive to `notebooks/runs/`, §0.7 row-list amendment to
