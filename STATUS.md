@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1_s43 cache + C1 S6-out next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E1′ measured (C1 seed-stable, GRL-specific instability); s44 semi-finally declined; C1 S6-out run done (domain-diag remaining); C1_s43 cache next; SupCon fair-shot team call OPEN** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -488,7 +488,26 @@
   AR-7 wholly in train, val = {S1b_E, S1b_J2, S1c_S, S2a_R, S4a_C2, S4b_J1}
   (AR-1×3/2×1/4×2), **val classes {C,E,J,R,S} — H/L/W absent → 5-class val
   macro-F1** (declared, §2.2), test = 15 AR-6 traces (S6a×9, S6b×6), single
-  living-room domain. Next: C1 S6-out run.
+  living-room domain.
+
+- **C1 S6-out run complete** (2026-07-18, Colab GPU, `configs/c1_ce_s6out.yaml`,
+  seed 42; archived `notebooks/runs/2026-07-18_c1_ce_s6out_part1.ipynb` (training,
+  clean single session) + `_part2.ipynb` (CPU curves session, no GPU)): **best val
+  macro-F1 0.7761 @ epoch 12**, early stop 22/40 (patience 10). `best.ckpt` on Drive
+  `C1_s6out`. Two readings:
+  - **Val trajectory is very noisy — best came mid-schedule, not on the tail.** The
+    6-trace / 956-sample **5-class** val (H/L/W absent) swings 0.14 to 0.78
+    epoch-to-epoch; best @12 with lr still high on cosine, epochs 15/19 (0.759/0.767)
+    neared but never beat it, early stop @22. This is the C2-like "early best" shape,
+    opposite to C1-S7's tail best @37 — driven by the tiny skewed val, not by the loss.
+    Selection is fragile here (declared, 2.2 / split-audit family), but a within-run
+    k-class metric stays valid for checkpoint choice.
+  - **NOT scale-comparable to C1-S7's 0.8871:** different rotation, different 5-class
+    set, noisier val. Do NOT read 0.7761 as "S6 is harder" — the S6-out number that
+    enters the story is the **8-class TEST row** (once, 0.7), not this val. This run's
+    only deliverable is the val-selected `best.ckpt` for that one pre-registered row.
+  - Remaining on this rotation: the domain-diagnostic replication on its **train**
+    features (9, the other reason E2' exists — 2nd environment is the lab here).
 
 ## In progress
 
@@ -524,8 +543,8 @@
   the single seed-42 number (−4.6).**
 - Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
   `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out split
-  now frozen (see Done) — only the C1 run + train-feature domain diagnostic
-  remain on that rotation.
+  frozen + C1 run done (see Done) — only the train-feature domain diagnostic
+  remains on that rotation.
 
 ## Next steps (in order)
 
@@ -534,11 +553,11 @@
 2. **E1 tail (remaining):** run `04_cache_c1_s43_features.ipynb` (ready, see In
    progress; owner A on return) — archives, trigger analysis and the semi-final
    no-s44 decision are done; team confirmation of the s44 decision closes E1′.
-3. **E2′ living-out:** split frozen (`splits/p2_living.json`, see Done).
-   Remaining: run C1 S6-out via `notebooks/e2_living_out/03_train_c1_ce_s6out.ipynb`
-   (~2.3 h, seed 42, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`; readiness cell
-   needs the frozen split pushed first), archive the executed copy verbatim +
-   STATUS line, then the domain-diagnostic replication on its train features.
+3. **E2′ living-out:** split frozen + C1 S6-out run done (best val 0.7761 @12, see
+   Done). Remaining: the domain-diagnostic replication on this run's **train**
+   features (frozen §5.3 recipe, no val selection, no test contact §0.7) — same
+   code as the C1/C2/C3 train-feature diagnostics, run where only `C1_s6out`'s
+   cache is staged. The `best.ckpt` is ready for the single §0.7 test row.
 4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
    priori): NCM + kNN (k=20) for C1/C2/C3, concat C1⊕C3 + control C1⊕C1′ —
    diagnostics-style notebook, `probe.py` untouched, no test contact. Plus the
