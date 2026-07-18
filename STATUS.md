@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-18 · **Phase: v5.2 tail — C2_s43 in (seed-44 trigger fired, decision held for C1_s43); E1′/E2′ + transductive-row prep continue** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-18 · **Phase: v5.2 tail — E2′ P2-living split frozen (C1 S6-out run next); C2_s43 in (seed-44 trigger fired, decision held for C1_s43); transductive-row prep continues** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -458,6 +458,17 @@
     `umap-learn` dropped from requirements (never imported; §9's "t-SNE/UMAP"
     resolved to t-SNE, declared in the figure title).
 
+- **E2′ P2-living split frozen** (2026-07-18, Colab session, executed copy
+  `notebooks/runs/2026-07-18_s6out_split.ipynb`): `splits/p2_living.json`
+  committed (§0.1, own train-only μ/σ). `build_p2_rotation(AR-6,
+  reference=p2_lab.json)` passed the frozen-reference universe/metadata check;
+  the printed partition matched the dry-run **exactly** — train=80 val=6
+  test=15 pinned=41, both twin pairs (S4a_L/Lalt, S5a_L/Lalt) bound to train,
+  AR-7 wholly in train, val = {S1b_E, S1b_J2, S1c_S, S2a_R, S4a_C2, S4b_J1}
+  (AR-1×3/2×1/4×2), **val classes {C,E,J,R,S} — H/L/W absent → 5-class val
+  macro-F1** (declared, §2.2), test = 15 AR-6 traces (S6a×9, S6b×6), single
+  living-room domain. Next: C1 S6-out run.
+
 ## In progress
 
 - **NCM/kNN (§7 v5.2) partial: C1 done, C2 blocked, C3 pending.**
@@ -495,12 +506,9 @@
   for any other purpose, and the domain finding is already replicated
   cross-encoder). Reported as a footnote to the seed-42 numbers, not a new row.
 - Still local prep for the v5.2 tail: the C1⊕C3 concat diagnostic (blocked on
-  `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out
-  generation prep is done (2026-07-18, see Done); the pending restage-vs-reuse
-  design choice is resolved as **restage + rebuild the inventory in-session**
-  (μ/σ need the staged data regardless, so reusing the committed CSV saves
-  nothing), with the new frozen-reference universe check turning any divergence
-  from the day-1 trace set into a blocking failure before anything is written.
+  `C1_s43`), T3A + AdaBN (harness addition, cross-review required). S6-out split
+  now frozen (see Done) — only the C1 run + train-feature domain diagnostic
+  remain on that rotation.
 
 ## Next steps (in order)
 
@@ -509,14 +517,11 @@
 2. **E1 tail:** archive both executed s43 notebooks verbatim + STATUS line (same
    commit); apply the s44 trigger rule (CHANGELOG 2026-07-18) against the seed-42
    siblings and record the outcome; cache `C1_s43` features (C1⊕C1′ control input).
-3. **E2′ living-out:** generate + freeze the S6-out split on Git via
-   `notebooks/e2_living_out/01_s6out_split.ipynb` (own μ/σ, rare-cell pins,
-   blocking asserts + frozen-reference consistency check + twin-binding
-   amendment, CHANGELOG 2026-07-18; inspect the contingency and confirm the
-   expected partition — train=80 val=6 test=15, 5-class val declared — BEFORE
-   launch), then C1 S6-out (~2.3 h, seed 42, pinned runner), then the
-   domain-diagnostic replication on its train features. Pre-declared names
-   (§10.3): `splits/p2_living.json`, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`.
+3. **E2′ living-out:** split frozen (`splits/p2_living.json`, see Done).
+   Remaining: run C1 S6-out via `notebooks/e2_living_out/03_train_c1_ce_s6out.ipynb`
+   (~2.3 h, seed 42, `configs/c1_ce_s6out.yaml`, Drive `C1_s6out`; readiness cell
+   needs the frozen split pushed first), archive the executed copy verbatim +
+   STATUS line, then the domain-diagnostic replication on its train features.
 4. **Val-only diagnostics** (seed 42, cached features, hyperparameters fixed a
    priori): NCM + kNN (k=20) for C1/C2/C3, concat C1⊕C3 + control C1⊕C1′ —
    diagnostics-style notebook, `probe.py` untouched, no test contact. Plus the
