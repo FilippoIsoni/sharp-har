@@ -1,0 +1,54 @@
+# C3_ft — CE fine-tuning of C3's SupCon encoder (13th test row, approved
+# 2026-07-19; recipe = the recommended package adopted by owner A, recorded
+# in STATUS). Byte-diff from c1_ce.yaml: `name`, `init_ckpt`, `optim.lr`.
+#
+# Pre-registered recipe (the four §0-mandated choices, fixed BEFORE the run):
+#   (i)  init scope: FULL-network fine-tune — backbone from C3/epoch40.ckpt
+#        (the phase-B-selected checkpoint); encoder-frozen would just be
+#        C3-lin again.
+#   (ii) head: fresh ActivityHead (enforced by the train.py wiring — the
+#        source "head" is a ProjectionHead; reusing the probe head would
+#        anchor to the linear-probe solution).
+#   (iii) horizon/LR: same 40-epoch cosine + warmup as C1, peak LR 1e-4
+#        (10x below C1 — at 1e-3 the pre-trained init would wash out in
+#        the first epochs, defeating the run's purpose). Single a-priori
+#        recipe, no grid, no selection.
+#   (iv) augmentation: the C1 "ce" profile inherited unchanged — what makes
+#        this a fair CE run.
+#
+# Pre-registered hypothesis (STATUS 2026-07-19): comparable to C1 (±1 pt
+# val macro-F1); success = comparable, not beats. Protected floor: worst
+# case ~ a CE run from a different init. Budget ~2 h (§8.4 amendment,
+# splits/CHANGELOG.md 2026-07-19).
+name: C3_ft
+seed: 42
+protocol: P2-lab
+split_file: splits/p2_lab.json
+backbone: resnet_vb
+d_enc: 256
+n_att: 8
+init_ckpt: "C3/epoch40.ckpt"
+loss:
+  type: ce
+  label_smoothing: 0.1
+adversary:
+  type: null
+  target: ar_set
+  lambda_max: null
+  beta: null
+optim:
+  name: adamw
+  lr: 1.0e-4
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 40
+  batch_size: 256
+  sampler: uniform
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10

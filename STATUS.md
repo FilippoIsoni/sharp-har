@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft (recipe TBD) + cross-review + notebook-05 = the last prep before the single test session. All val-only diagnostics complete.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft pre-registered & ready (recipe adopted, wiring in) + cross-review + notebook-05 = the last prep before the single test session. All val-only diagnostics complete.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -630,17 +630,22 @@
   2026-07-18), so no pair-clause deviation is needed. **Standing constraint for
   the report: the GRL val cost is stated as a RANGE (≈3.7–10 pts, n=2), never as
   the single seed-42 number (−4.6).**
-- **C3-ft (approved 2026-07-19) — implementation to be specified before wiring.**
-  Decided: run it. Open sub-decisions (all need pre-registration BEFORE the run, §0):
-  (i) init scope — full-network fine-tune from `C3/epoch40.ckpt` vs encoder-frozen +
-  new head; (ii) head init — reuse C3's probe head vs fresh `ActivityHead`;
-  (iii) horizon/LR — same 40-epoch cosine as C1 vs a shorter warm-restart tail, and
-  whether LR is reduced given a pre-trained init; (iv) augmentation — inherit the C1
-  "ce" profile (recommended, keeps it a fair CE run). Then: `train.py`
-  init-from-checkpoint wiring (small, cross-review), `c3_ft.yaml` (byte-diff from
-  `c1_ce.yaml` = name + init_ckpt + horizon), §8.4 budget line (~2 h), pre-registered
-  hypothesis ("comparable to C1, ±1 pt; success = comparable, not beats"), §0.7 13th
-  row. Protected floor: worst case ≈ a CE from a different init.
+- **C3-ft — recipe DECIDED and fully pre-registered (2026-07-19, owner A adopting
+  the recommended package); READY TO RUN after wiring review.** The four
+  sub-decisions closed: (i) full-network fine-tune from `C3/epoch40.ckpt`;
+  (ii) fresh `ActivityHead` (enforced by the wiring — the head never transfers);
+  (iii) same 40-epoch cosine + warmup as C1 with peak **LR 1e-4** (10× below C1,
+  keeps the init from washing out) — single a-priori recipe, no grid;
+  (iv) C1 "ce" augmentation profile unchanged. Everything landed in one pass:
+  `train.py` `init_ckpt` wiring (resume takes precedence; backbone-only load with
+  d_enc/backbone assert; init recorded in `run_meta.json` per §0.4),
+  `configs/c3_ft.yaml` (byte-diff from `c1_ce.yaml`: name + init_ckpt + optim.lr;
+  full rationale in its header), pinned runner `notebooks/c3_ft/03_train_c3_ft.ipynb`
+  (RUN pinned + GPU sanity cell + a launch check: the first log line must say
+  "backbone initialized from ... head starts fresh"), §0.7 list amended 12 → 13
+  (session not yet open), §8.4 +2 h, CHANGELOG 2026-07-19 entry. The wiring joins
+  the pre-freeze cross-review; the run itself can go right after that review
+  (whoever runs it needs a read shortcut to `C3/`).
 - **Cross-review of the pre-freeze implementation pass** (T3A `transductive.py`,
   harness `adapt_bn`, `diagnostics.domain_probe`/`concat_caches`/`fused_head_scores`,
   the two new templates) — required before the single test session (§10.4). The

@@ -102,3 +102,26 @@ themselves are never touched.
   family as p2_lab's 5-class val; selection is within-run, so a
   k-class val metric stays valid for checkpoint selection and is
   never compared across scales).
+
+## 2026-07-19 — C3-ft: pre-registered 13th test row (§0.7 list amendment)
+
+- **Decision:** team-approved 2026-07-19 (recipe package adopted by owner A
+  the same day, recorded in STATUS): ONE additional run, `C3_ft` — CE
+  fine-tuning of C3's SupCon encoder from the phase-B-selected
+  `C3/epoch40.ckpt`. It answers the reviewer-facing fairness question
+  ("was the linear probe holding SupCon back?") with a protected floor
+  (worst case ≈ a CE run from a different init).
+- **Recipe (fixed a priori, no grid, no selection —
+  `configs/c3_ft.yaml` header carries the full rationale):** full-network
+  fine-tune; fresh ActivityHead (enforced by the train.py `init_ckpt`
+  wiring — the head never transfers); 40-epoch cosine + warmup 5 as C1
+  with peak LR 1e-4 (10× below C1, so the pre-trained init is not washed
+  out); C1 "ce" augmentation profile unchanged. Byte-diff from
+  `c1_ce.yaml`: name, `init_ckpt`, `optim.lr`.
+- **Pre-registered hypothesis:** comparable to C1 (±1 pt val macro-F1);
+  success = comparable, not beats (§0.5 band + measured seed noise).
+- **Amendments:** §0.7 frozen row list 12 → 13 (session not yet opened —
+  the freeze clause forbids extensions with the session OPEN, and this
+  precedes it); §8.4 budget +2 h (extensions total ≈ 9.1 h, still under
+  the pre-v5.2 envelope). Wiring (`train.py` init_ckpt) enters the
+  pre-freeze cross-review with the rest of the 2026-07-18 pass.

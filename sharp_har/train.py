@@ -159,7 +159,12 @@ def train_run(
     modified COPY of the config (fewer epochs/steps), never edits the
     file. Optional cfg keys: "seed" (default 42, E1/E3 extensions use
     43/44), "labels" (explicit class list, required for P1/C0),
-    "escalation_b", adversary "lambda_max"/"beta"/"ramp_epochs".
+    "escalation_b", adversary "lambda_max"/"beta"/"ramp_epochs",
+    "init_ckpt" (C3-ft, pre-registered 2026-07-19: BACKBONE weights
+    initialized from another run's checkpoint — path relative to
+    ckpt_dir or absolute; the head always starts fresh (declared recipe
+    choice) and auto-resume from last.ckpt takes precedence, so a
+    resumed run never re-applies the init).
 
     Artifacts under ckpt_dir/<cfg.name>/: last.ckpt (every epoch,
     atomic), best.ckpt (val-selected; CE runs only — phase-A selection
@@ -320,9 +325,33 @@ def train_run(
         history = ckpt["history"]
         logger.info("resumed %s from %s at epoch %d", cfg["name"], last_path, start_epoch)
     else:
+        init_meta = None
+        if cfg.get("init_ckpt"):  # C3-ft wiring (§0.4: recorded in run_meta)
+            init_path = Path(cfg["init_ckpt"])
+            if not init_path.is_absolute():
+                init_path = Path(ckpt_dir) / init_path
+            src = torch.load(init_path, map_location="cpu", weights_only=False)
+            src_cfg = src["config"]
+            assert src_cfg["backbone"] == cfg["backbone"] and src_cfg.get("d_enc") == cfg.get("d_enc"), (
+                f"init_ckpt backbone mismatch: source {src_cfg['backbone']}/d_enc "
+                f"{src_cfg.get('d_enc')} vs config {cfg['backbone']}/d_enc {cfg.get('d_enc')}"
+            )
+            backbone.load_state_dict(src["backbone"])
+            # Head deliberately NOT loaded: fresh ActivityHead (declared
+            # recipe — the source is a SupCon run whose "head" is a
+            # ProjectionHead anyway; only encoder weights transfer).
+            init_meta = {
+                "path": str(init_path), "source_config": src_cfg["name"],
+                "source_epoch": int(src["epoch"]), "source_seed": src.get("seed"),
+            }
+            logger.info(
+                "%s: backbone initialized from %s (%s, epoch %d); head starts fresh",
+                cfg["name"], init_path, src_cfg["name"], src["epoch"],
+            )
         write_json(run_dir / "run_meta.json", {
             "config": cfg, "seed": seed, "git_hash": get_git_hash(repo_dir),
             "device": str(dev), "torch": torch.__version__,
+            "init_ckpt": init_meta,
         })
 
     for epoch in range(start_epoch, max_epochs + 1):
