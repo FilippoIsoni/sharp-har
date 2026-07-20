@@ -697,6 +697,24 @@
     was deliberately NOT added (harmless — the one override key is a real width-table
     key); the T3A/AdaBN order subtleties are declared in §9.
 
+- **Post-test analysis audit complete (2026-07-20) — `CONSOLIDATION_REVIEW.md` §6,
+  11 gaps between notebook 06 and a report-grade §9 result set; no frozen artifact
+  touched.** Notebook 06 (paired bootstrap + calibration/error) is methodologically
+  sound, but its coverage is bounded by notebook 05, which today evaluates 7 streams
+  (6 frozen rows + the closed C4) and misses 10 of the 16 (the
+  s43/AdaBN/T3A/both/s6out/C3-ft/3×aug streams) under checkpoint-stem keys. Beyond the
+  05 rewrite (already on the §10.4 list), the analysis does not yet produce: the
+  **C1-aug paired test deltas** (§10.3 item 4's only deliverable), the **E1′ seed
+  range on test** (§9 "media ± min–max"), the **C1+AdaBN+T3A** comparison, the **§9
+  key figure #1** (accuracy bars per config×domain — no `viz` producer exists) and
+  **#2** (domain-diagnostics table — numbers still prose across 5 diagnostic
+  notebooks), the **per-trace** error cut (per-AR-set is degenerate on the single-set
+  S7 test), a re-runnable **master table surfacing macro-F1** (06 reads only windows
+  CSVs, never the metrics CSVs), the **two-variances juxtaposition** (Bouthillier
+  hook), and the **C1-vs-C3 error-discordance** behind "SupCon buys nothing".
+  Prioritized do-list in §6; all are notebook-06 + one `viz` bar chart on
+  pre-registered rows/figures, none a new post-hoc comparison.
+
 ## In progress
 
 - **C1-aug runs (3) to launch on Colab** (wiring cross-review PASSED 2026-07-20):
@@ -812,6 +830,13 @@
    failed on the realized 0.627 accuracy — the output-free template had never
    been executed) was replaced by the exact `ECE == |acc−0.65|` identity.
    Self-test now passes at N_BOOT=10000, verified locally.
+   **Audit 2026-07-20 (`CONSOLIDATION_REVIEW.md` §6): the template is sound but not
+   yet report-grade — 11-gap do-list. After notebook 05 emits the 16 clean-keyed
+   streams: extend `PAIRS`/`FOCUS` (C1-aug deltas, seed range, C1+both), add
+   per-trace / master-table (macro-F1) / cross-stream ECE / C1-vs-C3 discordance /
+   two-variances cells, and add a `viz` accuracy-bars figure (§9 key #1, no producer
+   today) + assemble the domain-diagnostics table (§9 key #2). None a new test
+   contact.**
 9. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
    2026-07-28 (deadline 2026-07-30); PCA+t-SNE figure C1 vs C3, domain-diagnostics
    table as the §9 key figure.

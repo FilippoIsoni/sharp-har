@@ -214,7 +214,97 @@ raises the rigor and generality of the existing null.
    enters the runway; the matrix stays P2-lab + E2′.
 3. **D + E** inside the single §0.7 test session already planned.
 
-## 6. Sources
+## 6. Post-test analysis audit — is the result set report-grade? (2026-07-20)
+
+Directions **A** and **D** above are implemented as `notebooks/06_final_analysis.ipynb`
+(trace-level paired bootstrap + calibration/ECE + per-class/per-AR-set error). The
+notebook is methodologically sound — bootstrap on accuracy not macro-F1 (macro-F1
+ill-defined on ~11 traces, 6 of 8 classes with a single trace each), test-sampling
+variance kept separate from seed variance, per-stream labels, a synthetic self-test.
+But an audit against the §9 report spec (2026-07-20) finds the post-test **analysis
+pipeline does not yet produce a report-grade result set**. Every gap below is a
+pre-registered §0.7 row whose result is uncomputed, a pre-registered §9 key figure
+with no producer, or a named direction-D cut that is missing — **none is a new
+post-hoc comparison**. Listed here (planning only, no frozen artifact touched) so the
+pre-freeze work closes a known list rather than an ad hoc one.
+
+**Coverage coupling (read first).** Notebook 06 is row-count-agnostic: it analyses
+whatever `*_test_*_windows.csv` the single §0.7 session writes, keyed by the filename
+prefix, so its output is bounded by notebook 05. Today 05 (i) evaluates 7 streams —
+C0, C1, C2, C1-lin, C2-lin, C3 and **the closed C4** — i.e. covers 6 of the frozen 16
+rows plus a stream v5.2 closed, and misses 10 (C1_s43, C2_s43, C1+AdaBN, C1+T3A,
+C1+both, C1_s6out, C3-ft, C1_aug, C1_aug_s43, C1_s6out_aug); and (ii) copies artifacts
+under checkpoint-stem keys (`C1_best`, `C1_C1_lin`) that the naming contract and 06's
+`FOCUS`/`PAIRS` (`C1`, `C1_lin`, `C1_AdaBN`, `C3_ft`, …) do not match. A report-grade
+set needs the notebook-05 rewrite (already on the §10.4 checklist) **and** the 06/viz
+extensions below; neither alone suffices. The 05 side is tracked with the freeze
+checklist; this section is the 06/viz side.
+
+### Must-fix — pre-registered results with no output
+- **G1 — C1-aug paired test deltas.** The augmentation arm's *only* deliverable
+  (§10.3 item 4) is a paired Δ on test: `C1_aug−C1` (s42), `C1_aug_s43−C1_s43`,
+  `C1_s6out_aug−C1_s6out` (the last on P2-living, its own units — not poolable with
+  the P2-lab pairs). `PAIRS` in 06 has none of them. Without this the arm has no
+  number and "one point on an unexplored axis" cannot be written.
+- **G2 — E1′ seed range on test.** §9 mandates "media ± (min–max)" once seeds are
+  added; C1/C1_s43/C2/C2_s43 are all frozen test rows. The report table needs
+  C1 = mean±range, C2 = mean±range, and the C1–C2 gap as a *range* — the val story
+  STATUS already closed (direction-consistent, 3.7–10 pt) reproduced on test. 06
+  computes no seed table.
+- **G3 — C1+AdaBN+T3A (row 11).** `PAIRS` compares C1 to AdaBN and to T3A singly but
+  not to the composed row, the 3rd pre-registered transductive row (§9).
+
+### Must-fix — pre-registered §9 key figures with no producer
+- **G4 — accuracy bars per config × domain (§9 key figure #1).** `viz.py` has
+  `plot_history`/`plot_confusion`/`compare_runs`/`metrics_table`/`plot_embeddings` —
+  **no grouped bar chart.** The report's *figure #1* has no code. Needs a `viz`
+  function over the harness metrics CSVs (fused rows), degenerate-aware (P2-lab test =
+  single set S7; rich on C0 S2–S7 and the S6-out row).
+- **G5 — domain-diagnostics consolidated table (§9 key figure #2).** The invariance
+  evidence (target × encoder, delta-vs-own-baseline) is the figure that *replaces* the
+  underpowered §7 probe, but the numbers still live as prose across five diagnostic
+  notebooks + STATUS (C1, C2, C3, C1_s6out, C3-ft). Nothing assembles them into the
+  one grid the report shows. Train/val-only, no test contact — pure assembly, yet no
+  artifact today.
+
+### Should-do — direction-D depth and the report headline
+- **G6 — per-trace error cut.** Direction D names per class / per AR-set / **per
+  trace**; 06 has the first two. On the primary test per-AR-set is degenerate (single
+  S7), so **per-trace (11 traces) is the informative granularity** and it is absent.
+- **G7 — cross-stream ECE.** Calibration runs for `FOCUS=C1` only; an ECE-per-stream
+  line (C1/C2/C3/C0) is a cheap, genuinely interesting comparison — are the loss
+  families differently calibrated?
+- **G8 — master results table + macro-F1 in 06.** 06 reads only `*_windows.csv`,
+  never the `*_metrics.csv`, so the report's headline metric (macro-F1, with the
+  `absent_classes` list) and a re-runnable master table (acc + macro-F1 + n_traces per
+  stream) live only in the run-once notebook 05. The post-session analysis notebook
+  should own the master table.
+
+### Should-do — framing that makes the null excel
+- **G9 — the two variances, juxtaposed (Bouthillier on our data).** §3.A's hook —
+  seed swing (5.45 pt) > config gap (4.6 pt) — is the report's strongest
+  methodological point. On test we can now show, in one figure/table, the C1–C2 gap +
+  its test-sampling CI (paired bootstrap, direction A) + the seed range (G2). 06
+  correctly keeps them "separate and labelled" but never places both numbers side by
+  side, which is exactly what instantiates Bouthillier concretely.
+- **G10 — error-discordance (McNemar-style) C1 vs C3/C2.** The paired bootstrap gives
+  the aggregate gap; a per-window agreement table (windows C3 rescues that C1 misses,
+  and vice versa) gives the *mechanism* behind "SupCon buys nothing / encoders
+  redundant" (STATUS: 16/349 val error-overlap). Cheap test-side complement,
+  strengthens the SupCon-null.
+- **G11 — multiple-comparisons caveat.** With the expanded `PAIRS` (10+ comparisons on
+  ~11 traces) the report needs a declared multiplicity caveat (STATUS already flags the
+  pressure). Not a correction — the honest wide interval is the result — a sentence.
+
+### Sequencing
+None of G1–G11 is a run or a new test contact; all are analysis on the single
+session's CSVs (plus assembly of already-measured val/train diagnostics for G5) and
+one `viz` figure (G4). Order: notebook-05 rewrite (16 clean-keyed rows) → 06
+`PAIRS`/`FOCUS` extension + per-trace / master-table / seed-range / discordance cells
+(G1–G3, G6–G11) → `viz` accuracy-bars (G4) + domain-diagnostics table assembly (G5).
+Do them with the report draft, after the single §0.7 test session has written its CSVs.
+
+## 7. Sources
 
 - A Survey on Wi-Fi Sensing Generalizability (2025) — https://arxiv.org/pdf/2503.08008
 - Wi-Fi Sensing for HAR: Survey, Challenges, Research Directions (ACM CSUR) — https://dl.acm.org/doi/10.1145/3705893
