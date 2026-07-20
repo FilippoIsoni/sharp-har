@@ -15,7 +15,12 @@ loss families for WiFi CSI HAR under Leave-One-Environment-Out:
 
 - SupCon does not beat CE on this dataset (seven independent instruments agree
   on the ~0.82 SupCon ceiling: linear probe, NCM, kNN, t-SNE, concat, full
-  fine-tune, and the domain diagnostics).
+  fine-tune, and the domain diagnostics). *(Caveat — conceptual stress test L4,
+  `CONCEPTUAL_STRESS_TEST.md`: five of these read the SAME cached features
+  (train, seen traces) with the same memorization confound, so for the report
+  count **two families of evidence** — readouts on frozen features + full
+  fine-tune C3-ft, the load-bearing distinct-input confirmation — not "seven
+  independent instruments".)*
 - The GRL/domain-adversarial branch has **no readable domain target** under
   either loss family (replicated on C1/C2/C3/C1_s43/C3-ft and on two rotations),
   and this is **structural** — forced by the dataset's set/environment incidence,
@@ -295,14 +300,26 @@ checklist; this section is the 06/viz side.
 - **G11 — multiple-comparisons caveat.** With the expanded `PAIRS` (10+ comparisons on
   ~11 traces) the report needs a declared multiplicity caveat (STATUS already flags the
   pressure). Not a correction — the honest wide interval is the result — a sentence.
+- **G12 — class-coverage decomposition (conceptual stress test L8,
+  `CONCEPTUAL_STRESS_TEST.md`).** Selection uses a **5-class** val macro-F1; test is
+  **8-class** (the mismatch is common-mode across configs, so it does not threaten the
+  headline ordering, but it is a scale + per-class confound). Per stream, alongside the
+  8-class test macro-F1, compute a **val-visible test macro-F1** restricted to that
+  rotation's own val classes (p2_lab: {H,J,L,R,W}, blind {C,E,S}; p2_living:
+  {C,E,J,R,S}, blind {H,L,W}) so selection metric and reported metric cover the same
+  label space, and **surface per-class test F1 for the selection-blind classes** — the
+  direct empirical test of D's "do the blind classes underperform on test?". Post-hoc on
+  the logged `*_windows.csv`, no rerun, no split change, no new §0.7 row. Extends G8
+  (master table) and the D per-class cut (G6).
 
 ### Sequencing
-None of G1–G11 is a run or a new test contact; all are analysis on the single
+None of G1–G12 is a run or a new test contact; all are analysis on the single
 session's CSVs (plus assembly of already-measured val/train diagnostics for G5) and
-one `viz` figure (G4). Order: notebook-05 rewrite (16 clean-keyed rows) → 06
-`PAIRS`/`FOCUS` extension + per-trace / master-table / seed-range / discordance cells
-(G1–G3, G6–G11) → `viz` accuracy-bars (G4) + domain-diagnostics table assembly (G5).
-Do them with the report draft, after the single §0.7 test session has written its CSVs.
+one `viz` figure (G4). Order: notebook-05 rewrite (16 clean-keyed rows — 15 if the L6
+aug amendment is ratified) → 06 `PAIRS`/`FOCUS` extension + per-trace / master-table /
+seed-range / discordance / class-coverage cells (G1–G3, G6–G12) → `viz` accuracy-bars
+(G4) + domain-diagnostics table assembly (G5). Do them with the report draft, after the
+single §0.7 test session has written its CSVs.
 
 ## 7. Sources
 

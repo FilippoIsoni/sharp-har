@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-20 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the 3 aug runs + notebook-05 = the prep left before the single test session. 13 of 16 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-20 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the 3 aug runs + notebook-05 = the prep left before the single test session. 13 of 16 row checkpoints exist. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); OPEN operational recommendation L6: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set), pending team ratification; L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -715,12 +715,42 @@
   Prioritized do-list in §6; all are notebook-06 + one `viz` bar chart on
   pre-registered rows/figures, none a new post-hoc comparison.
 
+- **Conceptual stress test complete (2026-07-20, `CONCEPTUAL_STRESS_TEST.md`) — a
+  multi-level adversarial read of the load-bearing claims; changes no frozen
+  artifact.** Seven levels (Level 3 out of scope by request). Conceptual six are
+  report-framing only, each with the exact wording to adopt: **L0** carry
+  "structural" on the incidence proof (§3.C), not on domain-probe readability
+  ("not linearly decodable on seen train traces" ≠ "no transfer-relevant domain
+  reliance") — C4 = pre-registered triage + proof, not "GRL proven useless";
+  **L1** downgrade "AR-set invariance" → transfer to n=2 unseen hostile sessions
+  (bedroom 5 / living 1 / lab 1 → same fact as §3.C); **L2** report `n_traces`
+  per test row, paired trace-level bootstrap + multiplicity caveat, no bare
+  4-digit macro-F1 (effective n ≈ 11); **L4** count **two families of evidence**
+  (readouts on frozen features + full fine-tune C3-ft), not "seven independent
+  instruments" — five share the same cached features/memorization confound
+  (recommend softening `CONSOLIDATION_REVIEW.md` §0); **L5** C0 = reproduction
+  anchor, causally isolated from V-B/P2 (see the C0-seed decision below); **L7**
+  C1>C2 directional, GRL cost as a range (≈3.7–10), downgrade "GRL destabilizes"
+  (variance claim from n=2). Two operational: **L6** reduce the aug arm 3 → 2
+  (see In progress + Blockers); **L8** notebook-06 class-coverage decomposition
+  (added to `CONSOLIDATION_REVIEW.md` §6 as G12). Unifying seed-value principle
+  recorded in the doc (governs C0-seeds, aug-s43, s44).
+
 ## In progress
 
-- **C1-aug runs (3) to launch on Colab** (wiring cross-review PASSED 2026-07-20):
+- **C1-aug runs to launch on Colab** (wiring cross-review PASSED 2026-07-20):
   `c1_ce_aug` (s42) → `c1_ce_aug_s43` → `c1_ce_s6out_aug`, runners in
   `notebooks/c1_aug/` (RUN pinned; push before each launch, archive executed
   copies to `notebooks/runs/` + STATUS line, same commit). ~2.3 h each.
+  **Conceptual-stress-test recommendation L6 (2026-07-20, `CONCEPTUAL_STRESS_TEST.md`,
+  pending team ratification): reduce 3 → 2 — launch `c1_ce_aug` (s42, P2-lab) +
+  `c1_ce_s6out_aug` (s42, P2-living), DROP `c1_ce_aug_s43`.** Reason: the comparison
+  is paired, so init noise is already controlled by the design; the seed twin
+  re-evaluates on the SAME S7 test set (cannot touch the dominant test-sampling
+  nuisance, only weakly checks replicate-across-init) — the cross-rotation twin
+  (S6, a different test set) is the replication worth keeping, and it is the arm's
+  own declared priority. Conditional on GPU idle *in parallel* with the critical
+  path; else drop the arm entirely. See Blockers for the ratification/amendment steps.
 - **Seed-44 decision — FINAL (team-confirmed 2026-07-19): no s44 runs, E1′ closed
   at n=2.** Rationale: the open question the trigger was held for ("pipeline-wide or
   GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
@@ -843,10 +873,31 @@
 
 ## Blockers / open decisions
 
+- **OPEN — amendment recommended (conceptual stress test L6, 2026-07-20,
+  `CONCEPTUAL_STRESS_TEST.md`): reduce the approved 3-run aug package to 2 (drop
+  `C1_aug_s43`).** The package was pre-registered at 3 runs (CHANGELOG 2026-07-20);
+  cutting a run is an amendment to a team-approved pre-registration → needs a team
+  call, recorded here, not a silent edit. Argument: the aug comparison is **paired**
+  (init + batch order identical between C1 and C1-aug at a fixed seed — verified in
+  `train.py`), so the pairing already controls the init noise a second seed would
+  buy. `C1_aug_s43` re-evaluates on the **same S7 test set** as `C1_aug` → it cannot
+  address the dominant uncertainty (test-sampling, 11 traces) and only weakly checks
+  replicate-across-init, which is **redundant with and weaker than** `C1_s6out_aug`
+  (a *different* test set, S6). Keep the two cross-rotation twins (S7-out s42 +
+  S6-out s42) — the arm's own stated priority. **If ratified:** CHANGELOG dated
+  amendment (drop s43; §8.4 −2.3 h → extensions ≈ 13.7 h); §0.7 frozen list 16 → 15
+  (session not yet open); leave `c1_ce_aug_s43.yaml` + its runner in the repo,
+  unlaunched (note in the folder README); notebook-06 `PAIRS` keeps only the two
+  paired deltas. **If kept:** the report must frame s43 as the augmented run's own
+  seed stability only, never as an independent "effect replicates across seeds"
+  check (it shares the S7 test set). No code change to `augment.py`/`train.py`/configs
+  either way — L6 is a run-scope + docs decision.
+
 - **DECIDED (team, 2026-07-20): the targeted augmentation arm IS RUN as "C1-aug"
   — variant (b), minimal cross-rotation package (C1_aug s42 + s43 on P2-lab,
   C1_s6out_aug s42 on P2-living). Implemented the same day; see the Done entry
-  and `splits/CHANGELOG.md` 2026-07-20.** The review record that fed the call is
+  and `splits/CHANGELOG.md` 2026-07-20.** (Superseding recommendation to drop s43
+  is the OPEN item directly above — L6.) The review record that fed the call is
   kept below verbatim (the question: does strengthening the §3 augmentation
   improve cross-environment generalization?).
   - **Mechanism (why it could work):** augmentation helps cross-domain when it
