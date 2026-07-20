@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft RUN DONE (hypothesis falsified: 0.8183 ≈ C3-lin, six instruments now agree on the SupCon ceiling); cross-review + notebook-05 = the ONLY prep left before the single test session. All 13 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); cross-review + notebook-05 = the ONLY prep left before the single test session. All 13 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -653,6 +653,18 @@
     the init line + the warmup trajectory behaviorally confirm the wiring, and
     the formal code review still applies pre-freeze. `best.ckpt` (epoch 4) on
     Drive `C3_ft` is the 13th-row checkpoint for the single test session.
+  - **Epilogue diagnostics DONE (2026-07-20, declared no-decision-feeds session,
+    `notebooks/diagnostics/2026-07-20_c3_ft_diagnostics.ipynb`) — all as
+    pre-written, chapter fully closed:** domain probe = 5th replication, every
+    target ≤ baseline (`y` control 0.981) → invariance holds across BOTH loss
+    families composed in sequence; NCM 0.7736 / kNN 0.7984 confirm the ~0.82
+    SupCon ceiling on the fine-tuned encoder too; t-SNE (asset
+    `reports/embeddings_c1_c3_c3ft_diagnostic.png`, diagnostic — NOT the §9
+    figure) shows the CE fine-tune *partially un-chaining* C3's L/S/E geometry
+    (J, W/R became discrete C1-like blobs; L/S/E a residual filament, best
+    stopped at epoch 4) — the fine-tune was turning the SupCon encoder INTO C1
+    (forgetting the init), not adding to it. "SupCon buys nothing" now visible,
+    not just numeric. Seven instruments agree.
 - **Cross-review of the pre-freeze implementation pass** (T3A `transductive.py`,
   harness `adapt_bn`, `diagnostics.domain_probe`/`concat_caches`/`fused_head_scores`,
   the two new templates) — required before the single test session (§10.4). The
