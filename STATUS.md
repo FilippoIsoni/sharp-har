@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-20 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; cross-review + the 3 aug runs + notebook-05 = the prep left before the single test session. 13 of 16 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-20 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the 3 aug runs + notebook-05 = the prep left before the single test session. 13 of 16 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -439,7 +439,7 @@
   on top of pyplot's own draw); fixed with the trailing-`;` convention already
   used in `03_train.ipynb`/`05_test_final.ipynb`. `sharp_har/viz.plot_embeddings`
   is package code — cross-review CLOSED 2026-07-18 (see the review pass below);
-  T3A/AdaBN still pending theirs (CLAUDE.md: no logic in notebooks).
+  T3A/AdaBN cross-review CLOSED 2026-07-20 (see the pre-freeze review pass below).
 
 - **NCM/kNN + embeddings cross-review pass (2026-07-18, code+doc, local):**
   - **NCM/kNN scorers promoted** from the diagnostics notebook to
@@ -510,7 +510,8 @@
     features (9, the other reason E2' exists — 2nd environment is the lab here).
 
 - **Pre-freeze implementation pass — every remaining code deliverable implemented**
-  (2026-07-18, code+templates, local; **cross-review PENDING**, required §10.4):
+  (2026-07-18, code+templates, local; **cross-review DONE 2026-07-20**, see the
+  review pass below; required §10.4):
   - **T3A** in new `sharp_har/transductive.py` (`t3a_head` + `head_weight_from_checkpoint`):
     §9 pinned batch variant, pure numpy on cached features; returns an
     `evaluate_features`-compatible head (adjusted prototypes, bias 0) → the C1+T3A row
@@ -619,7 +620,7 @@
     unfair to SupCon?" (no). Closes the last val-only §7 diagnostic.
 
 - **C1-aug arm implemented end-to-end (2026-07-20, code+configs+templates+doc,
-  local; cross-review PENDING with the rest of the pre-freeze pass):** the team
+  local; cross-review DONE 2026-07-20 with the rest of the pre-freeze pass):** the team
   approved (2026-07-20) the tabled proposal as its minimal cross-rotation
   package — variant (b), 3 runs: `C1_aug` s42 + `C1_aug_s43` (P2-lab) and
   `C1_s6out_aug` s42 (P2-living). Delivered in this commit:
@@ -652,9 +653,53 @@
     stability of the aug run; no probes/diagnostics on this arm; report
     wording = one point on an unexplored axis.
 
+- **Pre-freeze cross-review DONE — all pending code deliverables solid, no code
+  changes** (2026-07-20, reading + local runtime smoke on synthetic data; closes
+  the §10.4 freeze-gate review for the implementations landed 2026-07-18/20):
+  - **T3A (`transductive.py`):** faithful to the §9 pinned batch variant — initial
+    prototypes = L2-normed head rows (bias dropped), single-assignment pseudo-labels
+    + entropy from the INITIAL prototypes, per-class top-M=20 lowest-entropy filter,
+    adjusted proto = L2-renormed mean of {initial}∪{L2-normed supports}, prediction
+    via `evaluate_features` (weight=protos, bias=0) → the row differs from C1 only in
+    the head. Both declared deviations (bias-free scoring, initial proto never
+    filtered) present in doc+docstring; `fc.weight` key verified against
+    `ActivityHead`. Runtime: unit-norm protos, zero bias, bitwise determinism, empty
+    class keeps its initial prototype. Declared/accepted: entropy is on RAW features,
+    so the feature norm sets a per-sample softmax temperature — a consistent scoring
+    rule matching the raw-feature prediction path.
+  - **AdaBN (`harness._adapt_bn` + `adapt_bn` on `evaluate`/`cache_features`):** reset
+    → one no-grad full pass with ONLY `_BatchNorm` in train mode and `momentum=None`
+    (cumulative estimator), weights untouched, eval restored; `ADAPT_BN_BATCH=256`
+    assert, `_adabn` stem/infix, flag in the §0.7 JSONL + CSV/npz meta, `evaluate_c0`
+    refuses it. Runtime: running_mean tracks the data mean, BN weights bitwise
+    unchanged, eval restored. Declared (§9): only the last partial batch's composition
+    can perturb the cumulative estimator by order.
+  - **`diagnostics.domain_probe`/`concat_caches` (+ `inner_trace_split`,
+    `build_domain_targets`, `fused_head_scores`, `ncm`/`knn`):** frozen §5.3 recipe
+    (`probe.linear_probe`) reused unchanged; inner split trace-disjoint (rule 2) and
+    deterministic; each target vs its own majority baseline with the `y` control;
+    concat = alignment-asserted hstack. Runtime: split disjoint+deterministic,
+    NCM/kNN shapes+non-negativity, concat misalignment assert fires — consistent with
+    the byte-identical-to-notebook checks already on record.
+  - **C3-ft wiring (`train.py` `init_ckpt`):** backbone-only load behind a
+    backbone/d_enc guard assert, fresh `ActivityHead` (source is a `ProjectionHead`),
+    auto-resume takes precedence (a resumed run never re-applies the init), `init_meta`
+    in `run_meta.json`. `c3_ft.yaml` byte-diff = name/init_ckpt/lr (seed:42 explicit
+    == default, no-op).
+  - **C1-aug `ce_amp` wiring:** additive & non-mutative — `augment_cfg("ce")`/
+    `"supcon_view"` byte-identical (proven), `ce_amp` differs from `ce` only on the two
+    amplitude keys; CE-path-only asserts cover every path; the paired design holds
+    (init after `set_seed`; shuffle stream = f(seed,epoch) on a separate generator;
+    augmenter on its own RNG offset 7919) → at seed 42 init+batch-order identical to
+    the baseline. Dedicated review pass this session.
+  - **Verdict: all solid, launch/freeze-ready — no defects, no code changed.** Minor,
+    non-blocking, all declared or optional: the `_PROFILE_OVERRIDES` key-subset guard
+    was deliberately NOT added (harmless — the one override key is a real width-table
+    key); the T3A/AdaBN order subtleties are declared in §9.
+
 ## In progress
 
-- **C1-aug runs (3) to launch on Colab** once the wiring passes cross-review:
+- **C1-aug runs (3) to launch on Colab** (wiring cross-review PASSED 2026-07-20):
   `c1_ce_aug` (s42) → `c1_ce_aug_s43` → `c1_ce_s6out_aug`, runners in
   `notebooks/c1_aug/` (RUN pinned; push before each launch, archive executed
   copies to `notebooks/runs/` + STATUS line, same commit). ~2.3 h each.
@@ -724,17 +769,17 @@
    (C1⊕C3 vs C1⊕C1′ → no complementarity) all done and archived, see Done. Nothing
    left on this line before the single test session.
 5. **C3-ft — DONE** (run + epilogue diagnostics complete, see Done; hypothesis
-   falsified, 13th-row checkpoint on Drive). Only its wiring cross-review remains
-   (step 6). **C1-aug runs (team call 2026-07-20): 3 launches pending** — see In
+   falsified, 13th-row checkpoint on Drive). Its wiring cross-review is DONE
+   (2026-07-20, step 6). **C1-aug runs (team call 2026-07-20): 3 launches pending** — see In
    progress; each archives to `notebooks/runs/` + STATUS line, same commit.
-6. **Cross-review before code freeze** (implementations DONE 2026-07-18/20, see
-   Done): T3A (`transductive.py`), AdaBN (harness `adapt_bn`),
+6. **Cross-review before code freeze — DONE 2026-07-20** (see Done): T3A
+   (`transductive.py`), AdaBN (harness `adapt_bn`),
    `diagnostics.domain_probe`/`concat_caches`, the C3-ft init wiring + the C1-aug
-   wiring (`ce_amp` profile in `augment.py`, `train.augment_profile` in
-   `train.py`). Then, with the FINAL row list fixed (16 rows, incl. C3-ft and the
-   3 aug rows): extend the notebook 05 template with the pre-registered
-   transductive rows + post-AdaBN feature caching + the hard-coded frozen row-list
-   readiness assert (§0.7) — deliberately deferred, see Done.
+   wiring (`ce_amp` profile in `augment.py`, `train.augment_profile` in `train.py`)
+   — all solid, no code changes. **Remaining on this step:** with the FINAL row list
+   fixed (16 rows, incl. C3-ft and the 3 aug rows), extend the notebook 05 template
+   with the pre-registered transductive rows + post-AdaBN feature caching + the
+   hard-coded frozen row-list readiness assert (§0.7) — deliberately deferred, see Done.
 7. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
