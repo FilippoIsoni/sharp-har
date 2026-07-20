@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); cross-review + notebook-05 = the ONLY prep left before the single test session. All 13 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); cross-review + notebook-05 = the ONLY prep left before the single test session. All 13 row checkpoints exist. **OPEN proposal tabled: targeted augmentation arm (C6-aug) — see Blockers.**** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -708,6 +708,66 @@
    table as the §9 key figure.
 
 ## Blockers / open decisions
+
+- **OPEN — proposal (owner A, 2026-07-20): a targeted augmentation arm ("C6-aug"),
+  tabled for the team. NOT approved, NOT implemented, no config written.** The
+  question: does strengthening the §3 augmentation improve cross-environment
+  generalization (S7)? Reviewed 2026-07-20 against the code and the protocol; what
+  follows is the state of that review, for the call to decide on.
+  - **Mechanism (why it could work):** augmentation helps cross-domain when it
+    approximates the actual train→test shift. S7 differs by room (multipath),
+    monitor position (M4), **unseen person P3** and day (§2.2, v5.1 errata). Of the
+    §3 set, `amplitude_scaling` plausibly models the attenuation change of a
+    different room/distance, and `velocity_masking` the gait/velocity change of an
+    unseen person; `time_shift`/`time_masking` have no articulable link to an
+    environment change.
+  - **The two implementable variants are NOT equivalent** (verified in
+    `augment.py`: `_PROFILE_PROBS` differs only in application *probabilities*;
+    widths/ranges are **shared** between profiles — `time_shift_max` ±10/340,
+    `time_mask_width` 5–20/340, `velocity_mask_width` 2–10/100,
+    `amplitude_range` 0.8–1.2, `noise_sigma` 0.05):
+    - *(a) probability swap* — train C1 with the existing `supcon_view`
+      probabilities (0.8 masks + noise 0.5) instead of `ce`. Cost: ~2 lines
+      (`augment_profile` read from config, today hardcoded in `train.py:230`) +
+      cross-review. **No new §3 artifact.** Weak thesis: "the same mild
+      perturbations, applied more often" — not derived from the S7 shift.
+    - *(b) targeted magnitude* — widen `amplitude_range` (e.g. 0.8–1.2 → 0.6–1.5),
+      the single knob with a physical story ("different rooms attenuate
+      differently"). **This edits the declared §3 width table = a new artifact**,
+      so it needs its own ratification, not just a config line.
+    - Recommended if it runs: **(b)**, one knob, one pre-registered hypothesis.
+      (a) is cheaper but answers "more is better?", which is not the question asked.
+  - **Honest limit, unchanged by either variant:** the claim is about *test*
+    (in-domain val cannot see cross-environment effects), so it needs the 14th
+    pre-registered §0.7 row — a **single-seed delta on 11 traces, 6 of 8 classes
+    with one trace each**, against a measured seed swing of 5.45 pts (E1′). Unless
+    the effect is large it will read "comparable", and it adds one more comparison
+    to a 13-row table on a tiny test set (multiple-comparisons pressure). Whatever
+    the outcome, it must be written as *one point on an unexplored axis*, never as
+    "augmentation helps / does not help".
+  - **Cost if approved:** ~2 lines + cross-review; ~2.3 h GPU (§8.4 amendment,
+    extensions ≈ 11.4 h — still under the pre-v5.2 15–35 h envelope); §6 amendment
+    (the ablation/augmentation line was eliminated "fuori budget" on day 1 — the
+    budget reason has since changed, the merit was never argued); §0.7 amendment
+    13 → 14 rows, only valid while the session is **not yet open**; archive + STATUS.
+  - **Reviewer's recommendation (not a veto):** it is defensible with variant (b)
+    and full pre-registration, but it is the third addition proposed in two days
+    while the critical path (cross-review → notebook-05 rewrite → single test
+    session → report) has not moved. Priority stays: cross-review, notebook 05,
+    **test session early with slack** (incl. the proposed val dry-run of notebook
+    05), report. If GPU hours are free *in parallel* with writing, this is a
+    reasonable use of them; if they come *out of* the critical path, it is not.
+  - Related, decided earlier the same day: **E3 (leave-bedroom-out) — recommended
+    for rejection.** Feasibility from frozen artifacts: train pool 26 traces, and
+    with the §2.2 rare-cell pinning 15 of 16 cells are rare → 15 traces pinned to
+    train, 11 left to stratify → **val ≈ 2 traces** covering ≤2 of 8 classes, with
+    no blocking assert (the guard only rejects an *empty* val). Checkpoint
+    selection would be meaningless; the 26-trace train confounds "does not
+    generalize" with "had no data"; and it reverses §2.2's explicit "non si
+    esegue". Its own claim (the incidence argument) is a combinatorial proof that
+    needs no empirical illustration. If the team runs it anyway, the val problem
+    is fixable by pre-registering **no val selection** (fixed horizon, final
+    checkpoint, as phase A does) — the other two objections stand.
 
 - **DECIDED (team, 2026-07-19): the "fair-shot" SupCon extension = C3-ft (Candidate
   A) IS RUN; implementation to be specified (see "In progress"). Seed 44 is NOT run
