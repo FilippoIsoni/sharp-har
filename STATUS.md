@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-19 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); cross-review + notebook-05 = the ONLY prep left before the single test session. All 13 row checkpoints exist. **OPEN proposal tabled: targeted augmentation arm (C6-aug) — see Blockers.**** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-20 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review pending); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; cross-review + the 3 aug runs + notebook-05 = the prep left before the single test session. 13 of 16 row checkpoints exist.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -618,8 +618,46 @@
     concat number, exactly as pre-declared; third convergent answer to "was the probe
     unfair to SupCon?" (no). Closes the last val-only §7 diagnostic.
 
+- **C1-aug arm implemented end-to-end (2026-07-20, code+configs+templates+doc,
+  local; cross-review PENDING with the rest of the pre-freeze pass):** the team
+  approved (2026-07-20) the tabled proposal as its minimal cross-rotation
+  package — variant (b), 3 runs: `C1_aug` s42 + `C1_aug_s43` (P2-lab) and
+  `C1_s6out_aug` s42 (P2-living). Delivered in this commit:
+  - `augment.py`: additive `ce_amp` profile — = "ce" except the single
+    amplitude channel, s ~ U(0.6, 1.5) at p=0.8 via a per-profile override
+    table; frozen `ce`/`supcon_view` profiles byte-identical (verified
+    programmatically). Named for the transform, NOT the rotation (`ce_s7aug`
+    in the review was an example; the arm also runs S6-out, where S7 is in
+    train).
+  - `train.py`: new optional key `train.augment_profile` (default "ce" —
+    nothing existing changes), CE-path-only with blocking asserts (contradicts
+    `augment: false`, forbidden on SupCon); profile recorded in run_meta.json
+    via the config as always.
+  - Configs `c1_ce_aug.yaml` (byte-diff from c1_ce: name/seed-explicit/
+    augment_profile), `c1_ce_aug_s43.yaml` (= aug twin, name/seed only),
+    `c1_ce_s6out_aug.yaml` (same diff vs c1_ce_s6out); full rationale +
+    pre-registered hypothesis in the headers. Drive folders `C1_aug`/
+    `C1_aug_s43`/`C1_s6out_aug`.
+  - `notebooks/c1_aug/`: three pinned runners (c3_ft pattern) + README; each
+    carries a launch-check cell (stale clone without `ce_amp` fails BEFORE
+    training; config must carry the profile; frozen split present).
+  - Doc amendments: §3 additive-profile row (frozen table untouched), §0.7
+    list 13 → 16 (session not yet open), §8.4 reopened by explicit team
+    decision (+6.9 h, extensions ≈ 16 h, inside the pre-v5.2 envelope), §6
+    note (not the eliminated ablation), §10.3 item 4; full pre-registration
+    entry in `splits/CHANGELOG.md` (2026-07-20).
+  - Design invariants (from the deepened review, now binding): paired at
+    fixed seed against the EXISTING baselines (no reruns); hypothesis
+    room/attenuation-framed (§2.2 confound clause); s43's job = seed
+    stability of the aug run; no probes/diagnostics on this arm; report
+    wording = one point on an unexplored axis.
+
 ## In progress
 
+- **C1-aug runs (3) to launch on Colab** once the wiring passes cross-review:
+  `c1_ce_aug` (s42) → `c1_ce_aug_s43` → `c1_ce_s6out_aug`, runners in
+  `notebooks/c1_aug/` (RUN pinned; push before each launch, archive executed
+  copies to `notebooks/runs/` + STATUS line, same commit). ~2.3 h each.
 - **Seed-44 decision — FINAL (team-confirmed 2026-07-19): no s44 runs, E1′ closed
   at n=2.** Rationale: the open question the trigger was held for ("pipeline-wide or
   GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
@@ -685,20 +723,23 @@
 4. **Val-only diagnostics — COMPLETE:** NCM/kNN (C1/C2/C3/C1_s43) and the §7 concat
    (C1⊕C3 vs C1⊕C1′ → no complementarity) all done and archived, see Done. Nothing
    left on this line before the single test session.
-5. **C3-ft (approved 2026-07-19):** specify the training recipe (In progress), wire
-   init-from-checkpoint in `train.py` + `c3_ft.yaml` + §8.4 budget + pre-registered
-   hypothesis, run (~2 h), archive to `notebooks/runs/`, §0.7 row-list amendment to
-   13 rows. Cross-review the wiring with the rest of the pre-freeze pass (step 6).
-6. **Cross-review before code freeze** (implementation DONE 2026-07-18, see Done):
-   T3A (`transductive.py`), AdaBN (harness `adapt_bn`), `diagnostics.domain_probe`/
-   `concat_caches` + the new C3-ft init wiring. Then, with the FINAL row list fixed
-   (now includes C3-ft): extend the notebook 05 template with the pre-registered
+5. **C3-ft — DONE** (run + epilogue diagnostics complete, see Done; hypothesis
+   falsified, 13th-row checkpoint on Drive). Only its wiring cross-review remains
+   (step 6). **C1-aug runs (team call 2026-07-20): 3 launches pending** — see In
+   progress; each archives to `notebooks/runs/` + STATUS line, same commit.
+6. **Cross-review before code freeze** (implementations DONE 2026-07-18/20, see
+   Done): T3A (`transductive.py`), AdaBN (harness `adapt_bn`),
+   `diagnostics.domain_probe`/`concat_caches`, the C3-ft init wiring + the C1-aug
+   wiring (`ce_amp` profile in `augment.py`, `train.augment_profile` in
+   `train.py`). Then, with the FINAL row list fixed (16 rows, incl. C3-ft and the
+   3 aug rows): extend the notebook 05 template with the pre-registered
    transductive rows + post-AdaBN feature caching + the hard-coded frozen row-list
    readiness assert (§0.7) — deliberately deferred, see Done.
 7. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
-   (unconditional, §9), the S6-out rotation's C1, **+ C3-ft (13th)**) — evaluate_c0,
+   (unconditional, §9), the S6-out rotation's C1, C3-ft, **+ C1_aug, C1_aug_s43,
+   C1_s6out_aug (14th–16th, team call 2026-07-20)**) — evaluate_c0,
    evaluate, evaluate_features, `viz.metrics_table` + confusions; commit
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook. Editor shortcuts to EVERY run folder from one account,
@@ -732,11 +773,12 @@
 
 ## Blockers / open decisions
 
-- **OPEN — proposal (owner A, 2026-07-20): a targeted augmentation arm ("C6-aug"),
-  tabled for the team. NOT approved, NOT implemented, no config written.** The
-  question: does strengthening the §3 augmentation improve cross-environment
-  generalization (S7)? Reviewed 2026-07-20 against the code and the protocol; what
-  follows is the state of that review, for the call to decide on.
+- **DECIDED (team, 2026-07-20): the targeted augmentation arm IS RUN as "C1-aug"
+  — variant (b), minimal cross-rotation package (C1_aug s42 + s43 on P2-lab,
+  C1_s6out_aug s42 on P2-living). Implemented the same day; see the Done entry
+  and `splits/CHANGELOG.md` 2026-07-20.** The review record that fed the call is
+  kept below verbatim (the question: does strengthening the §3 augmentation
+  improve cross-environment generalization?).
   - **Mechanism (why it could work):** augmentation helps cross-domain when it
     approximates the actual train→test shift. S7 differs by room (multipath),
     monitor position (M4), **unseen person P3** and day (§2.2, v5.1 errata). Of the

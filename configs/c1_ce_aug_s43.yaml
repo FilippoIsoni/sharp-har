@@ -1,0 +1,43 @@
+# C1_aug_s43 — seed-43 replicate of C1_aug (targeted-amplitude arm,
+# team-approved 2026-07-20). Byte-identical to c1_ce_aug.yaml except
+# `name` and `seed` (42 -> 43), the E1' twin pattern. Its job is NOT to
+# beat anything: it checks that C1_aug stays seed-stable — a stronger
+# augmentation changes training stochasticity, so C1's measured 0.87-pt
+# stability does not automatically transfer — and its test row is the
+# mean±range cell with the s42 sibling (E1' reporting pattern, §10.3).
+# Probes/diagnostics stay on seed 42 (declared asymmetry, as for E1').
+# Full rationale + pre-registered hypothesis: c1_ce_aug.yaml header and
+# splits/CHANGELOG.md (2026-07-20). Drive run folder: C1_aug_s43
+# (separate — auto-resume must never cross seeds, §10.3).
+name: C1_aug_s43
+seed: 43
+protocol: P2-lab
+split_file: splits/p2_lab.json
+backbone: resnet_vb
+d_enc: 256
+n_att: 8
+loss:
+  type: ce
+  label_smoothing: 0.1
+adversary:
+  type: null
+  target: ar_set
+  lambda_max: null
+  beta: null
+optim:
+  name: adamw
+  lr: 1.0e-3
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 40
+  batch_size: 256
+  sampler: uniform
+  augment_profile: ce_amp
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10

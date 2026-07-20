@@ -1,0 +1,57 @@
+# C1_aug — targeted-amplitude augmentation arm of C1 (team-approved
+# 2026-07-20; pre-registered in splits/CHANGELOG.md; §3 amendment =
+# additive "ce_amp" profile). Byte-diff from c1_ce.yaml: `name`, `seed`
+# (explicit), `train.augment_profile`. Everything else — backbone, loss,
+# optimizer, horizon, sampler, split, mu/sigma — is C1's, so at seed 42
+# the init and the batch order are IDENTICAL to C1 (verified in
+# train.py: build_backbone after set_seed; shuffle stream = f(seed,
+# epoch), profile-independent; the augmenter owns a separate RNG) and
+# the paired test delta C1_aug − C1 cancels the seed nuisance.
+#
+# The arm (single conceptual lever, clean attribution): amplitude
+# scaling s ~ U(0.6, 1.5) at p=0.8 (frozen CE: U(0.8, 1.2) at p=0.5),
+# all other channels identical to "ce". Amplitude/attenuation is the
+# only §3 lever that is physically coherent on μ-Doppler, label-safe
+# and in-scope (STATUS 2026-07-20 deepened review; time-warp rejected
+# on physics, velocity-warp on label-safety).
+#
+# Pre-registered hypothesis (CHANGELOG 2026-07-20): stronger attenuation
+# augmentation improves cross-AR-set generalization — paired same-seed
+# test delta vs C1 positive on both rotations (room-framed per §2.2's
+# confound clause, NEVER "compensates the person shift"). Noise floor:
+# C1's measured seed swing 0.87 pt; within the §0.5 ~2-pt band the
+# result reads "comparable". Reported as one point on an unexplored
+# axis, never as "augmentation helps/does not help". Baselines are the
+# EXISTING runs (no baseline reruns). Budget ~2.3 h (§8.4 amendment).
+name: C1_aug
+seed: 42
+protocol: P2-lab
+split_file: splits/p2_lab.json
+backbone: resnet_vb
+d_enc: 256
+n_att: 8
+loss:
+  type: ce
+  label_smoothing: 0.1
+adversary:
+  type: null
+  target: ar_set
+  lambda_max: null
+  beta: null
+optim:
+  name: adamw
+  lr: 1.0e-3
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 40
+  batch_size: 256
+  sampler: uniform
+  augment_profile: ce_amp
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10

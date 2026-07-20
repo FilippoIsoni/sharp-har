@@ -1,0 +1,51 @@
+# C1_s6out_aug — targeted-amplitude arm on the E2' living-out rotation
+# (team-approved 2026-07-20). Byte-diff from c1_ce_s6out.yaml: `name`,
+# `seed` (explicit), `train.augment_profile`. Same frozen split
+# `splits/p2_living.json` with its own train-only mu/sigma (§0.3 — the
+# augmentation is on-the-fly and post-standardization, so mu/sigma are
+# untouched by design, §3/STATUS "augment then split rejected"); at
+# seed 42 init and batch order are identical to C1_s6out, so the paired
+# test delta C1_s6out_aug − C1_s6out is seed-nuisance-free.
+#
+# This run is the cross-rotation replication of the arm — prioritized
+# over a second seed on this rotation (STATUS 2026-07-20: rotation
+# specificity is the residual confound once the seed nuisance is
+# cancelled by pairing). Same single lever and same pre-registered
+# hypothesis as c1_ce_aug.yaml (see its header + splits/CHANGELOG.md);
+# on this rotation the shift is room-framed toward the living room
+# (S6), with the lab (S7) in train. Reminder from the baseline run:
+# this rotation's val is 6 traces / 5 classes (H/L/W absent) and very
+# noisy — the deliverable is the val-selected best.ckpt for the single
+# §0.7 test row, never the val number. Drive run folder: C1_s6out_aug.
+name: C1_s6out_aug
+seed: 42
+protocol: P2-living
+split_file: splits/p2_living.json
+backbone: resnet_vb
+d_enc: 256
+n_att: 8
+loss:
+  type: ce
+  label_smoothing: 0.1
+adversary:
+  type: null
+  target: ar_set
+  lambda_max: null
+  beta: null
+optim:
+  name: adamw
+  lr: 1.0e-3
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 40
+  batch_size: 256
+  sampler: uniform
+  augment_profile: ce_amp
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10

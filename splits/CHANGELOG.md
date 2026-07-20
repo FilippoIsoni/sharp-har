@@ -125,3 +125,64 @@ themselves are never touched.
   precedes it); §8.4 budget +2 h (extensions total ≈ 9.1 h, still under
   the pre-v5.2 envelope). Wiring (`train.py` init_ckpt) enters the
   pre-freeze cross-review with the rest of the 2026-07-18 pass.
+
+## 2026-07-20 — C1-aug: targeted amplitude augmentation arm (§0.7 list 13 → 16)
+
+- **Decision:** team-approved 2026-07-20 (closes the "C6-aug" proposal
+  tabled 2026-07-20, reviewed twice in STATUS): THREE runs of variant
+  (b), the minimal cross-rotation package from the deepened review —
+  `C1_aug` (P2-lab, seed 42), `C1_aug_s43` (P2-lab, seed 43),
+  `C1_s6out_aug` (P2-living, seed 42). Question: does strengthening the
+  attenuation component of the §3 augmentation improve cross-AR-set
+  generalization?
+- **Lever (fixed by the 2026-07-20 physical analysis, recorded in
+  STATUS):** amplitude scaling only — s ~ U(0.6, 1.5) at p=0.8 (frozen
+  CE: U(0.8, 1.2) at p=0.5). Amplitude/attenuation is the single §3
+  lever that is physically coherent on μ-Doppler (global attenuation ≈
+  the room/distance component of the shift), label-safe (a global
+  scalar preserves the class pattern; velocity manipulations are not,
+  §3) and in-scope (no raw CSI). One conceptual lever → clean
+  attribution; bundling other channels (= variant (a)) rejected as
+  uninterpretable.
+- **Implementation (additive, non-mutative):** new `ce_amp` profile in
+  `augment.py` (own `_PROFILE_PROBS` entry + `amplitude_range`
+  override); the frozen `ce`/`supcon_view` profiles and the §3 width
+  table stay byte-identical, so every archived run reproduces
+  unchanged. Selected per run via new config key
+  `train.augment_profile` (default "ce"; CE path only, blocking
+  asserts in `train.py`). Profile name is `ce_amp`, NOT the
+  "ce_s7aug" example from the review: the arm replicates on the
+  S6-out rotation too, where S7 is in train — the profile names the
+  transform, not a rotation. Wiring joins the pre-freeze cross-review.
+- **Design (paired, no baseline reruns):** frozen splits and mu/sigma
+  reused; baselines are the EXISTING `C1`, `C1_s43`, `C1_s6out` runs.
+  At a fixed seed, init and batch order are identical between twin
+  runs (verified in train.py: build_backbone after set_seed; shuffle
+  stream = f(seed, epoch), profile-independent; the augmenter owns an
+  independent RNG) → the paired test delta cancels the seed nuisance.
+  Priority: cross-rotation replication (S7-out + S6-out) over a second
+  seed; the s43 twin's job is to check the AUGMENTED run stays
+  seed-stable (C1's 0.87-pt floor does not automatically transfer),
+  reported as a mean±range cell with its s42 sibling (E1' pattern).
+  Probes/diagnostics are NOT run on this arm (end-to-end rows only,
+  declared E1'-style asymmetry); separate Drive folders `C1_aug`,
+  `C1_aug_s43`, `C1_s6out_aug` (auto-resume never crosses runs).
+- **Pre-registered hypothesis (fixed BEFORE any run):** stronger
+  attenuation augmentation improves cross-AR-set generalization — the
+  paired same-seed test delta (aug − baseline, 8-class test macro-F1)
+  is positive on BOTH rotations. Framed on the room/attenuation
+  component only (§2.2: S7 confounds room + monitor + person + day —
+  NEVER read as "compensates the person shift"). Noise floor: C1's
+  measured seed swing 0.87 pt; deltas within the §0.5 ~2-pt band read
+  "comparable". Whatever the outcome, the report states it as one
+  point on an unexplored axis, never "augmentation helps / does not
+  help"; the in-domain val CANNOT see the effect (declared), so val
+  numbers select checkpoints and nothing else.
+- **Amendments:** §3 additive profile row (the frozen table untouched);
+  §0.7 frozen row list 13 → 16 (session not yet opened — the freeze
+  clause forbids extension only with the session OPEN; the notebook-05
+  readiness assert, still deliberately deferred, is now written against
+  16 rows); §8.4 reopened by explicit team decision (+3 × ~2.3 ≈ 6.9 h,
+  extensions ≈ 16 h, inside the pre-v5.2 15–35 h envelope); §6 note
+  (the arm does not reopen the eliminated augmentation ablation);
+  §10.3 item 4.

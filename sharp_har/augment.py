@@ -6,6 +6,20 @@ probability profiles (§3 table): "ce" for C1/C2 batches and
 "supcon_view" for the SupCon views of C3/C4, where each sample yields
 2 views = 2 independent augmentations of the same (window, antenna).
 
+Additive third profile "ce_amp" (§3 amendment, team-ratified
+2026-07-20, pre-registered in splits/CHANGELOG.md): the C1-aug arm.
+Identical to "ce" except the SINGLE amplitude channel — scaling
+s ~ U(0.6, 1.5) at p=0.8 (vs U(0.8, 1.2) at p=0.5) — the one §3 lever
+that is physically coherent on μ-Doppler (global attenuation ≈ the
+room/distance component of a cross-environment shift), label-safe
+(a global scalar preserves the class pattern; contrast the forbidden
+velocity manipulations) and in-scope (no raw CSI needed). The frozen
+"ce"/"supcon_view" profiles and the §3 width table stay byte-identical:
+the profile is selected per run via the config key `train.augment_profile`
+(train.py, default "ce"), so every existing run is untouched. The name
+describes the transform, not a rotation: the arm runs on both the
+S7-out and S6-out rotations.
+
 Forbidden by design and deliberately not implemented here: velocity-axis
 flip (inverts the Doppler sign) and time flip (sit-down <-> stand-up).
 
@@ -34,7 +48,12 @@ REFERENCE_TIME_STEPS = 340
 REFERENCE_VELOCITY_BINS = 100
 
 # Application probabilities per profile (§3 table). Everything else
-# (widths, ranges, sigma) is shared between the two profiles.
+# (widths, ranges, sigma) is shared between the profiles, except the
+# per-profile overrides below. "ce" and "supcon_view" are the frozen §3
+# table and MUST stay byte-identical (every archived run reproduces
+# through them); "ce_amp" is the additive 2026-07-20 amendment, written
+# out literally (not spread from "ce") so each frozen value is auditable
+# in place.
 _PROFILE_PROBS: dict[str, dict[str, float]] = {
     "ce": {
         "p_time_shift": 0.5,
@@ -50,6 +69,23 @@ _PROFILE_PROBS: dict[str, dict[str, float]] = {
         "p_amplitude_scaling": 0.8,
         "p_gaussian_noise": 0.5,
     },
+    "ce_amp": {  # C1-aug arm: = "ce" except the amplitude channel (§3 amendment 2026-07-20)
+        "p_time_shift": 0.5,
+        "p_time_masking": 0.5,
+        "p_velocity_masking": 0.5,
+        "p_amplitude_scaling": 0.8,
+        "p_gaussian_noise": 0.0,
+    },
+}
+
+# Per-profile parameter overrides, applied on top of the shared §3 width
+# table by augment_cfg. One conceptual lever per arm: "ce_amp" touches
+# ONLY the amplitude range (clean attribution — bundling other channels
+# would be variant (a) "more of everything", uninterpretable). The
+# amplitude scalar is geometry-free, so overriding after the axis
+# rescaling is exact.
+_PROFILE_OVERRIDES: dict[str, dict[str, Any]] = {
+    "ce_amp": {"amplitude_range": (0.6, 1.5)},
 }
 
 
@@ -60,15 +96,16 @@ def _rescale(value: int, actual: int, reference: int) -> int:
 
 
 def augment_cfg(
-    profile: Literal["ce", "supcon_view"],
+    profile: Literal["ce", "supcon_view", "ce_amp"],
     time_steps: int = REFERENCE_TIME_STEPS,
     velocity_bins: int = REFERENCE_VELOCITY_BINS,
 ) -> dict[str, Any]:
-    """Builds the parameter dict `apply` consumes for one of the two §3
+    """Builds the parameter dict `apply` consumes for one of the §3
     profiles, with widths rescaled from the reference 340x100 geometry
     to the actual one recorded in the frozen split (day-1 axes check
     confirmed 340x100, so the rescaling is the identity for this
-    project's rotations)."""
+    project's rotations). Per-profile overrides (_PROFILE_OVERRIDES,
+    §3 amendment 2026-07-20) apply last."""
     assert profile in _PROFILE_PROBS, f"unknown profile {profile!r}, expected {sorted(_PROFILE_PROBS)}"
     t = lambda v: _rescale(v, time_steps, REFERENCE_TIME_STEPS)  # noqa: E731
     d = lambda v: _rescale(v, velocity_bins, REFERENCE_VELOCITY_BINS)  # noqa: E731
@@ -80,6 +117,7 @@ def augment_cfg(
         "velocity_mask_width": (d(2), d(10)),        # width ~ U{2, ..., 10}
         "amplitude_range": (0.8, 1.2),               # s ~ U(0.8, 1.2)
         "noise_sigma": 0.05,
+        **_PROFILE_OVERRIDES.get(profile, {}),
     }
 
 
@@ -146,7 +184,7 @@ class Augmenter:
 
     def __init__(
         self,
-        profile: Literal["ce", "supcon_view"],
+        profile: Literal["ce", "supcon_view", "ce_amp"],
         seed: int,
         time_steps: int = REFERENCE_TIME_STEPS,
         velocity_bins: int = REFERENCE_VELOCITY_BINS,

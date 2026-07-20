@@ -164,7 +164,11 @@ def train_run(
     initialized from another run's checkpoint — path relative to
     ckpt_dir or absolute; the head always starts fresh (declared recipe
     choice) and auto-resume from last.ckpt takes precedence, so a
-    resumed run never re-applies the init).
+    resumed run never re-applies the init), "train.augment_profile"
+    (C1-aug arm, pre-registered 2026-07-20: §3 augmentation profile for
+    the CE path, default "ce"; "ce_amp" = the strengthened-amplitude
+    arm. CE-path only — the config, incl. the profile, is recorded in
+    run_meta.json as always).
 
     Artifacts under ckpt_dir/<cfg.name>/: last.ckpt (every epoch,
     atomic), best.ckpt (val-selected; CE runs only — phase-A selection
@@ -220,14 +224,24 @@ def train_run(
     # Augmentation (§3): train only, after standardization, profile by
     # loss path. Reseeded per (epoch, worker) — see the epoch loop.
     # train.augment: false opts out — C0 reproduces the SHARP repo,
-    # which does not use the §3 set (§6-C0 "faithful").
+    # which does not use the §3 set (§6-C0 "faithful"). The CE profile
+    # is config-selectable (train.augment_profile, default "ce" — §3
+    # amendment 2026-07-20: "ce_amp" is the C1-aug arm); a profile on
+    # the wrong path is a config error and fails fast, never a silent
+    # fallback.
     train_ds = datasets["train"]
+    aug_profile = cfg["train"].get("augment_profile", "ce")
     if not cfg["train"].get("augment", True):
         assert not is_supcon, "SupCon phase A cannot run without augmentation: the 2 views ARE augmentations (§3)"
+        assert aug_profile == "ce", "train.augment_profile set but train.augment is false — contradictory config"
     elif is_supcon:
+        assert aug_profile == "ce", (
+            "train.augment_profile applies to the CE path only — SupCon views are pinned to the "
+            "supcon_view profile (§3)"
+        )
         train_ds.transform = TwoViewAugmenter(seed, train_ds.window_len, train_ds.velocity_bins)
     else:
-        train_ds.transform = Augmenter("ce", seed, train_ds.window_len, train_ds.velocity_bins)
+        train_ds.transform = Augmenter(aug_profile, seed, train_ds.window_len, train_ds.velocity_bins)
 
     batch_size = cfg["train"]["batch_size"]
     grad_clip = float(cfg["train"].get("grad_clip", GRAD_CLIP_NORM))
