@@ -756,14 +756,17 @@
       perturbations, applied more often" — not derived from the S7 shift.
     - *(b) targeted magnitude* — widen `amplitude_range` (e.g. 0.8–1.2 → 0.6–1.5),
       the single knob with a physical story ("different rooms attenuate
-      differently"). **This edits the declared §3 width table = a new artifact**,
-      so it needs its own ratification, not just a config line.
+      differently"). It is a **new §3 artifact** needing its own ratification — but the
+      correct implementation is **additive** (a new profile), so the frozen width
+      table stays byte-identical (see the deepened review for the lever verdict and
+      the non-mutative implementation).
     - Recommended if it runs: **(b)**, one knob, one pre-registered hypothesis.
       (a) is cheaper but answers "more is better?", which is not the question asked.
   - **Honest limit, unchanged by either variant:** the claim is about *test*
     (in-domain val cannot see cross-environment effects), so it needs the 14th
     pre-registered §0.7 row — a **single-seed delta on 11 traces, 6 of 8 classes
-    with one trace each**, against a measured seed swing of 5.45 pts (E1′). Unless
+    with one trace each**, against the **C1 seed floor of 0.87 pt** — E1′; the 5.45-pt swing is
+    **C2/GRL-specific**, not the C1 floor (see the deepened review below). Unless
     the effect is large it will read "comparable", and it adds one more comparison
     to a 13-row table on a tiny test set (multiple-comparisons pressure). Whatever
     the outcome, it must be written as *one point on an unexplored axis*, never as
@@ -780,6 +783,67 @@
     **test session early with slack** (incl. the proposed val dry-run of notebook
     05), report. If GPU hours are free *in parallel* with writing, this is a
     reasonable use of them; if they come *out of* the critical path, it is not.
+  - **Deepened review (2026-07-20, second pass — settles the lever, the
+    implementation and the split-order question; corrects two errors in the notes
+    above):**
+    - **Seed-floor correction.** The "5.45-pt swing" cited above is
+      **C2/GRL-specific** (E1′: C2 vs C2_s43). This arm is built on **C1**, whose
+      seed swing is **0.87 pt** (C1 vs C1_s43, inside the §0.5 comparable band) — so
+      the noise floor is ~1 pt and the arm is *more* decidable than implied. The 2nd
+      seed's real job is to confirm C1-**aug** stays seed-stable (a stronger
+      augmentation changes training stochasticity; C1's stability does not
+      automatically transfer), not to beat 5.45.
+    - **Which lever — minute physical analysis (supersedes the "Mechanism"
+      bullet).** From the μ-Doppler representation (§1.2 window 340×100 slice; §1.4
+      μ/σ pre-augmentation; §3 velocity axis signed and *is the class signal*,
+      "separates walking/running"):
+      - **`amplitude_scaling` (room/attenuation) is the ONLY coherent + label-safe +
+        in-scope lever** — a global scalar preserves the class pattern (walk stays
+        walk) and models the real attenuation part of the S7 room change.
+      - **time-warp rejected on PHYSICS** (not just evidence): in μ-Doppler, time and
+        velocity are *coupled* (slower motion ⇒ lower Doppler AND slower evolution);
+        stretching time alone decouples them → models no real person-speed change.
+        (In 2401.00964 resized-crop helped a LOS→NLOS *room* shift, not a person one.)
+      - **velocity-warp rejected on LABEL-SAFETY** — dilating velocity moves
+        walk→run; §3 protects exactly this axis (same reason the flip is forbidden).
+      - large circular shift = no link (§3: ±10 is local robustness, not offset
+        compensation); multipath-sim / generative CSI = out of scope (no raw CSI).
+      - **Verdict: the lever is amplitude/attenuation** — this rehabilitates variant
+        (b), now on a rigorous basis (label-safety + scope + incoherence of the
+        alternatives), not the loose "physical story".
+    - **Confounding clause (§2.2).** S7 confounds room + monitor M4 + person P3 +
+      day; a gain is **not attributable** to any one. Pre-register the hypothesis as
+      "stronger attenuation augmentation improves cross-AR-set generalization"
+      (room-framed), **never** "compensates the person shift".
+    - **Correct implementation = additive, non-mutative** (this is why (b) does NOT
+      edit the frozen table): a new config-driven profile (e.g. `ce_s7aug`) in
+      `augment.py` — new `_PROFILE_PROBS` entry (`p_amplitude_scaling` 0.8) + a
+      per-profile width override (`amplitude_range` 0.6–1.5); the frozen
+      `ce`/`supcon_view` profiles and the §3 width table stay **byte-identical** (all
+      existing runs reproducible). Read the profile from config at `train.py:230`
+      (default "ce" → nothing existing changes); §3 gets a **new row** (own
+      ratification), the frozen rows untouched. Touch only the amplitude channel
+      (range + p = one conceptual lever) for clean attribution; do **not** bundle
+      noise/masking (= variant (a), "more of everything", uninterpretable).
+      Cross-review the ~5 lines.
+    - **Design.** Paired at the same seed — **verified in `train.py`**: init
+      (`build_backbone` after `set_seed`; the augmenter owns an independent RNG) and
+      shuffle order (`epoch_seed(seed, epoch)`, profile-independent) are *identical*
+      between C1 and C1-aug, only the transform differs → the paired Δ cancels the
+      seed nuisance. Reuse the **frozen splits** and the **existing baselines** (C1
+      s42, C1_s43, C1_s6out s42); only the augmented models are trained. Priority:
+      **cross-rotation replication (S7-out + S6-out) > a 2nd seed** (rotation-
+      specificity is the residual confound once 5.45 is retired). Minimal = 3 aug
+      runs (S7×{42,43} + S6×{42}); symmetric 2×2 adds C1-aug S6 s43 + one baseline
+      C1_s6out_s43.
+    - **"Augment then split" rejected.** On-the-fly augmentation already exposes the
+      model to the full augmentation distribution per epoch; pre-materialising then
+      splitting is a finite subset (≤ diversity) — no gain. The literal version
+      **leaks** (§0.2: augmented copies of a train trace are *more* correlated than
+      sibling windows), **contaminates μ/σ** (§0.3 if computed post-augmentation),
+      and **unfreezes the splits** (§0.1 → invalidates every baseline, breaks the
+      paired comparison). The order split → μ/σ-train-only → augment-train-on-the-fly
+      is the only coherent one; the gain, if any, lives in the lever, not the order.
   - Related, decided earlier the same day: **E3 (leave-bedroom-out) — REJECTED as
     a run (declined on merit, not blocked on a guard).** Feasibility numbers
     **verified against the frozen artifacts and `_stratified_val_split`**

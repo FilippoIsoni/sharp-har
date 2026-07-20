@@ -173,11 +173,21 @@ result is a null.
 
 ## 4. Excluded / future work (with reasons)
 
-- **G — Cross-domain data augmentation.** Strongly supported in the literature
-  (simple amplitude augmentations improve cross-scenario generalization), **but**
-  the §3 augmentation set is frozen and deliberately restricted (velocity-axis
-  and time flips forbidden). Changing it = new artifact + many runs + a new
-  axis. A good future-work sentence, not work for now.
+- **G — Cross-domain data augmentation.** Reviewed in depth 2026-07-20 (full
+  record in STATUS "Blockers / open decisions"). The literature (2401.00964)
+  supports amplitude augmentation for cross-scenario transfer, but weakly. On our
+  μ-Doppler data the lever question resolves cleanly: **amplitude/attenuation is
+  the only coherent, label-safe, in-scope lever** — time-warp is physically
+  incoherent (time and velocity are coupled in μ-Doppler, so stretching time alone
+  models no real motion), velocity-warp is label-unsafe (velocity separates
+  walking/running, §3), and channel-sim / generative CSI need raw CSI we do not
+  hold. Since S7 confounds room + monitor + person + day (§2.2), any gain is
+  unattributable and must be framed on the room component only. If ever pursued it
+  is a **minimal additive arm** (a new config-driven `ce_s7aug` profile — the
+  frozen §3 table stays byte-identical — paired at fixed seed against existing
+  baselines, replicated across the S7-out and S6-out rotations, ~3 runs), **not**
+  the "many runs + new backbone" shape. Still future work, not runway work — but if
+  run, this is the correct and only shape.
 - **F — New backbone (ViT/TCN/diffusion).** Breaks the shared-backbone design
   that gives the comparison its integrity; cannot move the GRL verdict (proven
   structural in §3.C); needs its own throughput gate and budget line; ViT is
