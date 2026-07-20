@@ -703,7 +703,19 @@
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook. Editor shortcuts to EVERY run folder from one account,
    verified beforehand.
-8. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
+8. **Post-session analysis — template READY** (`notebooks/06_final_analysis.ipynb`,
+   2026-07-20): the two zero-run consolidation directions (A paired bootstrap,
+   D calibration + error structure) as a thin notebook that reads only the
+   session's `*_windows.csv`. **No test access of its own** (no checkpoint, no
+   dataset → nothing to log, free to re-run) and **row-count agnostic**, so a
+   13- or 14-row session both work without edits — deliberately written now
+   because it is immune to the open C6-aug decision. Two constraints fixed
+   before any number: bootstrap on **accuracy** (a macro-F1 bootstrap is
+   ill-defined here — only ~2.8% of trace-level resamples contain all 8
+   classes, measured), and test-sampling variance reported **separately** from
+   seed variance (E1′), never merged. Carries a synthetic self-test to run
+   before session day; writing it caught an inverted ECE assertion.
+9. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
    2026-07-28 (deadline 2026-07-30); PCA+t-SNE figure C1 vs C3, domain-diagnostics
    table as the §9 key figure.
 
