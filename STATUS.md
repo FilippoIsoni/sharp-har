@@ -769,17 +769,42 @@
     **test session early with slack** (incl. the proposed val dry-run of notebook
     05), report. If GPU hours are free *in parallel* with writing, this is a
     reasonable use of them; if they come *out of* the critical path, it is not.
-  - Related, decided earlier the same day: **E3 (leave-bedroom-out) — recommended
-    for rejection.** Feasibility from frozen artifacts: train pool 26 traces, and
-    with the §2.2 rare-cell pinning 15 of 16 cells are rare → 15 traces pinned to
-    train, 11 left to stratify → **val ≈ 2 traces** covering ≤2 of 8 classes, with
-    no blocking assert (the guard only rejects an *empty* val). Checkpoint
-    selection would be meaningless; the 26-trace train confounds "does not
-    generalize" with "had no data"; and it reverses §2.2's explicit "non si
-    esegue". Its own claim (the incidence argument) is a combinatorial proof that
-    needs no empirical illustration. If the team runs it anyway, the val problem
-    is fixable by pre-registering **no val selection** (fixed horizon, final
-    checkpoint, as phase A does) — the other two objections stand.
+  - Related, decided earlier the same day: **E3 (leave-bedroom-out) — REJECTED as
+    a run (declined on merit, not blocked on a guard).** Feasibility numbers
+    **verified against the frozen artifacts and `_stratified_val_split`**
+    (2026-07-20): train pool = 26 traces (living AR-6 = 15 + lab AR-7 = 11), test
+    = bedroom 76 traces; with the §2.2 rare-cell pinning 15 of 16 `(ar_set,
+    attivita)` cells are rare (only AR-6/J has n=4) → 15 traces pinned to train,
+    the leftover degrades to AR-set stratification → **val = 2 traces** (one AR-6/J
+    + one AR-6 leftover), covering 2 of 8 classes, with no blocking assert (the
+    guard at `splits.py:211` only rejects an *empty* val).
+    The three objections, ordered by fixability so the report cites the decisive one:
+    - **Capital reason — E3 is circular as evidence (unfixable).** Its own train
+      (living AR-6 + lab AR-7) is *two single-set environments*, exactly the
+      condition under which environment-invariance is undefinable. That is what
+      makes the incidence argument a **proof**, but the corollary is that E3's null
+      is *entailed* by a theorem we already hold: one does not run an experiment
+      whose outcome is implied by a proof already in hand. The capstone is the
+      proof, not a single number illustrating it.
+    - **Confound (unfixable).** A 26-trace train conflates "does not generalize to
+      the bedroom" with "was trained on too little data"; a capstone that confounds
+      its own conclusion is not a capstone. Note a diagnostic-only variant does not
+      escape this: a domain probe on that train recovers session identity (as
+      §3.C/E2′ already show), so it too only reconfirms a degenerate target.
+    - **Reverses §2.2's "non si esegue" (amendable, but no merit to amend for)** —
+      the doc exclusion could be amended, but only if the merit held, and it does
+      not survive the two objections above.
+    - The val problem *alone* is **fixable** (pre-register **no val selection** —
+      fixed horizon, final checkpoint, as phase A does); it is listed last on
+      purpose, because it is the objection a reviewer dismantles most easily and it
+      is not why E3 is declined.
+  - **Handling:** keep the incidence argument as a **proposition with proof** in
+    report §9 (bedroom = 5 sets, living = 1, lab = 1 → no LOEO rotation of this
+    dataset poses environment-invariance non-degenerately → the GRL-null is
+    *structural*, not an outcome of our runs); the LOEO matrix is then complete as
+    far as it can be non-degenerately — **P2-lab (S7-out) primary + E2′ (S6-out)
+    done**, the third rotation being the degenerate one. No 14th §0.7 row, no §2.2
+    / §8.4 amendment.
 
 - **DECIDED (team, 2026-07-19): the "fair-shot" SupCon extension = C3-ft (Candidate
   A) IS RUN; implementation to be specified (see "In progress"). Seed 44 is NOT run

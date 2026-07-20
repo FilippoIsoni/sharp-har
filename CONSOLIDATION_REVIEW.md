@@ -43,7 +43,7 @@ value of negative results. The generalizability taxonomy was extracted from the
 |---|---|---|---|---|---|---|
 | A | Statistical rigor: paired bootstrap + variance framing | High | ~0 (analysis) | None | Strong | **Do** |
 | B | Literature positioning of the two nulls (GRL, SupCon) | High | 0 (writing) | None | Strong | **Do** |
-| C | E3 (leave-bedroom-out) + incidence argument | High | 1 run | 1 pre-reg. row | Medium | **Do** |
+| C | E3 (leave-bedroom-out) + incidence argument | High | 0 (run rejected 07-20) | None | Strong (as proof) | **Do — proof only, no run** |
 | D | C1 model characterization (calibration + error structure) | Med-high | Low | In-session only | Medium | **Do** |
 | E | TTA framing (T3A/AdaBN) vs current SOTA | Medium | 0 | Already pre-reg. | Strong | **Do** |
 | I | Reproducibility package for the null | High | Low | None | Strong | **Do** |
@@ -114,17 +114,28 @@ identity, not a generalizable "environment"). **No rotation of this dataset
 poses environment-invariance non-degenerately.** Hence "the GRL has no target"
 is not an outcome of our runs — it is forced by the dataset design.
 
-E3 completes the LOEO matrix (each environment held out once) and is the
-empirical capstone to this argument. Honest note: E3's own train (living AR-6 +
-lab AR-7) also has each environment = a single set — which is precisely what
-makes the argument a *proof* rather than luck.
+Honest note: E3's own train (living AR-6 + lab AR-7) also has each environment =
+a single set — which is precisely what makes the argument a *proof* rather than
+luck.
 
-- **Scope fit:** C1-only, one pre-registered test row, plus the train-feature
-  domain diagnostic (as E2'). Infrastructure exists (`build_p2_rotation`,
-  config pattern). Corollary: do **not** run C2/C3 on E3 — they would only
-  reconfirm a degenerate/session-level target.
-- **Pre-req:** a feasibility check from frozen artifacts (class coverage of
-  living+lab train; train/val/test trace counts) before any Colab session.
+**Feasibility check DONE (2026-07-20) → the E3 run is REJECTED; the incidence
+argument is kept as a proof.** The check this section required as a pre-req was
+run against the frozen artifacts and `_stratified_val_split`:
+- train pool = 26 traces (living 15 + lab 11), test = bedroom 76; §2.2 pinning
+  makes 15 of 16 `(ar_set, attivita)` cells rare → **val = 2 traces / 2 classes**,
+  no blocking assert (guard rejects only empty val).
+- **Decisive reason is not the val (that is fixable via no-val pre-registration)
+  but circularity:** E3's null is *entailed* by the incidence proof — its own
+  single-set-per-environment train cannot pose invariance non-degenerately — so
+  the run would illustrate a theorem, not test it; and its 26-trace train confounds
+  "does not generalize" with "had no data". A diagnostic-only variant does not
+  escape either objection (the domain probe recovers session identity).
+- **Corrected framing:** the incidence argument is the capstone, as a §9
+  proposition-with-proof. The LOEO matrix is complete as far as it can be
+  non-degenerately — **P2-lab (S7-out) + E2′ (S6-out) done**; the bedroom-out
+  rotation is the degenerate one and is covered by the proof, not by a run.
+- Still true: do **not** run C2/C3 on E3 (would reconfirm a degenerate target).
+  See STATUS "Blockers / open decisions" for the full rejection record.
 
 ### D. C1 model characterization (calibration + error structure)
 C1 is the deliverable model but has only ever been summarized by a scalar
@@ -186,9 +197,11 @@ raises the rigor and generality of the existing null.
 1. **A + B + I, in parallel with report writing** (zero-run): paired bootstrap
    on the single-session predictions; Bouthillier variance framing; positioning
    of both nulls; reproduction package.
-2. **E3** as the only additional run, pre-registered, to make the null
-   *structural* (LOEO capstone). Gate it on the frozen-artifact feasibility
-   check first.
+2. **The incidence proof** (§3.C) as the LOEO capstone that makes the null
+   *structural* — **zero runs.** The feasibility gate ran (2026-07-20) and
+   **rejected the E3 run**: its null is entailed by the proof and its 26-trace
+   train confounds the result (val = 2 traces besides). So no additional run
+   enters the runway; the matrix stays P2-lab + E2′.
 3. **D + E** inside the single §0.7 test session already planned.
 
 ## 6. Sources
