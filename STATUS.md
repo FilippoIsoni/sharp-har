@@ -715,6 +715,17 @@
    classes, measured), and test-sampling variance reported **separately** from
    seed variance (E1′), never merged. Carries a synthetic self-test to run
    before session day; writing it caught an inverted ECE assertion.
+   **Review pass 2026-07-20:** fixed a silent per-stream label bug (the global
+   `LABELS` was taken from the first stream = C0's 5-class P1 set, corrupting
+   the 8-class analysis of the C1 deliverable) → labels are now per-stream;
+   pinned the notebook-05 → 06 filename contract (stream key = prefix before
+   `_test_`, printed with per-stream class counts so a stray checkpoint stem or
+   class-set mismatch is caught up front); calibration now scores against the
+   stored `y_pred` (consistent with the reported accuracy under sharp_c0 too);
+   and the ECE self-test's too-tight `abs(ece_lo−0.05)<0.02` tolerance (which
+   failed on the realized 0.627 accuracy — the output-free template had never
+   been executed) was replaced by the exact `ECE == |acc−0.65|` identity.
+   Self-test now passes at N_BOOT=10000, verified locally.
 9. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
    2026-07-28 (deadline 2026-07-30); PCA+t-SNE figure C1 vs C3, domain-diagnostics
    table as the §9 key figure.
