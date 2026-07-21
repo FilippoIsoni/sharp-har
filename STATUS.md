@@ -738,10 +738,17 @@
 
 ## In progress
 
-- **C1-aug runs to launch on Colab** (wiring cross-review PASSED 2026-07-20):
-  `c1_ce_aug` (s42) → `c1_ce_aug_s43` → `c1_ce_s6out_aug`, runners in
-  `notebooks/c1_aug/` (RUN pinned; push before each launch, archive executed
-  copies to `notebooks/runs/` + STATUS line, same commit). ~2.3 h each.
+- **C1-aug arm — 1 of the 2 kept runs DONE.** `c1_ce_s6out_aug` complete (2026-07-21,
+  archived `notebooks/runs/2026-07-21_c1_s6out_aug.ipynb`): **best val macro-F1 0.9230
+  @ epoch 37**, full 40/40. Paired vs no-aug S6-out (0.7761): Δbest +0.147, **Δmedian
+  +0.186** (max-selection-robust). Real, robust val gain — but IN-DOMAIN val (p2_living
+  val = bedroom+lab; held-out env S6=living); the cross-domain claim is the paired Δ on
+  the **S6 test**, session-only. Equally consistent with generic small-data
+  regularization until Δtest vs Δval is compared (notebook 06). `best.ckpt` on Drive
+  `C1_s6out_aug` = its §0.7 row. **Do NOT let this val number move any decision.**
+- **Still to launch:** `c1_ce_aug` (s42, P2-lab) — the other kept run; runner in
+  `notebooks/c1_aug/` (RUN pinned; push before launch, archive + STATUS line, same
+  commit). ~2.3 h. And the OPEN L6 call below on whether `c1_ce_aug_s43` runs at all.
   **Conceptual-stress-test recommendation L6 (2026-07-20, `CONCEPTUAL_STRESS_TEST.md`,
   pending team ratification): reduce 3 → 2 — launch `c1_ce_aug` (s42, P2-lab) +
   `c1_ce_s6out_aug` (s42, P2-living), DROP `c1_ce_aug_s43`.** Reason: the comparison
