@@ -1,0 +1,59 @@
+# C1_sharplike — BACKBONE ABLATION (proposed 2026-07-21, val-only).
+# The SHARP-paper architecture (sharp_like) in the EXACT C1 recipe, to
+# isolate the backbone axis against ResNet-VB. Byte-diff from c1_ce.yaml:
+# name + backbone.
+#
+# Why it isolates the axis cleanly: same split (p2_lab), same 8 classes,
+# same §3 "ce" augmentation, same optimizer/horizon/fusion as C1 — only
+# the backbone differs. (C0-vs-C1 is confounded: architecture AND
+# protocol AND class count all change; this ablation fixes that.)
+#
+# Declared interpretation caveat (see the deepened analysis in STATUS):
+# sharp_like is a ~1k-param shallow conv front-end + a ~204k-param dense
+# head on 25500 flattened features — i.e. a near-linear wide model, vs
+# V-B's 2.79M deep bottlenecked net. A gap therefore measures
+# "shallow-wide vs deep", not only "the paper's design choice". Frame
+# accordingly. `d_enc` is ignored by sharp_like (feature_dim is fixed by
+# geometry = 25500).
+#
+# SCOPE: VAL-ONLY training. It produces C1_sharplike/best.ckpt selected
+# on val. Whether this checkpoint gets a §0.7 TEST row is a SEPARATE,
+# still-open team decision — and the only admissible form is
+# pre-register-AND-commit-to-report (never evaluate-then-decide, which
+# would be outcome-conditional selection on the test set). This config
+# does NOT touch the test and does NOT amend the frozen row list.
+#
+# Pre-registered hypothesis (val): success = understanding whether the
+# V-B choice (made on the day-2 throughput gate, not on accuracy) was
+# justified — NOT a higher number. Expect "comparable-or-worse"; only a
+# large val gap is informative on the 9-trace / 5-class val (§0.5 band).
+name: C1_sharplike
+protocol: P2-lab
+split_file: splits/p2_lab.json
+backbone: sharp_like
+d_enc: 256
+n_att: 8
+loss:
+  type: ce
+  label_smoothing: 0.1
+adversary:
+  type: null
+  target: ar_set
+  lambda_max: null
+  beta: null
+optim:
+  name: adamw
+  lr: 1.0e-3
+  wd: 1.0e-4
+  warmup_epochs: 5
+  scheduler: cosine
+train:
+  epoch_steps: 400
+  max_epochs: 40
+  batch_size: 256
+  sampler: uniform
+  amp: true
+  grad_clip: 1.0
+eval:
+  select_metric: val_macro_f1
+  patience: 10
