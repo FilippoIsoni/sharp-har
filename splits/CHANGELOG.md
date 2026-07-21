@@ -186,3 +186,42 @@ themselves are never touched.
   extensions ≈ 16 h, inside the pre-v5.2 15–35 h envelope); §6 note
   (the arm does not reopen the eliminated augmentation ablation);
   §10.3 item 4.
+
+## 2026-07-21 — C1_sharplike: backbone ablation (val-only, NO §0.7 row yet)
+
+- **Decision:** team-approved 2026-07-21 — ONE val-only run, `C1_sharplike`:
+  the SHARP-paper backbone (`sharp_like`) trained in the EXACT C1 recipe on
+  p2_lab, to isolate the backbone axis against ResNet-VB. C0-vs-C1 confounds
+  architecture + protocol + class count at once; holding the C1 recipe fixed
+  and swapping only the backbone answers the reviewer-facing question "why V-B
+  and not the paper's net?".
+- **Config (byte-diff from `c1_ce.yaml` = name + backbone, verified):** same
+  split (p2_lab), 8 classes, "ce" augmentation, adamw/lr/horizon/fusion — only
+  the backbone differs. NO code change: `train_run` already sizes the head from
+  `backbone.feature_dim` (= 25500 = 3·⌈340/2⌉·⌈100/2⌉, `train.py:296`); `d_enc`
+  is ignored by `sharp_like` (feature size fixed by geometry, §5.1). Pinned
+  runner + README in `notebooks/backbone_ablation/`.
+- **Interpretation caveat (fixed a priori, carried in the config header +
+  STATUS Done):** `sharp_like` is a ~1k-param shallow conv front-end + a
+  ~204k-param dense head on 25500 flattened features — a near-linear WIDE model
+  — vs V-B's 2.79M deep bottlenecked net, so a val gap measures "shallow-wide
+  vs deep", not only "the paper's design choice". Load-bearing second limit:
+  the V-B choice was originally made on the **day-2 THROUGHPUT gate, not on
+  accuracy** — this accuracy-only val ablation is therefore ONE axis and cannot
+  by itself vindicate or refute V-B on the ground it was actually chosen (a
+  throughput read of `sharp_like` would complete it; not run).
+- **Pre-registered hypothesis (val, BEFORE any run):** success = understanding
+  whether the V-B choice was justified, NOT a higher number; expect
+  comparable-or-worse; only a LARGE val gap is informative on the 9-trace /
+  5-class val (§0.5 band). C1 and C1_sharplike val macro-F1 are the same
+  5-class metric on the same val → directly comparable to each other (the
+  5-class caveat only blocks the val→8-class-test scale comparison).
+- **Scope: VAL-ONLY — NO §0.7 / §8.4 amendment now.** Produces
+  `C1_sharplike/best.ckpt` selected on val, no test contact; the frozen 16-row
+  §0.7 list stays untouched (unlike C3-ft / C1-aug, this adds NO test row).
+  ~2.3 h GPU on the C1 recipe. A §0.7 TEST row for this checkpoint is a
+  SEPARATE, still-open team call (STATUS Blockers), admissible ONLY as
+  pre-register-AND-commit-to-report — never evaluate-then-decide, which is
+  outcome-conditional selection on the test set (§0 rule 7). If later ratified
+  before the single session opens: §0.7 frozen list 16 → 17, §8.4 +2.3 h, and a
+  dated amendment recorded here.
