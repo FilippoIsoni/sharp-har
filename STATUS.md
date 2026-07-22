@@ -789,6 +789,29 @@
     assert to be written against 17 rows. Test-row interpretation inherits both
     caveats above (shallow-wide-vs-deep; throughput axis untested).
 
+- **Notebook 05 REWRITTEN — the single §0.7 session, ready + de-risked (2026-07-21,
+  `notebooks/05_test_final.ipynb`, output-free template).** Declarative 17-row
+  table (the frozen §0.7 list, hard-coded) + a **readiness assert** that checks
+  every artifact on Drive before any eval. Four eval kinds dispatched from the
+  table: `e2e` (evaluate, incl. `adapt_bn` for C1+AdaBN), `c0` (evaluate_c0,
+  paper fusion), `probe` (cache_features → evaluate_features with the persisted
+  head; C3 reads its checkpoint+head from `phase_b_selection.json`), `t3a`
+  (cache raw / post-AdaBN features → `t3a_head` prototypes → evaluate_features).
+  **Val dry-run mode (`SET="val"`, the DEFAULT):** exercises the whole path with
+  ZERO test contact — the harness logs only on `set_name=="test"` (verified
+  harness.py 354/440/512), so a val run writes no `test_invocations.jsonl` and
+  self-verifies via a per-row accuracy summary. The real session needs
+  `SET="test"` + an explicit confirm flag. All outputs (CSVs, feature caches,
+  merged audit log) go to a local `SESSION_DIR` → the run needs only **read**
+  access to the Drive checkpoints, and emits `reports/final/<row>_test_<fusion>_<kind>.csv`
+  exactly per notebook-06's naming contract. Verified before commit: 17 rows =
+  the frozen list 1:1; all signatures (evaluate/evaluate_c0/evaluate_features/
+  cache_features/t3a_head) match; `evaluate_features` head convention
+  `(C,d_enc)` matches both probe heads and T3A prototypes; every code cell parses.
+  If L6 drops `C1_aug_s43`, delete that one ROWS line → 16 (assert adapts).
+  **NEXT: run it on `SET="val"` — the dry run tells you it's sound before the
+  one-shot session.**
+
 ## In progress
 
 - **C1-aug arm — 1 of the 2 kept runs DONE.** `c1_ce_s6out_aug` complete (2026-07-21,
