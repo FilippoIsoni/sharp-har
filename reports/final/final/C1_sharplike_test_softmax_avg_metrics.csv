@@ -1,0 +1,11 @@
+set_name,aggregation,ar_set,n_windows,n_traces,accuracy,macro_f1,absent_classes,checkpoint,git_hash,fusion,adapt_bn
+test,fused_softmax_avg,ALL,425,11,0.5694117647058824,0.5434429601356511,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,fused_softmax_avg,AR-7,425,11,0.5694117647058824,0.5434429601356511,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_0,ALL,425,11,0.4776470588235294,0.4501218372597817,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_0,AR-7,425,11,0.4776470588235294,0.4501218372597817,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_1,ALL,425,11,0.4117647058823529,0.3840086710943278,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_1,AR-7,425,11,0.4117647058823529,0.3840086710943278,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_2,ALL,425,11,0.4117647058823529,0.38784080802618703,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_2,AR-7,425,11,0.4117647058823529,0.38784080802618703,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_3,ALL,425,11,0.47058823529411764,0.4452235114409221,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False
+test,antenna_3,AR-7,425,11,0.47058823529411764,0.4452235114409221,,/content/drive/MyDrive/sharp_har_runs/C1_sharplike/best.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg,False

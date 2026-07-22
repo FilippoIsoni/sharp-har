@@ -1,0 +1,11 @@
+set_name,aggregation,ar_set,n_windows,n_traces,accuracy,macro_f1,absent_classes,checkpoint,git_hash,fusion
+test,fused_softmax_avg,ALL,425,11,0.7270588235294118,0.7286021411880224,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,fused_softmax_avg,AR-7,425,11,0.7270588235294118,0.7286021411880224,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_0,ALL,425,11,0.6282352941176471,0.6283838070530154,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_0,AR-7,425,11,0.6282352941176471,0.6283838070530154,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_1,ALL,425,11,0.5929411764705882,0.5878418696416883,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_1,AR-7,425,11,0.5929411764705882,0.5878418696416883,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_2,ALL,425,11,0.4964705882352941,0.4681918403319941,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_2,AR-7,425,11,0.4964705882352941,0.4681918403319941,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_3,ALL,425,11,0.6635294117647059,0.6601900868820634,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
+test,antenna_3,AR-7,425,11,0.6635294117647059,0.6601900868820634,,/content/drive/MyDrive/sharp_har_runs/C3/epoch40.ckpt,bdf52babb08bb127be02e9f622497bba5eb8a4f8,softmax_avg
