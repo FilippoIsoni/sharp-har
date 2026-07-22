@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-21 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the 3 aug runs + notebook-05 = the prep left before the single test session. All 17 row checkpoints exist (C1_sharplike promoted to the 17th test row 2026-07-21). Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); OPEN operational recommendation L6: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set), pending team ratification; L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-22 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **16 of the 17 §0.7 row checkpoints exist** (C1_sharplike promoted to the 17th test row 2026-07-21); the one gap is `C1_aug_s43` — never run and the still-OPEN L6 drop-or-run call, so **the session is gated on resolving it** (run s43 → 17, or ratify the L6 drop → 16), and notebook-05's readiness assert must match whichever count is chosen. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); OPEN operational recommendation L6: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set), pending team ratification; L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -788,6 +788,23 @@
     — the checkpoint exists), dated CHANGELOG amendment; notebook-05 readiness
     assert to be written against 17 rows. Test-row interpretation inherits both
     caveats above (shallow-wide-vs-deep; throughput axis untested).
+  - **Interpretive key for the test row (pre-registered, outcome-independent — the read
+    the team ratified 2026-07-21; also in `splits/CHANGELOG.md`).** S7 is read the same
+    way whichever it gives, so that no outcome can retro-justify the row: **(i) gap
+    confirms** (large on S7) → V-B beats the near-linear net on the held-out domain too;
+    **(ii) gap compresses** (both ≈0.7 8-class — S7 is hard, 6 singleton classes, floor
+    effect) → on the hostile domain architecture matters less than the regime, and the
+    vindication then rests on the clean in-domain val gap. **Neither reading is an
+    architecture contribution**; both stay val-selected and appendix-only. Fixing this
+    read *before* the session is exactly what makes the post-val decision admissible.
+  - **Scope of what the ablation buys (report precaution — conceptual, from the 2026-07-22
+    review).** It closes the **weak-backbone objection** to the CE/SupCon null: our CE
+    baseline runs on a backbone that decisively beats the paper's own net, so the null is
+    not a strawman-backbone artifact — a genuine strengthening of `CONSOLIDATION_REVIEW.md`
+    §0/§I. It does **NOT** close the **SupCon-regime caveat** (large-batch / many-class /
+    transfer-robustness, where SupCon is strong, stays untested, §B) — a different,
+    already-declared limitation. Do not let the backbone win *over*-defend the null; it
+    shuts one specific objection, not all of them.
 
 - **Notebook 05 REWRITTEN — the single §0.7 session, ready + de-risked (2026-07-21,
   `notebooks/05_test_final.ipynb`, output-free template).** Declarative 17-row
@@ -814,26 +831,34 @@
 
 ## In progress
 
-- **C1-aug arm — 1 of the 2 kept runs DONE.** `c1_ce_s6out_aug` complete (2026-07-21,
-  archived `notebooks/runs/2026-07-21_c1_s6out_aug.ipynb`): **best val macro-F1 0.9230
-  @ epoch 37**, full 40/40. Paired vs no-aug S6-out (0.7761): Δbest +0.147, **Δmedian
-  +0.186** (max-selection-robust). Real, robust val gain — but IN-DOMAIN val (p2_living
-  val = bedroom+lab; held-out env S6=living); the cross-domain claim is the paired Δ on
-  the **S6 test**, session-only. Equally consistent with generic small-data
-  regularization until Δtest vs Δval is compared (notebook 06). `best.ckpt` on Drive
-  `C1_s6out_aug` = its §0.7 row. **Do NOT let this val number move any decision.**
-- **Still to launch:** `c1_ce_aug` (s42, P2-lab) — the other kept run; runner in
-  `notebooks/c1_aug/` (RUN pinned; push before launch, archive + STATUS line, same
-  commit). ~2.3 h. And the OPEN L6 call below on whether `c1_ce_aug_s43` runs at all.
-  **Conceptual-stress-test recommendation L6 (2026-07-20, `CONCEPTUAL_STRESS_TEST.md`,
-  pending team ratification): reduce 3 → 2 — launch `c1_ce_aug` (s42, P2-lab) +
-  `c1_ce_s6out_aug` (s42, P2-living), DROP `c1_ce_aug_s43`.** Reason: the comparison
-  is paired, so init noise is already controlled by the design; the seed twin
-  re-evaluates on the SAME S7 test set (cannot touch the dominant test-sampling
-  nuisance, only weakly checks replicate-across-init) — the cross-rotation twin
-  (S6, a different test set) is the replication worth keeping, and it is the arm's
-  own declared priority. Conditional on GPU idle *in parallel* with the critical
-  path; else drop the arm entirely. See Blockers for the ratification/amendment steps.
+- **C1-aug arm — BOTH kept runs DONE** (indexed in `notebooks/runs/README.md`, commit
+  `fdb3c08`/`2ecec5b`):
+  - `c1_ce_s6out_aug` (2026-07-21, `notebooks/runs/2026-07-21_c1_s6out_aug.ipynb`):
+    **best val 0.9230 @ e37**, full 40/40. Paired vs no-aug S6-out (0.7761): Δbest +0.147,
+    **Δmedian +0.186**. Real, robust — but IN-DOMAIN val (p2_living val = bedroom+lab;
+    held-out env S6=living). `best.ckpt` on Drive `C1_s6out_aug` = its §0.7 row.
+  - `c1_ce_aug` (2026-07-21, `notebooks/runs/2026-07-21_c1_ce_aug.ipynb`): **best val
+    0.8830 @ e31**, full 40/40. Paired vs no-aug C1 (0.8871): **Δbest −0.004 — flat**
+    (C1 already near the val ceiling). `best.ckpt` on Drive `C1_aug` = its §0.7 row.
+  - **Identifiability of the arm (two layers — the conceptual precaution for the report):**
+    the asymmetry (S7 flat, S6 +0.147) is best read as "a regulariser helps where there is
+    headroom", NOT as a cross-domain lever. **Layer 1 (resolvable):** notebook 06's
+    **Δtest-vs-Δval** separates regularisation (Δtest ≈ Δval) from a genuine transfer
+    effect (Δtest ≫ Δval) — so the val numbers must move NO decision. **Layer 2
+    (unresolvable):** even a clean transfer gain is **not attributable to room-attenuation**
+    — S7/S6 confound room + person P3 + day + monitor (§2.2), and the amplitude lever is
+    itself a dual-purpose regulariser/attenuation-model. Report wording: "a label-safe
+    perturbation compatible with the attenuation shift moved / did not move the held-out
+    number", never "augmentation helps cross-domain".
+- **OPEN L6 — the only aug run-scope call left:** whether `c1_ce_aug_s43` runs at all or
+  is dropped. **Conceptual-stress-test recommendation L6 (2026-07-20,
+  `CONCEPTUAL_STRESS_TEST.md`, pending team ratification): DROP `c1_ce_aug_s43`** (2 kept
+  runs, both now done). Reason: the comparison is paired, so init noise is already
+  controlled; the seed twin re-evaluates on the SAME S7 test set (cannot touch the
+  dominant test-sampling nuisance) — the cross-rotation twin (S6, a different test set) is
+  the replication worth keeping. The c1_ce_aug flat result reinforces this: the S7 effect
+  being "replicated" is ≈null, so a seed twin of it buys nothing. **This gates the
+  session** (§0.7 list is 17 with s43 unrun): resolve before opening — see Blockers.
 - **Seed-44 decision — FINAL (team-confirmed 2026-07-19): no s44 runs, E1′ closed
   at n=2.** Rationale: the open question the trigger was held for ("pipeline-wide or
   GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
@@ -907,15 +932,16 @@
    (`transductive.py`), AdaBN (harness `adapt_bn`),
    `diagnostics.domain_probe`/`concat_caches`, the C3-ft init wiring + the C1-aug
    wiring (`ce_amp` profile in `augment.py`, `train.augment_profile` in `train.py`)
-   — all solid, no code changes. **Remaining on this step:** with the FINAL row list
-   fixed (16 rows, incl. C3-ft and the 3 aug rows), extend the notebook 05 template
-   with the pre-registered transductive rows + post-AdaBN feature caching + the
-   hard-coded frozen row-list readiness assert (§0.7) — deliberately deferred, see Done.
+   — all solid, no code changes. **DONE (2026-07-21):** notebook 05 rewritten for the
+   17-row §0.7 list with the transductive rows, post-AdaBN caching and the hard-coded
+   readiness assert (see the "Notebook 05 REWRITTEN" Done entry) — the assert adapts to
+   16 if the OPEN L6 call drops `C1_aug_s43`.
 7. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
    (unconditional, §9), the S6-out rotation's C1, C3-ft, **+ C1_aug, C1_aug_s43,
-   C1_s6out_aug (14th–16th, team call 2026-07-20)**) — evaluate_c0,
+   C1_s6out_aug (14th–16th, team call 2026-07-20), C1_sharplike (17th, team call
+   2026-07-21)**; `C1_aug_s43` pending the OPEN L6 drop-or-run call, Blockers) — evaluate_c0,
    evaluate, evaluate_features, `viz.metrics_table` + confusions; commit
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook. Editor shortcuts to EVERY run folder from one account,

@@ -249,3 +249,21 @@ themselves are never touched.
   choice"; (ii) V-B was chosen on the day-2 THROUGHPUT gate, not accuracy, so an
   accuracy comparison is one axis (sharp_like is ~2.8× faster: 0.191 vs 0.53
   s/step — the real trade-off is accuracy-vs-speed, V-B winning accuracy widely).
+- **Pre-registered interpretive key (outcome-independent — the read fixed BEFORE
+  the session opens; this is what makes the post-val decision admissible, since
+  no S7 outcome can retro-justify the row):** read the S7 test row the same way
+  whichever it gives.
+  - **(i) Gap confirms** (large on S7) → V-B beats the paper's near-linear net on
+    the held-out domain as well.
+  - **(ii) Gap compresses** (both ≈0.7 8-class — S7 is a hard single domain, 6
+    singleton classes, floor effect) → on the hostile domain architecture matters
+    less than the regime; the vindication then rests on the clean in-domain val
+    gap (~15 pt), which is not weakened by a compressed test gap.
+  - **Neither branch is an architecture contribution.** Both stay val-selected and
+    reported as an appendix ablation, never a headline row.
+- **Scope the row is allowed to defend (report precaution):** it closes the
+  *weak-backbone* objection to the CE/SupCon null (the CE baseline's backbone
+  beats the paper's own net → the null is not a strawman-backbone artifact). It
+  does NOT close the *SupCon-regime* caveat (large-batch / many-class /
+  transfer-robustness, untested — a separate, already-declared limitation). One
+  objection shut, not all.
