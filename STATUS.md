@@ -833,6 +833,25 @@
   **NEXT: run it on `SET="val"` — the dry run tells you it's sound before the
   one-shot session.**
 
+- **Notebook 05 dispatch extracted to `sharp_har/session.py` (2026-07-22, code
+  quality — no behavior change, review R1/R2/R5).** The §0.7 row dispatch that had
+  lived inline in the notebook (`run_row`, `required_paths`, `_finalize`, `_acc`)
+  moved into a new package module (`required_paths`/`readiness_missing`/`run_row`/
+  `finalize_csvs`/`row_accuracy`) per the thin-notebook rule — the once-only
+  test-access logic is now diffable/unit-testable; notebook 05 keeps only the
+  frozen `ROWS` table + display (readiness print+raise, per-row summary, log
+  merge). Three review fixes folded in: **(R1)** the §9 T3A audit arrays
+  (`n_supports`/`pseudo_label_counts`) are now RETURNED by `run_row` and printed
+  per T3A row — honoring the `t3a_head` docstring's "the §0.7 session prints them",
+  which the inline code silently dropped (the session is irreproducible, so those
+  arrays are now captured in the archived output); **(R2)** AdaBN rows pin
+  `batch_size=harness.ADAPT_BN_BATCH` explicitly (was relying on the harness
+  default 256 — now can't drift from the harness's own assert); **(R5)** the inline
+  `json` import is gone, so the `json`/`_json` NameError class is structurally
+  impossible here. Verified: `py_compile` clean, all 13 cells parse, no dangling
+  refs to the removed inline helpers. CLAUDE.md architecture list updated in the
+  same change.
+
 ## In progress
 
 - **C1-aug arm — BOTH kept runs DONE** (indexed in `notebooks/runs/README.md`, commit
