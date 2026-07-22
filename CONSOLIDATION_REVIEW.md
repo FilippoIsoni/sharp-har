@@ -221,6 +221,16 @@ raises the rigor and generality of the existing null.
 
 ## 6. Post-test analysis audit — is the result set report-grade? (2026-07-20)
 
+> **UPDATE 2026-07-22 (`NOTEBOOK_06_REVIEW.md`).** The §0.7 test session has since
+> been executed (`reports/final/` committed) and notebook 06 was re-reviewed against
+> the real data. The notebook was extended past this 2026-07-20 snapshot: it now
+> reads macro-F1 from the metrics CSVs and its `PAIRS` cover the
+> aug/AdaBN/T3A/sharplike streams, so **G1, G3, G8 are largely done** and the 05
+> coverage/keying problem described below is resolved (16 clean-keyed streams).
+> **Still open: G6, G7, G9, G10, G11, G12** (nb-06) and **G4, G5** (viz/assembly).
+> See `NOTEBOOK_06_REVIEW.md` for the done-vs-open map, the measured numbers, and a
+> prioritized restart checklist. The gap descriptions below are kept as written.
+
 Directions **A** and **D** above are implemented as `notebooks/06_final_analysis.ipynb`
 (trace-level paired bootstrap + calibration/ECE + per-class/per-AR-set error). The
 notebook is methodologically sound — bootstrap on accuracy not macro-F1 (macro-F1

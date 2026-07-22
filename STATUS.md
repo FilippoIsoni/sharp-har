@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-22 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **L6 RESOLVED 2026-07-22 — `C1_aug_s43` DROPPED** (CHANGELOG 2026-07-22: the aug comparison is paired so init is already controlled, and s43 re-used the S7 test set); §0.7 list now **16 rows** and all 16 row checkpoints exist (C1_sharplike promoted 2026-07-21), so **the session is no longer gated on it**; notebook-05 declares 16 rows and its `json`/`_json` NameError on the C3 row was fixed 2026-07-22. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); operational recommendation L6 RATIFIED 2026-07-22: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set); L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-22 · **Phase: v5.2 tail — §0.7 SINGLE TEST SESSION EXECUTED 2026-07-22** (`reports/final/` + `test_invocations.jsonl` committed; 16 rows; headline test acc/macro-F1: C1 0.8047/0.8038, C1_s43 0.8000/0.7990, C2 0.6471/0.6006, C2_s43 0.6000/0.5618, C3 0.7271/0.7286, C3_ft 0.7200/0.7059, C1_T3A 0.8118/0.8101, C1_AdaBN 0.7459/0.7221, C1_aug 0.7765/0.7720, C1_sharplike 0.5694/0.5434, C1_s6out 0.7430/0.6842, C1_s6out_aug 0.8156/0.8227, C0 0.6117/0.6053; archived `notebooks/runs/2026_07_22_test_final.ipynb`). **Notebook-06 DEEP REVIEW done 2026-07-22 → `NOTEBOOK_06_REVIEW.md`** (run against the real session, all numbers reproduced from `reports/final/`): the analysis pipeline is correct and covers directions **A + D** and **G1/G3/G8**; **open in nb-06: G6** (per-trace), **G7** (cross-stream ECE), **G9** (two-variance juxtaposition), **G10** (discordance), **G11** (multiplicity sentence), **G12** (class-coverage decomposition); **G4/G5** are viz/assembly outside nb-06. Two report-relevant findings surfaced: the C1–C2 gap is +0.158 but its paired-bootstrap CI **crosses 0** on 11 traces (C1–C3 does resolve), and the "val-blind C/E/S underperform" caveat is **empirically false** on p2_lab (blind mean F1 0.904 > seen 0.744; non-uniform on p2_living). Prior tail: E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **L6 RESOLVED 2026-07-22 — `C1_aug_s43` DROPPED** (CHANGELOG 2026-07-22: the aug comparison is paired so init is already controlled, and s43 re-used the S7 test set); §0.7 list now **16 rows** and all 16 row checkpoints exist (C1_sharplike promoted 2026-07-21), so **the session is no longer gated on it**; notebook-05 declares 16 rows and its `json`/`_json` NameError on the C3 row was fixed 2026-07-22. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); operational recommendation L6 RATIFIED 2026-07-22: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set); L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -852,6 +852,46 @@
   refs to the removed inline helpers. CLAUDE.md architecture list updated in the
   same change.
 
+- **§0.7 SINGLE FINAL TEST SESSION EXECUTED (2026-07-22)** via notebook 05
+  (`SET="test"`), all **16 frozen rows**, one shot. Artifacts committed under
+  `reports/final/` (per-row `*_test_<fusion>_windows.csv` / `_metrics.csv` /
+  `_confusion.csv` + merged `test_invocations.jsonl` = the §0.7 audit proof, 21
+  test accesses logged), executed notebook archived `notebooks/runs/2026_07_22_test_final.ipynb`
+  (val dry-run archived `notebooks/runs/VAL_05_test_final.ipynb`). Headline (fused
+  test accuracy / macro-F1): **C1 0.8047 / 0.8038** (deliverable), C1_s43 0.8000 /
+  0.7990, **C2 0.6471 / 0.6006**, C2_s43 0.6000 / 0.5618, C1_lin 0.8071 / 0.8059,
+  C2_lin 0.7200 / 0.7080, **C3 0.7271 / 0.7286**, C3_ft 0.7200 / 0.7059,
+  **C1_T3A 0.8118 / 0.8101** (≈C1), **C1_AdaBN 0.7459 / 0.7221** (hurts),
+  C1_AdaBN_T3A 0.7576 / 0.7525, **C1_aug 0.7765 / 0.7720** (S7-out), **C1_sharplike
+  0.5694 / 0.5434** (backbone ablation — deep V-B beats the paper's net on test
+  too), **C1_s6out 0.7430 / 0.6842** and **C1_s6out_aug 0.8156 / 0.8227**
+  (S6-out aug +0.073), **C0 0.6117 / 0.6053** (P1 5-class, 57 traces). Seed spread
+  on test: C1 |Δ| 0.0047, **C2 |Δ| 0.0471** (GRL seed-instability replicates on
+  test). NOTE: this session ran AFTER the "Next steps 7–8 pending" text below was
+  written — those steps are superseded by this entry and the review entry.
+
+- **Notebook-06 deep review (2026-07-22) → `NOTEBOOK_06_REVIEW.md`** (multi-level:
+  correctness + conceptual + report-readiness; run against the real session, every
+  number reproduced by re-executing nb-06's functions over `reports/final/`; no
+  frozen artifact touched). Verdict: **the notebook is correct and runs clean** —
+  05→06 naming contract holds, all `paired_bootstrap` alignment asserts pass, the
+  functions do what they document. Since the 2026-07-20 §6 audit it was extended
+  (summary now reads macro-F1 from the metrics CSVs; `PAIRS` cover
+  aug/AdaBN/T3A/sharplike), so **G1/G3/G8 largely landed** and **directions A + D
+  (core)** are implemented. **Still open in nb-06: G6** (per-trace error cut — the
+  informative granularity where per-AR-set is degenerate on single-set S7),
+  **G7** (cross-stream ECE — measured: C2 0.070 far better calibrated than C1 0.243,
+  TTA worsens it), **G9** (two-variance juxtaposition), **G10** (McNemar-style
+  discordance), **G11** (multiplicity sentence, ~10 comparisons on 11 traces),
+  **G12** (class-coverage decomposition — nb-06 sets up the question in a print but
+  never computes it; measured answer contradicts the caveat: p2_lab blind {C,E,S}
+  mean F1 0.904 > seen {H,J,L,R,W} 0.744, and p2_living flips with a *seen* class
+  collapsing, S F1 0.131). **G4/G5** are viz/assembly outside nb-06. Two declared
+  (non-bug) caveats: C0 calibration is mildly ill-defined under `sharp_c0`
+  (confidence≠p(y_pred)); the percentile CI on 11 clusters is coarse (BCa would be
+  more honest). Prioritized restart checklist (all zero test contact) in the doc's
+  §5.
+
 ## In progress
 
 - **C1-aug arm — BOTH kept runs DONE** (indexed in `notebooks/runs/README.md`, commit
@@ -960,7 +1000,9 @@
    17-row §0.7 list with the transductive rows, post-AdaBN caching and the hard-coded
    readiness assert (see the "Notebook 05 REWRITTEN" Done entry) — the assert adapts to
    16 after L6 was ratified 2026-07-22 (drop `C1_aug_s43`).
-7. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
+7. **DONE 2026-07-22** (see the "§0.7 SINGLE FINAL TEST SESSION EXECUTED" Done
+   entry — `reports/final/` committed, `notebooks/runs/2026_07_22_test_final.ipynb`
+   archived). **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
    (unconditional, §9), the S6-out rotation's C1, C3-ft, **+ C1_aug,
@@ -970,7 +1012,16 @@
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook. Editor shortcuts to EVERY run folder from one account,
    verified beforehand.
-8. **Post-session analysis — template READY** (`notebooks/06_final_analysis.ipynb`,
+8. **Post-session analysis — RUN + DEEP-REVIEWED 2026-07-22** (`NOTEBOOK_06_REVIEW.md`):
+   notebook 06 executed against the real session, correct and clean; covers
+   directions A + D and G1/G3/G8. **Remaining to implement in nb-06 (all zero test
+   contact, from the review's §5 checklist, priority order): G12** (class-coverage
+   decomposition — highest report value), **G6** (per-trace), **G7** (cross-stream
+   ECE), **G9 + G11** (two-variance table + multiplicity sentence), **G10**
+   (discordance), **G2** presentation (seed mean±range), FOCUS-for-C0, confusion
+   interpretation; then the two `viz`/assembly figures **G4** (accuracy bars) +
+   **G5** (domain-diagnostics table). Original template note follows.
+   **Template READY** (`notebooks/06_final_analysis.ipynb`,
    2026-07-20): the two zero-run consolidation directions (A paired bootstrap,
    D calibration + error structure) as a thin notebook that reads only the
    session's `*_windows.csv`. **No test access of its own** (no checkpoint, no
