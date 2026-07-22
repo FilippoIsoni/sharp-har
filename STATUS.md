@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-21 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the 3 aug runs + notebook-05 = the prep left before the single test session. 13 of 16 row checkpoints exist. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); OPEN operational recommendation L6: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set), pending team ratification; L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-21 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the 3 aug runs + notebook-05 = the prep left before the single test session. All 17 row checkpoints exist (C1_sharplike promoted to the 17th test row 2026-07-21). Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); OPEN operational recommendation L6: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set), pending team ratification; L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -764,9 +764,30 @@
     C1 and C1_sharplike val macro-F1 are the same 5-class metric on the same
     val → directly comparable to each other (the 5-class caveat only blocks the
     val→8-class-test scale comparison, not this val-to-val one).
-  - **Scope: VAL-ONLY.** Produces `C1_sharplike/best.ckpt` selected on val, no
-    test contact; does NOT amend the frozen 16-row §0.7 list. Whether it earns a
-    §0.7 test row is a separate, still-OPEN sub-decision (see Blockers).
+  - **RESULT (run complete 2026-07-21, archived `notebooks/runs/2026-07-21_c1_sharplike.ipynb`):**
+    **best val macro-F1 0.7384 @ epoch 24**, early stop 34/40. **≈15 pts below C1
+    (0.8871)** — far outside the §0.5 band and the 0.87-pt C1 seed floor; median
+    plateau 0.672 vs C1's 0.759 (−9 pts) confirms it is not a selection fluke.
+    The deep V-B net decisively beats the paper's near-linear shallow-wide
+    architecture in the C1 recipe → **the V-B choice is vindicated on accuracy**
+    (and it was already chosen on throughput). Throughput here: **0.191 s/step vs
+    V-B's ~0.53** — sharp_like is ~2.8× faster, so the real trade-off is
+    accuracy-vs-speed and V-B wins accuracy by a wide margin. Interpretation
+    caveat stands: this is "deep beats near-linear", partly expected; frame as an
+    appendix ablation, not a headline. sharp_like was adequate in the paper's own
+    P1/5-class setup; it does not carry that adequacy to the harder LOEO/8-class
+    recipe.
+  - **§0.7 TEST row — DECIDED 2026-07-21 (team): C1_sharplike EARNS a test row
+    (17th).** Governance: the decision was taken AFTER seeing val (0.7384) — which
+    is admissible because val ≠ test, and there is **no cherry-pick incentive**
+    (val already shows it clearly worse, so the row is committed to reporting an
+    *expected-confirmatory* result, not fishing for a good number). Registered as
+    **pre-register-AND-commit-to-report** (reported whatever S7 gives). The ~15-pt
+    val gap is a LARGE concordant gap → survives the L2 multiplicity concern (it
+    is exactly the kind of row that does). §0.7 list 16 → 17, §8.4 +0 (no new run
+    — the checkpoint exists), dated CHANGELOG amendment; notebook-05 readiness
+    assert to be written against 17 rows. Test-row interpretation inherits both
+    caveats above (shallow-wide-vs-deep; throughput axis untested).
 
 ## In progress
 
@@ -842,11 +863,6 @@
   Done; the reviewer re-confirms rather than starts from zero. All v5.2-tail local
   prep is now implemented — what remains on the rotations is running sessions, not
   writing code.
-- **Backbone ablation `C1_sharplike` — pending launch (val-only).** Config +
-  pinned runner landed 2026-07-21 (see Done + CHANGELOG); ~2.3 h GPU on the C1
-  recipe. Runner in `notebooks/backbone_ablation/`; on completion archive the
-  executed copy as `notebooks/runs/YYYY-MM-DD_c1_sharplike.ipynb` + STATUS line,
-  same commit. Val only, no test contact.
 
 ## Next steps (in order)
 
@@ -917,18 +933,12 @@
 
 ## Blockers / open decisions
 
-- **OPEN — does `C1_sharplike` earn a §0.7 test row?** The val-only backbone
-  ablation is team-decided and implemented (2026-07-21, see Done + CHANGELOG); a
-  TEST row for its val-selected `best.ckpt` is a SEPARATE call. Admissible ONLY
-  as pre-register-AND-commit-to-report (decide to report it, and what its
-  interpretation is, BEFORE the single session opens) — never
-  evaluate-then-decide, which is outcome-conditional selection on the test set
-  (§0 rule 7). If ratified before the session opens: §0.7 frozen list 16 → 17,
-  §8.4 +2.3 h, dated CHANGELOG amendment, and the readiness assert re-fixed to 17
-  rows. If not, the run stays a **val-only backbone note** in report §9 (V-B vs
-  the paper's net, framed as "shallow-wide vs deep" + the throughput-not-accuracy
-  axis limit above) — no test contact. Note the freeze clause: like every §0.7
-  amendment, this is only open while the session is NOT yet open.
+- **RESOLVED 2026-07-21 — `C1_sharplike` earns a §0.7 test row (17th).** Team
+  decision taken after seeing val (0.7384), admissible (val ≠ test; committed to
+  report an expected-confirmatory result, no cherry-pick incentive). Registered
+  pre-register-AND-commit-to-report; §0.7 list 16 → 17, dated CHANGELOG amendment,
+  notebook-05 readiness assert to target 17. See Done for the full rationale and
+  the two inherited interpretation caveats. (Was: OPEN — does it earn a row.)
 
 - **OPEN — amendment recommended (conceptual stress test L6, 2026-07-20,
   `CONCEPTUAL_STRESS_TEST.md`): reduce the approved 3-run aug package to 2 (drop

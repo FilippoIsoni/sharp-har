@@ -225,3 +225,27 @@ themselves are never touched.
   outcome-conditional selection on the test set (§0 rule 7). If later ratified
   before the single session opens: §0.7 frozen list 16 → 17, §8.4 +2.3 h, and a
   dated amendment recorded here.
+
+
+## 2026-07-21 (addendum) — C1_sharplike EARNS a §0.7 test row (17th)
+
+- **Decision (team, 2026-07-21, after the val run):** the val-only backbone
+  ablation `C1_sharplike` is promoted to a pre-registered §0.7 TEST row.
+- **Why admissible after seeing val:** val ≠ test (val is decision-visible for
+  every stream); and there is no cherry-pick incentive — val already puts
+  sharp_like ~15 pts below C1 (0.7384 vs 0.8871), so the row is committed to
+  reporting an *expected-confirmatory* result ("V-B also wins on the held-out
+  S7"), not fishing for a favourable number. Registered as
+  **pre-register-AND-commit-to-report** (reported whatever S7 gives), never
+  evaluate-then-decide.
+- **Multiplicity:** the ~15-pt val gap is a LARGE concordant gap — the kind that
+  survives the L2 multiplicity concern (`CONCEPTUAL_STRESS_TEST.md`); it is not a
+  small-delta row.
+- **Amendments:** §0.7 frozen row list 16 → 17 (session not yet open); §8.4 +0
+  GPU (no new run — `C1_sharplike/best.ckpt` already exists); notebook-05
+  readiness assert to be written against 17 rows.
+- **Interpretation caveats inherited by the test row (report wording):**
+  (i) it measures "shallow-wide (≈linear) vs deep", not only "the paper's design
+  choice"; (ii) V-B was chosen on the day-2 THROUGHPUT gate, not accuracy, so an
+  accuracy comparison is one axis (sharp_like is ~2.8× faster: 0.191 vs 0.53
+  s/step — the real trade-off is accuracy-vs-speed, V-B winning accuracy widely).
