@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-22 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **16 of the 17 §0.7 row checkpoints exist** (C1_sharplike promoted to the 17th test row 2026-07-21); the one gap is `C1_aug_s43` — never run and the still-OPEN L6 drop-or-run call, so **the session is gated on resolving it** (run s43 → 17, or ratify the L6 drop → 16), and notebook-05's readiness assert must match whichever count is chosen. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); OPEN operational recommendation L6: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set), pending team ratification; L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-22 · **Phase: v5.2 tail — E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **L6 RESOLVED 2026-07-22 — `C1_aug_s43` DROPPED** (CHANGELOG 2026-07-22: the aug comparison is paired so init is already controlled, and s43 re-used the S7 test set); §0.7 list now **16 rows** and all 16 row checkpoints exist (C1_sharplike promoted 2026-07-21), so **the session is no longer gated on it**; notebook-05 declares 16 rows and its `json`/`_json` NameError on the C3 row was fixed 2026-07-22. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); operational recommendation L6 RATIFIED 2026-07-22: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set); L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -825,7 +825,11 @@
   the frozen list 1:1; all signatures (evaluate/evaluate_c0/evaluate_features/
   cache_features/t3a_head) match; `evaluate_features` head convention
   `(C,d_enc)` matches both probe heads and T3A prototypes; every code cell parses.
-  If L6 drops `C1_aug_s43`, delete that one ROWS line → 16 (assert adapts).
+  **Fix pass 2026-07-22:** L6 ratified (drop `C1_aug_s43`) → the ROWS line
+  removed, list now 16; fixed a `json`/`_json` NameError that would have crashed
+  the C3 `from_phaseb` row (`run_row` used `json.loads` while only `_json` was
+  imported); the val dry run's `_finalize` now writes to
+  `SESSION_DIR/_final_preview` so the committable `reports/final/` stays clean.
   **NEXT: run it on `SET="val"` — the dry run tells you it's sound before the
   one-shot session.**
 
@@ -850,15 +854,16 @@
     itself a dual-purpose regulariser/attenuation-model. Report wording: "a label-safe
     perturbation compatible with the attenuation shift moved / did not move the held-out
     number", never "augmentation helps cross-domain".
-- **OPEN L6 — the only aug run-scope call left:** whether `c1_ce_aug_s43` runs at all or
+- **L6 RESOLVED 2026-07-22 (team ratified) — `c1_ce_aug_s43` DROPPED** (CHANGELOG 2026-07-22). Record of the call: whether `c1_ce_aug_s43` runs at all or
   is dropped. **Conceptual-stress-test recommendation L6 (2026-07-20,
   `CONCEPTUAL_STRESS_TEST.md`, pending team ratification): DROP `c1_ce_aug_s43`** (2 kept
   runs, both now done). Reason: the comparison is paired, so init noise is already
   controlled; the seed twin re-evaluates on the SAME S7 test set (cannot touch the
   dominant test-sampling nuisance) — the cross-rotation twin (S6, a different test set) is
   the replication worth keeping. The c1_ce_aug flat result reinforces this: the S7 effect
-  being "replicated" is ≈null, so a seed twin of it buys nothing. **This gates the
-  session** (§0.7 list is 17 with s43 unrun): resolve before opening — see Blockers.
+  being "replicated" is ≈null, so a seed twin of it buys nothing. **Resolved
+  before the session opens** (§0.7 list now 16, s43 ROWS line removed from
+  notebook-05) — see Blockers.
 - **Seed-44 decision — FINAL (team-confirmed 2026-07-19): no s44 runs, E1′ closed
   at n=2.** Rationale: the open question the trigger was held for ("pipeline-wide or
   GRL-specific?") was answered by `C1_s43` (GRL-specific); every remaining claim
@@ -935,13 +940,13 @@
    — all solid, no code changes. **DONE (2026-07-21):** notebook 05 rewritten for the
    17-row §0.7 list with the transductive rows, post-AdaBN caching and the hard-coded
    readiness assert (see the "Notebook 05 REWRITTEN" Done entry) — the assert adapts to
-   16 if the OPEN L6 call drops `C1_aug_s43`.
+   16 after L6 was ratified 2026-07-22 (drop `C1_aug_s43`).
 7. **Single final test session** via notebook `05` (§0.7) once ALL streams have a
    val-selected checkpoint: readiness assert; rows = the frozen v5.2 list ONLY
    (C0, C1 ± s43, C2 ± s43, C1-lin/C2-lin, C3, C1+AdaBN, C1+T3A, C1+both
-   (unconditional, §9), the S6-out rotation's C1, C3-ft, **+ C1_aug, C1_aug_s43,
-   C1_s6out_aug (14th–16th, team call 2026-07-20), C1_sharplike (17th, team call
-   2026-07-21)**; `C1_aug_s43` pending the OPEN L6 drop-or-run call, Blockers) — evaluate_c0,
+   (unconditional, §9), the S6-out rotation's C1, C3-ft, **+ C1_aug,
+   C1_s6out_aug (aug arm, team call 2026-07-20), C1_sharplike (team call
+   2026-07-21)**; s43 twin dropped 2026-07-22 (L6)) — evaluate_c0,
    evaluate, evaluate_features, `viz.metrics_table` + confusions; commit
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook. Editor shortcuts to EVERY run folder from one account,
@@ -989,7 +994,7 @@
   notebook-05 readiness assert to target 17. See Done for the full rationale and
   the two inherited interpretation caveats. (Was: OPEN — does it earn a row.)
 
-- **OPEN — amendment recommended (conceptual stress test L6, 2026-07-20,
+- **RESOLVED 2026-07-22 (team ratified) — amendment applied (conceptual stress test L6, 2026-07-20,
   `CONCEPTUAL_STRESS_TEST.md`): reduce the approved 3-run aug package to 2 (drop
   `C1_aug_s43`).** The package was pre-registered at 3 runs (CHANGELOG 2026-07-20);
   cutting a run is an amendment to a team-approved pre-registration → needs a team
@@ -1000,8 +1005,8 @@
   address the dominant uncertainty (test-sampling, 11 traces) and only weakly checks
   replicate-across-init, which is **redundant with and weaker than** `C1_s6out_aug`
   (a *different* test set, S6). Keep the two cross-rotation twins (S7-out s42 +
-  S6-out s42) — the arm's own stated priority. **If ratified:** CHANGELOG dated
-  amendment (drop s43; §8.4 −2.3 h → extensions ≈ 13.7 h); §0.7 frozen list 16 → 15
+  S6-out s42) — the arm's own stated priority. **Applied (ratified 2026-07-22):** CHANGELOG dated
+  amendment (drop s43; §8.4 −2.3 h → extensions ≈ 13.7 h); §0.7 frozen list 17 → 16
   (session not yet open); leave `c1_ce_aug_s43.yaml` + its runner in the repo,
   unlaunched (note in the folder README); notebook-06 `PAIRS` keeps only the two
   paired deltas. **If kept:** the report must frame s43 as the augmented run's own

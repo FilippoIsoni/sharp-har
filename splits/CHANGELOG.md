@@ -266,3 +266,38 @@ themselves are never touched.
   does NOT close the *SupCon-regime* caveat (large-batch / many-class /
   transfer-robustness, untested — a separate, already-declared limitation). One
   objection shut, not all.
+
+## 2026-07-22 — L6 ratified: drop C1_aug_s43 (§0.7 list 17 → 16)
+
+- **Decision (team, 2026-07-22):** the aug arm's seed-43 twin `C1_aug_s43`
+  (P2-lab), pre-registered 2026-07-20 as the 3rd run of the C1-aug package, is
+  DROPPED — the conceptual-stress-test recommendation **L6**
+  (`CONCEPTUAL_STRESS_TEST.md`, 2026-07-20) is ratified. Kept: `C1_aug` (s42,
+  P2-lab) + `C1_s6out_aug` (s42, P2-living).
+- **Why:** the aug comparison is paired at a fixed seed — init and batch order
+  are identical between `C1_aug` and its baseline (verified in `train.py`) — so
+  the pairing already controls the init noise a 2nd seed would buy; and
+  `C1_aug_s43` re-evaluates on the SAME S7 test set as `C1_aug`, so it cannot
+  touch the dominant test-sampling uncertainty (11 traces). The cross-rotation
+  twin `C1_s6out_aug` (a DIFFERENT test set, S6) is the replication worth
+  keeping. Reinforcing: `C1_aug`'s val delta vs C1 is flat (0.8830 vs 0.8871,
+  Δ ≈ 0) — a seed twin of a ≈null effect adds little.
+- **Amendments:** §0.7 frozen row list 17 → 16 (session not yet open — the
+  freeze clause forbids extension only with the session OPEN; a drop tightens,
+  it does not extend); §8.4 −2.3 GPU-h (aug arm 6.9 → 4.6 h; extensions
+  ≈ 13.7 h); `configs/c1_ce_aug_s43.yaml` and its runner
+  (`notebooks/c1_aug/03_train_c1_ce_aug_s43.ipynb`) STAY in the repo,
+  UNLAUNCHED (note in `notebooks/c1_aug/README.md`); notebook-05 readiness
+  assert now declares 16 rows (the `C1_aug_s43` ROWS line removed); notebook-06
+  `PAIRS` keeps only the two paired deltas (C1-aug S7-out, C1-aug S6-out).
+- **Report wording:** the C1-aug arm is reported as two paired cross-rotation
+  deltas (S7-out + S6-out); the s43 twin's would-be "effect replicates across
+  seeds" claim is NOT made — it shared the S7 test set. One point on an
+  unexplored axis, per the 2026-07-20 pre-registration.
+- **Coincident notebook-05 fix (2026-07-22, no artifact touched):** `run_row`
+  referenced `json.loads` while the module was imported only as `_json` (a
+  NameError that would have crashed the C3 `from_phaseb` row in both the val
+  dry run and the real session); both cells now `import json`. Also: the val
+  dry run's `_finalize` now writes to a throwaway `SESSION_DIR/_final_preview`
+  instead of `reports/final/`, so a dry run leaves the committable report dir
+  clean.
