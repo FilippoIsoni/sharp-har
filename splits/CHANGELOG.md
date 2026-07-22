@@ -226,7 +226,6 @@ themselves are never touched.
   before the single session opens: §0.7 frozen list 16 → 17, §8.4 +2.3 h, and a
   dated amendment recorded here.
 
-
 ## 2026-07-21 (addendum) — C1_sharplike EARNS a §0.7 test row (17th)
 
 - **Decision (team, 2026-07-21, after the val run):** the val-only backbone
