@@ -1,0 +1,53 @@
+% !TEX root = template.tex
+
+\section{Concluding Remarks}
+\label{sec:conclusions}
+
+In this project we evaluated, under one shared apparatus and a single-use test
+protocol, whether adversarial (GRL) and contrastive (SupCon) training
+objectives improve cross-environment WiFi CSI activity recognition over a
+plain cross-entropy model. They do not: SupCon is significantly worse, the GRL
+costs accuracy and training stability, and test-time adaptation is neutral at
+best. The deep CE model itself, however, outperforms the SHARP-style shallow
+network by $23.5$ accuracy points on the unseen environment --- on this
+benchmark, backbone capacity mattered far more than any invariance objective.
+
+The practical observation we consider most useful is \emph{why} the objectives
+fail: frozen-encoder probes show that no domain attribute is linearly readable
+from the learned features, so a domain adversary has nothing to remove. This
+precondition is cheap to measure --- a linear probe on cached features ---
+and we suggest checking it before investing in adversarial or contrastive
+invariance on any dataset whose training split, like this one, is dominated by
+a single environment. Benchmark designers, conversely, need several
+well-populated training environments for domain-generalization claims to be
+meaningful.
+
+\subsection{Challenges and Lessons Learned}
+
+Most of our effort went into making a negative result trustworthy: splits
+frozen on day one and split by trace, normalization computed on train only, a
+single logged test session with validation-selected checkpoints, and a
+pre-registered row list. We learned to distrust single numbers twice. First,
+the seed replicates showed a same-configuration swing on the GRL model larger
+than some cross-configuration gaps, forcing us to report directions with
+ranges rather than point estimates. Second, with 11 test traces even a
+16-point accuracy gap is not resolved at the 95\% level by a trace-level
+bootstrap --- the honest unit of analysis (the trace, not the thousands of
+correlated windows) makes the dataset look much smaller than it appears. A
+declared caveat also failed empirically: the classes invisible to validation
+turned out to be the \emph{best} on test, a reminder that plausible
+methodological worries should be tested, not just declared.
+
+\subsection{Future Work}
+
+With one held-out environment per rotation, this is a transfer study rather
+than full domain generalization; the natural extension is a dataset with
+several well-populated training environments and a complete leave-one-out over
+all of them, where our diagnostic protocol transfers unchanged. On the
+modeling side, the open question is whether \emph{any} training-time objective
+can help when the domain factor is unreadable --- candidates that operate on
+the input rather than the representation (stronger physics-informed
+augmentations, synthetic environment simulation) are unaffected by our
+structural argument. Finally, the systematic underconfidence of the CE model
+suggests a simple calibration stage (temperature scaling on validation) before
+any deployment that consumes its confidence scores.

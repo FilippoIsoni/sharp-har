@@ -1,0 +1,62 @@
+% !TEX root = template.tex
+
+\section{Introduction}
+\label{sec:introduction}
+
+Wireless sensing turns the existing WiFi infrastructure into a device-free
+perception system: a moving person perturbs the multipath propagation of the
+radio signal, and these perturbations are recorded in the Channel State
+Information (CSI) exposed by commodity network cards. Human Activity
+Recognition (HAR) from CSI requires no wearable, no camera and no cooperation
+from the subject, which makes it attractive for assisted living, surveillance
+and smart-home applications~\cite{Wang-2019}. The micro-Doppler signature
+derived from the CSI --- the distribution of reflected power over velocity and
+time --- is among the most informative representations, and is the input we
+work with throughout this report.
+
+The obstacle that separates CSI HAR from deployment is not in-distribution
+accuracy, which is by now high, but \emph{generalization across environments}.
+A model trained in one room entangles the activity with the room's static
+geometry (walls, furniture, transmitter--receiver placement); moved to a new
+room, the same activity produces a different multipath fingerprint and accuracy
+drops. The literature has responded with two families of representation-shaping
+objectives: \emph{adversarial domain-invariance}, where a domain classifier
+trained through a gradient reversal layer (GRL)~\cite{Ganin-2016} pushes the
+encoder to discard environment-specific cues, and \emph{supervised contrastive}
+(SupCon) learning~\cite{Khosla-2020}, which promises a more transferable
+embedding geometry. Whether these objectives actually help on a given
+benchmark is usually assumed rather than tested under controlled conditions.
+
+In this work we test exactly that, on the SHARP dataset~\cite{Meneghello-2023}
+under a leave-one-environment-out protocol: with backbone, data pipeline,
+sampler, seed and evaluation harness held identical, does adding a GRL or
+replacing cross-entropy (CE) with SupCon improve transfer to an unseen
+environment? Our answer is a controlled negative result, together with an
+explanation of why it had to be negative on this class of datasets.
+
+\textbf{Contributions.} The key contributions of this paper are:
+\begin{itemize}
+\item A controlled comparison, under one shared experimental apparatus and a
+single-use test protocol, of CE, CE+GRL and SupCon for cross-environment CSI
+HAR, anchored to a faithful reproduction of the SHARP reference model. Our
+deep CE model reaches macro-F1 $0.804$ on the held-out environment, against
+$0.543$ for the SHARP-style shallow network in the identical recipe.
+\item Evidence that neither objective improves over plain CE: SupCon loses
+$7.8$ accuracy points (bootstrap-resolved) and the GRL loses $15.8$ with a
+$10\times$ larger seed instability than CE.
+\item An explanation via frozen-encoder diagnostics: no domain attribute is
+linearly readable from the learned features, so the adversary has no target ---
+a structural property of training splits dominated by a single environment,
+replicated here across two rotations, two seeds and three loss families.
+\item A statistical protocol suited to small LOEO test sets: trace-level paired
+bootstrap, explicit separation of test-sampling and seed variance, and
+declared multiplicity --- under which we also show test-time adaptation (T3A,
+AdaBN) and amplitude augmentation do not close the gap.
+\end{itemize}
+
+The remainder of the paper is organized as follows. \secref{sec:related_work}
+reviews related work. \secref{sec:processing_architecture} describes the
+processing pipeline, \secref{sec:model} the dataset and features, and
+\secref{sec:learning_framework} the learning framework and the evaluation
+protocol. \secref{sec:results} presents the experimental results and
+\secref{sec:conclusions} offers concluding remarks.

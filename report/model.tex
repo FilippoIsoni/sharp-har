@@ -1,0 +1,146 @@
+% !TEX root = template.tex
+
+\section{Processing Pipeline}
+\label{sec:processing_architecture}
+
+The system maps a raw CSI recording to an activity label through four stages,
+shared identically by every configuration we compare: (i) a \emph{Doppler
+front-end} that turns each antenna's CSI into a micro-Doppler time--velocity
+map; (ii) a \emph{windowing} stage that segments each recording into
+fixed-length windows and normalizes them with training-only statistics; (iii) a
+shared convolutional \emph{encoder} mapping a window to a feature vector; and
+(iv) a task \emph{head} producing per-window class scores, fused across the
+four antennas into one prediction per window. The configurations differ
+\emph{only} in the training objective attached to the encoder (plus, for the
+adversarial ones, a domain head that exists at training time only): front-end,
+windowing, encoder architecture, sampler, fusion and evaluation harness are
+byte-for-byte the same. This single-apparatus design is what makes the
+comparison a test of the loss family rather than of incidental engineering
+differences.
+
+\section{Signals and Features}
+\label{sec:model}
+
+\textbf{Dataset.} We use the SHARP micro-Doppler
+dataset~\cite{Meneghello-2023}, collected with identical IEEE~802.11 hardware
+in \emph{three environments} --- a bedroom, a living room and a laboratory ---
+with three subjects performing eight activities (labelled C, E, H, J, L, R, S,
+W). The recordings are organized into seven capture sets over twelve
+campaigns; each physical recording (a \emph{trace}) is captured on four
+antennas. The environment structure enables a leave-one-environment-out
+evaluation; its imbalance --- the bedroom dominates the collection, and the
+living room appears in a single capture set --- turns out to be central to our
+findings (\secref{sec:results}).
+
+\textbf{Pre-processing and features.} From each antenna's CSI we obtain the
+micro-Doppler representation as in the reference pipeline, yielding a
+time--velocity map per antenna. We deliberately did not re-engineer the
+front-end: keeping it fixed isolates the variable under study, the training
+objective. Because the velocity and time axes carry a physical orientation,
+velocity flips and time reversal are excluded from augmentation.
+
+\textbf{Windowing and normalization.} Each trace is segmented into fixed-length
+windows with a fixed hop (a larger hop at evaluation time). Normalization
+statistics $(\mu,\sigma)$ are computed on the training split only, per
+rotation, stored in the frozen split file, and reused identically on validation
+and test.
+
+\textbf{Splits.} Two rules govern every split and are enforced by blocking
+assertions in the code. First, \emph{we split by trace, never by window}: all
+windows of a trace, on all four antennas, fall entirely on one side of the
+train/val/test partition --- windows of the same trace on both sides would leak
+the static channel and inflate every metric. Second, splits are frozen once as
+JSON files under version control and never edited. The primary rotation holds
+out the laboratory for test (11 traces); a second rotation holds out the living
+room (15 traces) and is used for replication. Rare activity--environment cells
+are pinned into training to guarantee coverage. One consequence is declared
+up-front: the small validation split does not contain every class (no C, E, S
+traces in the primary rotation), so validation macro-F1 is a 5-class,
+within-run selection signal, not comparable to the 8-class test metric --- and
+in \secref{sec:results} we test empirically whether this selection blindness
+harmed the affected classes.
+
+\section{Learning Framework}
+\label{sec:learning_framework}
+
+\textbf{Shared backbone.} All configurations except C0 share a deep residual
+convolutional encoder~\cite{He-2016} ($\approx$2.8\,M parameters, feature
+dimension $d_{\mathrm{enc}}=256$), chosen after a throughput gate on the target
+hardware. C0 uses a faithful reimplementation of the shallow, wide SHARP
+network~\cite{Meneghello-2023}, so the reproduction is architecturally honest;
+the same network is also dropped into the exact C1 recipe as a backbone
+ablation (\emph{C1-sharplike}), isolating the effect of depth at equal task
+scale.
+
+\textbf{Configurations.} Table~\ref{tab:configs} summarizes them. C0 is the
+baseline (the prior approach); C1 is our model; C2--C4 are its objective
+variants, spanning a $2\times2$ design over loss family (CE vs.\ SupCon) and
+adversary (none vs.\ GRL):
+\begin{itemize}
+\item \textbf{C0} --- SHARP reproduction on the paper's 5-class core and split,
+with the paper's antenna decision fusion.
+\item \textbf{C1} --- CE with label smoothing on the shared backbone; our model,
+and the internal control for C2--C4.
+\item \textbf{C2} --- C1 plus a capture-set classifier trained through a
+GRL~\cite{Ganin-2016}:
+$\mathcal{L}=\mathcal{L}_{\mathrm{task}}+\beta\,\lambda(p)\,\mathcal{L}_{\mathrm{env}}$
+with a fixed ramp $\lambda(p)$.
+\item \textbf{C3} --- SupCon~\cite{Khosla-2020}: a contrastive phase trains
+encoder and projection head with a $P{\times}K$ sampler and two augmented views
+per sample; a frozen-encoder linear probe then selects and evaluates the
+checkpoint. A CE fine-tune of the whole network from the SupCon initialization
+(\emph{C3-ft}) gives the representation a fair shot beyond the frozen probe.
+\item \textbf{C4} --- SupCon+GRL. \emph{Closed on evidence, not trained}: the
+diagnostics of \secref{sec:res_diag} show no readable domain target under
+either loss family, so C4 could only reproduce ``C3 plus noise''. We report
+this as an evidence-based triage decision rather than spend its budget
+confirming a foregone null.
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\caption{Configurations. C0 is the prior-approach baseline, C1 our model,
+C2--C4 its objective variants. All but C0 share one backbone, pipeline, sampler
+and harness.}
+\label{tab:configs}
+\begin{tabular}{llll}
+\hline
+\textbf{Cfg} & \textbf{Loss} & \textbf{Adversary} & \textbf{Role} \\
+\hline
+C0 & CE (SHARP) & --- & baseline (prior approach) \\
+C1 & CE         & --- & our model / CE control \\
+C2 & CE         & GRL & adversarial invariance \\
+C3 & SupCon     & --- & contrastive \\
+C4 & SupCon     & GRL & closed on evidence \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Sampler, optimization, reproducibility.} The contrastive configuration
+uses a $P{\times}K$ sampler drawing $K$ distinct traces from each of $P$
+classes per batch, with a minimum reuse offset so a batch never contains
+near-duplicate windows of one trace; gradient accumulation is forbidden in the
+contrastive phase, as it would corrupt the in-batch positive/negative
+structure. A single seed (42) governs initialization, per-epoch sampler
+reseeding and augmentation; seed-43 replicates of C1 and C2 measure the
+training-variance floor. Differences within that floor are treated as
+comparable, not as improvements.
+
+\textbf{Evaluation harness and the single-use test rule.} One shared harness
+maps a checkpoint to per-set metric files; C0's decision fusion is a thin
+wrapper over the same harness. Checkpoint selection uses validation only, and
+the \emph{test set is evaluated exactly once}, at the end, in a single session
+over a frozen, pre-registered list of 16 evaluation rows --- every test access
+is logged by the harness before any test data is read. No intermediate test
+evaluation and no evaluate-then-decide selection is possible under this
+protocol.
+
+\textbf{Test-time adaptation.} On our model only, and pre-registered before
+the session, we evaluate AdaBN~\cite{Li-2017} (full-pass re-estimation of
+batch-norm statistics on the unlabeled test set), T3A~\cite{Iwasawa-2021} (a
+batch variant adjusting the classifier prototypes from confident test
+pseudo-labels), and their combination, with all hyperparameters fixed a
+priori. These bound how much of the residual gap is recoverable at inference
+time. We also evaluate a pre-registered amplitude-scaling augmentation arm
+(\emph{C1-aug}) on both rotations, with a declared discriminator between a
+cross-domain effect and generic regularization (\secref{sec:res_tta}).

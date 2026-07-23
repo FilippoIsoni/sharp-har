@@ -1,0 +1,146 @@
+\documentclass[10pt, conference, letterpaper]{IEEEtran}
+
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[ansinew]{inputenc} 
+\usepackage{xcolor}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{import}
+\usepackage{multirow}
+\usepackage{cite}
+\usepackage[export]{adjustbox}
+\usepackage{breqn}
+\usepackage{mathrsfs}
+\usepackage{acronym}
+%\usepackage[keeplastbox]{flushend}
+\usepackage{setspace}
+\usepackage{bm}
+\usepackage{stackengine}
+
+\usepackage{listings}
+
+\lstset{%
+ backgroundcolor=\color[gray]{.85},
+ basicstyle=\small\ttfamily,
+ breaklines = true,
+ keywordstyle=\color{red!75},
+ columns=fullflexible,
+}%
+
+\lstdefinelanguage{BibTeX}
+  {keywords={%
+      @article,@book,@collectedbook,@conference,@electronic,@ieeetranbstctl,%
+      @inbook,@incollectedbook,@incollection,@injournal,@inproceedings,%
+      @manual,@mastersthesis,@misc,@patent,@periodical,@phdthesis,@preamble,%
+      @proceedings,@standard,@string,@techreport,@unpublished%
+      },
+   comment=[l][\itshape]{@comment},
+   sensitive=false,
+  }
+
+\usepackage{listings}
+
+% listings settings from classicthesis package by
+% Andr\'{e} Miede
+\lstset{language=[LaTeX]Tex,%C++,
+    keywordstyle=\color{RoyalBlue},%\bfseries,
+    basicstyle=\small\ttfamily,
+    %identifierstyle=\color{NavyBlue},
+    commentstyle=\color{Green}\ttfamily,
+    stringstyle=\rmfamily,
+    numbers=none,%left,%
+    numberstyle=\scriptsize,%\tiny
+    stepnumber=5,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frameround=ftff,
+    frame=single
+    %frame=L
+}
+
+\renewcommand{\thetable}{\arabic{table}}
+\renewcommand{\thesubtable}{\alph{subtable}}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\def\delequal{\mathrel{\ensurestackMath{\stackon[1pt]{=}{\scriptscriptstyle\Delta}}}}
+
+\graphicspath{{./figures/}}
+\setlength{\belowcaptionskip}{0mm}
+\setlength{\textfloatsep}{8pt}
+
+\newcommand{\eq}[1]{Eq.~\eqref{#1}}
+\newcommand{\fig}[1]{Fig.~\ref{#1}}
+\newcommand{\tab}[1]{Tab.~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+
+\newcommand{\rev}[1]{{\color{blue}#1}}
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\mytexttilde}{{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}}
+% Placeholder for a test number not yet available (single §0.7 test session pending).
+% Every \tbd MUST be resolved before submission; grep the sources for "tbd" to find them.
+\newcommand{\tbd}[1]{\red{[TBD: #1]}}
+
+%\renewcommand{\baselinestretch}{0.98}
+% \renewcommand{\bottomfraction}{0.8}
+% \setlength{\abovecaptionskip}{0pt}
+\setlength{\columnsep}{0.2in}
+
+% \IEEEoverridecommandlockouts\IEEEpubid{\makebox[\columnwidth]{PUT COPYRIGHT NOTICE HERE \hfill} \hspace{\columnsep}\makebox[\columnwidth]{ }} 
+
+\title{Cross--Environment Human Activity Recognition from WiFi CSI:\\ A Controlled Study of Adversarial and Contrastive Training Objectives}
+
+\author{Filippo Isoni, \tbd{co-author 2}, \tbd{co-author 3}$^\dag$
+\thanks{$^\dag$Department of Information Engineering, University of Padova, \newline email: \texttt{\{name.surname\}@studenti.unipd.it}}
+}
+
+\IEEEoverridecommandlockouts
+
+\newcounter{remark}[section]
+\newenvironment{remark}[1][]{\refstepcounter{remark}\par\medskip
+   \textbf{Remark~\thesection.\theremark. #1} \rmfamily}{\medskip}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+WiFi Channel State Information (CSI) enables device-free human activity recognition, but models trained in one environment degrade when deployed in another, making cross-environment generalization the main obstacle to practical use.
+
+We present a controlled study on the SHARP micro-Doppler dataset under a leave-one-environment-out protocol. Starting from a faithful reproduction of the reference SHARP model, we train a deep residual network with plain cross-entropy (CE) and ask whether two popular representation-shaping objectives --- an adversarial domain classifier trained through a gradient reversal layer (GRL) and a supervised contrastive (SupCon) loss --- improve transfer to the unseen environment. All configurations share one backbone, one data pipeline and one evaluation harness; the test set is evaluated once, with validation-selected checkpoints, and differences are assessed with a trace-level paired bootstrap.
+
+Results show that the deep CE model transfers best, reaching macro-F1 $0.804$ on the held-out environment against $0.543$ for the SHARP-style shallow network in the identical recipe --- a $23.5$-point accuracy gap resolved by the bootstrap. Neither objective helps: SupCon loses $7.8$ accuracy points (significant), and the GRL loses $15.8$ with high seed instability. Frozen-encoder probes explain why: the CE features contain no linearly readable environment information, so the adversary has no target and can only add noise. Test-time adaptation is neutral (T3A) or harmful (AdaBN), and an amplitude augmentation acts as a generic regularizer rather than a cross-domain lever.
+
+Our results suggest measuring the readability of the nuisance factor before investing in invariance objectives, and provide a reproducible negative baseline for CSI HAR benchmarking.
+\end{abstract}
+
+\IEEEkeywords
+WiFi sensing, Channel State Information, Human Activity Recognition, Domain Generalization, Contrastive Learning, Adversarial Training.
+\endIEEEkeywords
+
+
+\input{intro}
+
+\input{related}
+
+\input{model}
+
+\input{results}
+
+\input{conclusions}
+
+\bibliography{biblio}
+\bibliographystyle{ieeetr}
+
+\end{document}
+
+

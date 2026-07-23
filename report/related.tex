@@ -1,0 +1,66 @@
+% !TEX root = template.tex
+
+\section{Related Work}
+\label{sec:related_work}
+
+\textbf{WiFi CSI human activity recognition.}
+Early CSI HAR pipelines fed hand-crafted statistics of the amplitude/phase
+time series to shallow classifiers; the field moved decisively to deep models
+operating on time--frequency representations, of which the micro-Doppler
+spectrogram is the most common~\cite{Wang-2019}. The reference point for this
+report is SHARP~\cite{Meneghello-2023}, which extracts a Doppler representation
+from commodity IEEE~802.11 CSI by removing the phase offsets and reconstructing
+the channel, and classifies activities with a comparatively shallow, wide
+convolutional network followed by a decision-fusion step across antennas. SHARP
+reports strong in-environment accuracy but, like most of the literature, its
+headline numbers mix training and test environments; the cross-environment
+setting, where the geometry at test time is unseen, is where accuracy is known
+to degrade and is the setting we adopt. We reproduce the SHARP model as our C0
+anchor and reuse its antenna decision-fusion for that configuration, so that our
+comparison is anchored to a published, faithful baseline rather than to an
+in-house model of unknown strength.
+
+\textbf{Domain generalization by adversarial invariance.}
+The dominant recipe for making a representation domain-invariant is adversarial:
+a domain discriminator is trained on the encoder features while a gradient
+reversal layer (GRL)~\cite{Ganin-2016} inverts its gradient into the encoder, so
+that the encoder is optimized to make the domain \emph{unpredictable} while the
+task head still classifies. DANN-style training has been transplanted into CSI
+sensing to remove environment- and subject-specific nuisance factors. The
+implicit precondition, rarely tested, is that the nuisance factor is actually
+present and readable in the features; when it is not, the adversary reduces to a
+gradient of noise. A central empirical point of this report is to \emph{measure}
+that precondition directly on our encoder, rather than assume it, and to show
+that the adversary's cost is paid whether or not the target exists.
+
+\textbf{Contrastive representation learning.}
+Supervised contrastive learning (SupCon)~\cite{Khosla-2020} extends the
+self-supervised InfoNCE objective~\cite{Chen-2020} by treating all same-label
+samples as positives, and has been reported to yield representations that are
+more robust and transferable than those trained with cross-entropy. It has been
+proposed for sensing modalities as a route to environment-robust features. The
+promise is geometric --- a class-collapsed, well-separated embedding --- but
+whether that geometry survives a linear (or any) readout, and whether it
+transfers better than CE across environments, is empirical. We evaluate SupCon
+under the identical LOEO protocol and probe its representation with linear,
+nearest-class-mean and kNN readouts to test the transferability claim head-on.
+
+\textbf{Test-time adaptation.}
+When some unlabeled target data is available at inference, test-time adaptation
+can partially close the domain gap without retraining: AdaBN~\cite{Li-2017}
+re-estimates batch-normalization statistics on the target distribution, and
+T3A~\cite{Iwasawa-2021} adjusts the classifier prototypes from confident target
+pseudo-labels. These are complementary to the training-time objectives above,
+and we include them as pre-registered rows on our CE model to bound how much
+of the residual gap is recoverable purely at test time under our deployment
+assumptions.
+
+\textbf{Positioning.}
+Prior work overwhelmingly reports where a domain-invariance or contrastive
+objective \emph{helped}. Our contribution is orthogonal and, we argue,
+complementary: a controlled study, under one shared apparatus and a strict
+single-use test protocol, in which both objectives fail on a realistic
+CSI benchmark, together with frozen-encoder diagnostics that explain the failure
+as structural rather than incidental. Negative results of this kind are
+underreported and, on the common class of datasets dominated by one training
+environment, directly actionable.
