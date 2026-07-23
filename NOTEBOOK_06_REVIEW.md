@@ -64,6 +64,20 @@ are implemented. **Still open in notebook-06 scope: G6, G7, G9, G10, G11, G12**
 > The two statistical notes deliberately **not** actioned: BCa vs percentile CI at n=11,
 > and equal-mass vs equal-width ECE bins — declared as limitations, not changed.
 
+> **Update 2026-07-23 (third pass) — G4/G5 settled against the actual report draft.**
+> Cross-checked against the committed `report/results.tex`. **G4 (accuracy bars) is
+> DROPPED** — the report conveys the main results via `tab:test`, and per-class/accuracy
+> bars were cut for the 6-page IEEE budget (`report/figures/README.md`). **G5
+> (domain-diagnostics consolidated table) is already DELIVERED** as `tab:domainprobe`
+> (the C1 domain probe) + a prose sentence covering C2/C3/2nd-rotation. So **neither is
+> pending report work** — the earlier "G4/G5 remain / outside nb-06 / report critical
+> path" notes above are superseded. The report references exactly **2 figures**:
+> `embeddings_c1_vs_c3.pdf` (t-SNE, from the committed PNG — **NOT** an nb-06 output) and
+> `confusion_c1_test.pdf` (an nb-06 output). nb-06's other figures (perclass, reliability,
+> forest) are produced but **unreferenced** — held OPTIONAL pending the page-budget build;
+> the **forest plot** is the lead add-if-space candidate (it could replace the CI column
+> of `tab:test`). The §3 table and §5 line below are updated to match.
+
 ---
 
 ## 1. Level 1 — correctness, completeness, coherence with the pipeline
@@ -142,8 +156,8 @@ juxtaposition).
 | G10 | **McNemar-style discordance** C1 vs C3/C2 | **done** — `mcnemar` (self-tested), counts + anti-conservative caveat |
 | G11 | **multiplicity caveat** sentence | **done** — primary/secondary flags in table + declared caveat |
 | G12 | **class-coverage decomposition** | **done** — `seen_blind_f1` (self-tested) → `class_coverage.csv` |
-| G4 | accuracy bars per config×domain | **open** — `viz`, outside nb-06 |
-| G5 | domain-diagnostics consolidated table | **open** — assembly, outside nb-06 |
+| G4 | accuracy bars per config×domain | **dropped** — report uses `tab:test`; bars cut for the 6-page budget |
+| G5 | domain-diagnostics consolidated table | **delivered** — present in `results.tex` as `tab:domainprobe` (C1) + prose |
 
 ### The findings the missing cells would surface (measured on the real session)
 
@@ -241,9 +255,12 @@ AR-4 0.549 · AR-5 0.499 · AR-6 0.573 · AR-7 0.732.
 
 > **Status 2026-07-23: items 1–8 below are all implemented and verified** in
 > `notebooks/06_final_analysis.ipynb` (see the §0 Update). They are kept here as the
-> record of what was added and why. The only remaining report-critical work is
-> **outside notebook 06**: **G4** (`viz` accuracy bars per config×domain) and **G5**
-> (domain-diagnostics consolidated table). Notebook 06 itself is report-grade.
+> record of what was added and why. Notebook 06 itself is report-grade. **G4/G5, once
+> listed here as the remaining report-critical work, are now settled** (see the
+> 2026-07-23 third-pass update in §0): **G4 dropped** (budget — `tab:test` covers the
+> results), **G5 already delivered** as `tab:domainprobe` + prose. The only report work
+> still outstanding is placing the 2 referenced figures + the page-budget build, all
+> outside this notebook.
 
 All items are analysis on the already-committed `reports/final/*_windows.csv`
 (+ `*_metrics.csv`), plus one `viz` figure. None is a rerun or a new §0.7 row.
@@ -266,9 +283,11 @@ All items are analysis on the already-committed `reports/final/*_windows.csv`
 8. **Confusion interpretation** — extract dominant off-diagonals (the "sensible
    confusions" sentence).
 
-Outside notebook 06 but on the report critical path: **G4** (`viz` accuracy bars
-per config×domain) and **G5** (domain-diagnostics consolidated table, assembled
-from the five diagnostic notebooks + STATUS).
+Outside notebook 06, both now settled (see the 2026-07-23 third-pass update in §0):
+**G4** (`viz` accuracy bars per config×domain) is **dropped** — `tab:test` conveys the
+results and the bars were cut for the 6-page budget; **G5** (domain-diagnostics
+consolidated table) is **already delivered** in `results.tex` as `tab:domainprobe`
+(the C1 probe) + prose covering C2/C3/2nd-rotation. Neither is pending.
 
 Process note: notebook 06 is notebook-local math by the diagnostics dividing line
 (`notebooks/diagnostics/README.md`); keep the "synthetic self-test first" pattern

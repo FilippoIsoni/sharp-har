@@ -4,7 +4,7 @@
 > **in the same commit** as the work that changes it (one line moved per
 > milestone, no essays). Timeline days refer to `pipeline_wifi_har_v5.md` §10.
 
-**Last update:** 2026-07-22 · **Phase: v5.2 tail — §0.7 SINGLE TEST SESSION EXECUTED 2026-07-22** (`reports/final/` + `test_invocations.jsonl` committed; 16 rows; headline test acc/macro-F1: C1 0.8047/0.8038, C1_s43 0.8000/0.7990, C2 0.6471/0.6006, C2_s43 0.6000/0.5618, C3 0.7271/0.7286, C3_ft 0.7200/0.7059, C1_T3A 0.8118/0.8101, C1_AdaBN 0.7459/0.7221, C1_aug 0.7765/0.7720, C1_sharplike 0.5694/0.5434, C1_s6out 0.7430/0.6842, C1_s6out_aug 0.8156/0.8227, C0 0.6117/0.6053; archived `notebooks/runs/2026_07_22_test_final.ipynb`). **Notebook-06 DEEP REVIEW done 2026-07-22 → `NOTEBOOK_06_REVIEW.md`** (run against the real session, all numbers reproduced from `reports/final/`): the analysis pipeline is correct and covers directions **A + D** and **G1/G3/G8**; **open in nb-06: G6** (per-trace), **G7** (cross-stream ECE), **G9** (two-variance juxtaposition), **G10** (discordance), **G11** (multiplicity sentence), **G12** (class-coverage decomposition); **G4/G5** are viz/assembly outside nb-06. Two report-relevant findings surfaced: the C1–C2 gap is +0.158 but its paired-bootstrap CI **crosses 0** on 11 traces (C1–C3 does resolve), and the "val-blind C/E/S underperform" caveat is **empirically false** on p2_lab (blind mean F1 0.904 > seen 0.744; non-uniform on p2_living). Prior tail: E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **L6 RESOLVED 2026-07-22 — `C1_aug_s43` DROPPED** (CHANGELOG 2026-07-22: the aug comparison is paired so init is already controlled, and s43 re-used the S7 test set); §0.7 list now **16 rows** and all 16 row checkpoints exist (C1_sharplike promoted 2026-07-21), so **the session is no longer gated on it**; notebook-05 declares 16 rows and its `json`/`_json` NameError on the C3 row was fixed 2026-07-22. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); operational recommendation L6 RATIFIED 2026-07-22: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set); L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
+**Last update:** 2026-07-23 · **Phase: v5.2 tail — §0.7 SINGLE TEST SESSION EXECUTED 2026-07-22** (`reports/final/` + `test_invocations.jsonl` committed; 16 rows; headline test acc/macro-F1: C1 0.8047/0.8038, C1_s43 0.8000/0.7990, C2 0.6471/0.6006, C2_s43 0.6000/0.5618, C3 0.7271/0.7286, C3_ft 0.7200/0.7059, C1_T3A 0.8118/0.8101, C1_AdaBN 0.7459/0.7221, C1_aug 0.7765/0.7720, C1_sharplike 0.5694/0.5434, C1_s6out 0.7430/0.6842, C1_s6out_aug 0.8156/0.8227, C0 0.6117/0.6053; archived `notebooks/runs/2026_07_22_test_final.ipynb`). **Notebook-06 DEEP REVIEW done 2026-07-22 → `NOTEBOOK_06_REVIEW.md`** (run against the real session, all numbers reproduced from `reports/final/`): the analysis pipeline is correct and covers directions **A + D** and **G1/G3/G8**; the then-open **G6/G7/G9/G10/G11/G12 are now all implemented + RUN 2026-07-23** (see the milestone clause at the end of this line); **G4 DROPPED** (accuracy bars — the report conveys results via `tab:test`, per-class/accuracy bars cut for the 6-page budget) and **G5 already DELIVERED** in `results.tex` as `tab:domainprobe` (C1 domain probe) + prose covering C2/C3/2nd rotation — neither is pending report work. Two report-relevant findings surfaced: the C1–C2 gap is +0.158 but its paired-bootstrap CI **crosses 0** on 11 traces (C1–C3 does resolve), and the "val-blind C/E/S underperform" caveat is **empirically false** on p2_lab (blind mean F1 0.904 > seen 0.744; non-uniform on p2_living). Prior tail: E1′ closed at n=2 (C1 seed-stable, GRL-specific instability), C1_s43 cache landed; E2′ S6-out domain diagnostic DONE (structural verdict replicates with the lab as 2nd env); NCM/kNN §7 complete for C1/C2/C3/C1_s43; ALL code deliverables implemented (T3A/AdaBN/domain-probe/concat — cross-review DONE 2026-07-20); §7 concat DONE (no CE↔SupCon complementarity); SupCon fair-shot DECIDED (C3-ft runs, seed-44 does not); C3-ft DONE + epilogue diagnostics DONE (hypothesis falsified 0.8183 ≈ C3-lin; SEVEN instruments agree on the SupCon ceiling, fine-tune visibly forgetting the init toward C1); **C1-aug arm APPROVED (team 2026-07-20) and implemented — 3 runs to launch (C1_aug s42/s43, C1_s6out_aug s42), §0.7 list now 16 rows**; pre-freeze cross-review DONE 2026-07-20 (all deliverables solid, runtime-verified, no code changes); the aug runs + notebook-05 = the prep left before the single test session. **L6 RESOLVED 2026-07-22 — `C1_aug_s43` DROPPED** (CHANGELOG 2026-07-22: the aug comparison is paired so init is already controlled, and s43 re-used the S7 test set); §0.7 list now **16 rows** and all 16 row checkpoints exist (C1_sharplike promoted 2026-07-21), so **the session is no longer gated on it**; notebook-05 declares 16 rows and its `json`/`_json` NameError on the C3 row was fixed 2026-07-22. Conceptual stress test DONE 2026-07-20 (`CONCEPTUAL_STRESS_TEST.md`) — 7 levels; conceptual findings are report-framing (L0 C4=triage-not-proof, L1 transfer-not-DG, L2 trace-level n, L4 two-families-not-seven-instruments, L5 C0=anchor/no-seeds, L7 GRL-cost-as-range); operational recommendation L6 RATIFIED 2026-07-22: reduce the aug arm 3 → 2 (drop C1_aug_s43, the wrong twin — paired design already controls init, seed twin re-uses the S7 test set); L8 notebook-06 class-coverage decomposition added to `CONSOLIDATION_REVIEW.md` §6 (G12).** · **Backbone ablation `C1_sharplike` team-decided + implemented 2026-07-21 (val-only: sharp_like in the EXACT C1 recipe on p2_lab, only the backbone differs — isolates the backbone axis vs ResNet-VB; whether it earns a §0.7 test row is a separate OPEN call).** · **2026-07-23 — NOTEBOOK 06 EXECUTED + REPORT DRAFT LANDED:** the analysis notebook ran clean end-to-end on the real 16-stream session — all G2/G6/G7/G9/G10/G11/G12 follow-up cells implemented, self-tested and RUN (executed copy archived `notebooks/runs/2026-07-23_final_analysis.ipynb`; `NOTEBOOK_06_REVIEW.md` §0/§3/§5 updated to "implemented + verified"); 8 measured report tables committed to `report/tables/` (`summary`, `paired_bootstrap` w/ resolved+primary flags, `ece`, `class_coverage`, `per_trace_accuracy`, `augmentation_effect`, `tta_effect`, `worst_trace_c1_vs_c2`); the **IEEEtran report DRAFT with real test numbers** committed under `report/` (intro/related/model/results/conclusions.tex + biblio + IEEEtran class). Two report-relevant results now computed (not eyeballed): the C1–C2 gap **does not resolve** (+0.158, CI [−0.034, +0.323], P=0.946 on 11 traces — C1–C3 does, +0.078 CI [+0.030, +0.128]); the val-blind-classes caveat is **empirically false** on p2_lab (blind {C,E,S} F1 0.904 > seen 0.744), non-uniform on p2_living; plus four `## F` report headlines (F1 aug env-dependent, F2 GRL harm is in the HEAD, F3 TTA net-neutral/negative, F4 worst-trace C1−C2 drill-down). **Report figure plan RESOLVED 2026-07-23:** the report references exactly **2 figures** — `embeddings_c1_vs_c3.pdf` (t-SNE §9 key, from the committed PNG `reports/embeddings_c1_vs_c3.png`, NOT an nb-06 output → needs PNG→PDF or a Colab re-render) and `confusion_c1_test.pdf` (an nb-06 output) — both still to place in `report/figures/` (only the README is committed there today). **G4 (accuracy bars) DROPPED** (`tab:test` covers the results; bars cut for the 6-page budget); **G5 (domain-diagnostics table) already DELIVERED** as `tab:domainprobe` + prose. nb-06's other figures (perclass/reliability/**forest**) are being produced + committed for safety, held **OPTIONAL** pending the page-budget build — the **forest plot** is the lead add-if-space candidate (could replace the CI column of `tab:test`). **Remaining = place the 2 figures → `pdflatex` build (6-page fit) → decide the forest plot → resolve the `\tbd` co-author placeholders + full read-through → presentation.** · **Deadline: 2026-07-30 (code freeze 2026-07-28, §10.4)**
 
 ## Done
 
@@ -892,6 +892,37 @@
   more honest). Prioritized restart checklist (all zero test contact) in the doc's
   §5.
 
+- **Notebook-06 EXECUTED end-to-end + report draft landed (2026-07-23).** Every
+  then-open nb-06 follow-up cell (**G2, G6, G7, G9, G10, G11, G12**) was implemented,
+  synthetic-self-tested and **RUN against the real 16-stream session** — nb-06 is now
+  report-grade and runs clean; executed copy archived
+  `notebooks/runs/2026-07-23_final_analysis.ipynb`, `NOTEBOOK_06_REVIEW.md` §0/§3/§5
+  updated to "implemented + verified". Measured outputs persisted (no number retyped
+  from stdout): **8 report tables → `report/tables/`** (`summary`, `paired_bootstrap`
+  with resolved/primary flags, `ece`, `class_coverage`, `per_trace_accuracy`,
+  `augmentation_effect`, `tta_effect`, `worst_trace_c1_vs_c2`). Report-relevant
+  results now computed, not eyeballed: **the C1–C2 headline gap does NOT resolve**
+  (+0.158, 95% CI [−0.034, +0.323], P(C1>C2)=0.946 on 11 traces; C1–C3 resolves,
+  +0.078 CI [+0.030, +0.128]); the **val-blind-classes caveat is empirically false**
+  on p2_lab (blind {C,E,S} F1 0.904 > seen 0.744), non-uniform on p2_living; four
+  `## F` report headlines added (**F1** aug effect environment-dependent, sign flips
+  −0.028 lab / +0.073 living; **F2** GRL harm is in the classifier HEAD not the
+  representation, probe−e2e +0.002 C1 vs +0.073 C2; **F3** TTA net-neutral/negative,
+  none resolves; **F4** worst-trace C1−C2 drill-down concentrates on S7a_H/W/S).
+  **IEEEtran report DRAFT committed** (`report/`: intro/related/model/results/
+  conclusions.tex + biblio.bib + IEEEtran class; real test numbers wired into
+  `results.tex`). **Report figure plan (resolved 2026-07-23):** the report references
+  exactly **2 figures** — `embeddings_c1_vs_c3.pdf` (t-SNE, from the committed PNG) +
+  `confusion_c1_test.pdf` (an nb-06 output); both still to place in `report/figures/`
+  (only the README is committed there today). **G4 (accuracy bars) DROPPED** —
+  `tab:test` conveys the results and the bars were cut for the 6-page budget; **G5
+  (domain-diagnostics table) already DELIVERED** in `results.tex` as `tab:domainprobe`
+  (C1 probe) + prose. nb-06's other figures (perclass/reliability/forest) are being
+  produced + committed for safety, held OPTIONAL pending the page-budget build (the
+  forest plot is the lead add-if-space candidate). Remaining: place the 2 figures,
+  `pdflatex` build + 6-page check, decide the forest plot, resolve the `\tbd`
+  co-author placeholders + a full read-through, presentation.
+
 ## In progress
 
 - **C1-aug arm — BOTH kept runs DONE** (indexed in `notebooks/runs/README.md`, commit
@@ -1012,15 +1043,17 @@
    `reports/final/` (per-AR-set CSVs + `test_invocations.jsonl`) in the same commit as
    the archived notebook. Editor shortcuts to EVERY run folder from one account,
    verified beforehand.
-8. **Post-session analysis — RUN + DEEP-REVIEWED 2026-07-22** (`NOTEBOOK_06_REVIEW.md`):
+8. **Post-session analysis — DONE + RE-EXECUTED 2026-07-23** (`NOTEBOOK_06_REVIEW.md`):
    notebook 06 executed against the real session, correct and clean; covers
-   directions A + D and G1/G3/G8. **Remaining to implement in nb-06 (all zero test
-   contact, from the review's §5 checklist, priority order): G12** (class-coverage
-   decomposition — highest report value), **G6** (per-trace), **G7** (cross-stream
-   ECE), **G9 + G11** (two-variance table + multiplicity sentence), **G10**
-   (discordance), **G2** presentation (seed mean±range), FOCUS-for-C0, confusion
-   interpretation; then the two `viz`/assembly figures **G4** (accuracy bars) +
-   **G5** (domain-diagnostics table). Original template note follows.
+   directions A + D and G1/G3/G8. **All nb-06 follow-up cells now implemented,
+   self-tested and RUN 2026-07-23** — G2, G6, G7, G9, G10, G11, G12 + FOCUS-for-C0 +
+   confusion interpretation (see the "Notebook-06 EXECUTED" Done entry): the notebook
+   is report-grade, archived `notebooks/runs/2026-07-23_final_analysis.ipynb`, 8
+   measured tables in `report/tables/`. **G4 and G5 are now settled, NOT pending:
+   G4 (accuracy bars) DROPPED (budget — `tab:test` covers the results), G5
+   (domain-diagnostics table) already DELIVERED in `results.tex` as `tab:domainprobe`
+   + prose. nb-06 is fully done; the only figure it owes the report is
+   `confusion_c1_test.pdf` (produced with the rest).** Original template note follows.
    **Template READY** (`notebooks/06_final_analysis.ipynb`,
    2026-07-20): the two zero-run consolidation directions (A paired bootstrap,
    D calibration + error structure) as a thin notebook that reads only the
@@ -1051,9 +1084,17 @@
    two-variances cells, and add a `viz` accuracy-bars figure (§9 key #1, no producer
    today) + assemble the domain-diagnostics table (§9 key #2). None a new test
    contact.**
-9. **Report + presentation** with the §10.4 v5.2 declaration list; code freeze
-   2026-07-28 (deadline 2026-07-30); PCA+t-SNE figure C1 vs C3, domain-diagnostics
-   table as the §9 key figure.
+9. **Report + presentation — DRAFT LANDED 2026-07-23.** IEEEtran skeleton + filled
+   sections committed (`report/`: intro/related/model/results/conclusions.tex,
+   biblio.bib, real test numbers wired into `results.tex`; 8 measured tables in
+   `report/tables/`). Remaining: place the **2 referenced figures** in `report/figures/`
+   (`embeddings_c1_vs_c3.pdf` via PNG→PDF or a Colab re-render; `confusion_c1_test.pdf`
+   from nb-06); `pdflatex` build + 6-page check; **decide the forest plot** (lead
+   add-if-space candidate, already produced by nb-06 — could replace the CI column of
+   `tab:test`); resolve the `\tbd` co-author placeholders; finish the prose against the
+   §10.4 v5.2 declaration list; presentation. **G4 DROPPED (budget); G5 already in the
+   report as `tab:domainprobe` + prose** — neither is pending. Code freeze 2026-07-28
+   (deadline 2026-07-30).
 
 ## Blockers / open decisions
 
