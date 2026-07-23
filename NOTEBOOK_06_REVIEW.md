@@ -43,6 +43,27 @@ are implemented. **Still open in notebook-06 scope: G6, G7, G9, G10, G11, G12**
 > streams; every number below reproduced). Only **G4/G5** remain, and they are outside
 > notebook 06 as noted. The §3 status table and §5 checklist below are updated to match.
 
+> **Update 2026-07-23 (second pass) — report-foregrounding + figure/framing fixes.**
+> A follow-up deep read flagged that several findings were *computed but buried*. Fixed
+> in the notebook (still zero test contact, runs clean, output-free): (1) confusion +
+> per-class figures now also cover the **backbone ablation `C1_sharplike`** and the
+> SupCon fine-tune **`C3_ft`** (`FIG_STREAMS`), not just the loss families; (2) the
+> **forest plot** now shows **both rotations** (the pre-registered P2-living augmentation
+> test is on it, group-tagged, n=11 vs n=15 noted); (3) the **reliability overlay**
+> excludes **C0** — its `sharp_c0` majority-VOTE fusion makes "confidence" ≠ P(y_pred),
+> so mixing it on the calibration axes was misleading (its ECE stays in the ece table
+> with the footnote); (8) **C0 is now framed as a PARTIAL, NON-FAITHFUL reproduction**
+> (backbone/preprocessing/fusion differ) — a sanity anchor for our harness on P1, **not**
+> a paper benchmark; the report must not claim "we reproduced X%". New **`## F — report
+> headlines`** section foregrounds four syntheses, each with a persisted CSV: **F1**
+> augmentation effect is environment-dependent (sign flips −0.028 lab / +0.073 living →
+> `augmentation_effect.csv`); **F2** GRL damage localization (probe−e2e +0.002 for C1 vs
+> +0.073 for C2 → harm is in the classifier HEAD, not the representation); **F3** TTA
+> verdict (AdaBN net-negative, T3A ~0, none resolves → `tta_effect.csv`); **F4** worst-
+> trace drill-down (C1−C2 gap concentrates on S7a_H/W/S → `worst_trace_c1_vs_c2.csv`).
+> The two statistical notes deliberately **not** actioned: BCa vs percentile CI at n=11,
+> and equal-mass vs equal-width ECE bins — declared as limitations, not changed.
+
 ---
 
 ## 1. Level 1 — correctness, completeness, coherence with the pipeline
