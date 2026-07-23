@@ -26,6 +26,23 @@ streams), so **G1, G3, G8 largely landed** and **direction A + direction-D core*
 are implemented. **Still open in notebook-06 scope: G6, G7, G9, G10, G11, G12**
 (plus G2 as presentation). **G4, G5 are `viz`/assembly, outside notebook 06.**
 
+> **Update 2026-07-23 — the notebook-06 open items are now implemented and verified.**
+> The follow-up cells for **G2, G6, G7, G9, G10, G11, G12** landed in commit
+> `6b30b9d`; a subsequent pass then added: (a) synthetic **self-tests** for the new
+> `mcnemar` / `top_confusions` / `seen_blind_f1` (refactored to pure functions in the
+> analysis-functions cell, tested in the self-test cell before any data load); (b)
+> **CSV persistence** of every report table to `reports/tables/` (`summary`,
+> `paired_bootstrap` with `resolved`/`primary` flags, `ece`, `class_coverage`,
+> `per_trace_accuracy`) so no number is retyped from stdout; (c) report **figures**
+> to `reports/figures/` — per-stream confusion + per-class F1 for C0/C1/C2/C3/C1_s6out
+> (no longer FOCUS-only), a cross-stream **reliability** overlay, and a **forest plot**
+> of the paired deltas (pre-registered primaries highlighted); and (d) explicit
+> framing (per-trace≈per-class confound on the single-set test, "CI crosses 0 =
+> under-powered not null" with a resolution-floor read, label-smoothing→underconfidence
+> shown computed). The notebook runs **clean end to end** on the committed session (16
+> streams; every number below reproduced). Only **G4/G5** remain, and they are outside
+> notebook 06 as noted. The §3 status table and §5 checklist below are updated to match.
+
 ---
 
 ## 1. Level 1 — correctness, completeness, coherence with the pipeline
@@ -90,20 +107,20 @@ juxtaposition).
 
 ### Done-vs-open against the G1–G12 list
 
-| G | item | status in nb-06 today |
+| G | item | status in nb-06 today (updated 2026-07-23) |
 |---|---|---|
-| A | trace-level paired bootstrap | **done** (`PAIRS`, `PAIRS_S6`) |
-| D | calibration + per-class/per-AR-set error | **done for FOCUS** (single stream) |
+| A | trace-level paired bootstrap | **done** (`PAIRS`, `PAIRS_S6`; persisted + forest plot) |
+| D | calibration + per-class/per-AR-set error | **done** (per-stream figures loop, not FOCUS-only) |
 | G1 | C1-aug paired test deltas | **done** (`C1_aug`−`C1`; `C1_s6out_aug`−`C1_s6out`) |
-| G2 | E1′ seed range on test | **partial** — prints \|Δ\|, not `mean ± range` |
+| G2 | E1′ seed range on test | **done** — seed cell prints `mean ± half-range` + gap range |
 | G3 | C1+AdaBN+T3A comparison | **done** (in `PAIRS`) |
-| G8 | master table + macro-F1 in 06 | **done** (summary reads metrics CSVs) |
-| G6 | **per-trace** error cut | **open** — only per-class + per-AR-set (degenerate on S7) |
-| G7 | **cross-stream ECE** | **open** — calibration only for FOCUS |
-| G9 | **two variances juxtaposed** | **open** — kept separate, never side by side |
-| G10 | **McNemar-style discordance** C1 vs C3/C2 | **open** |
-| G11 | **multiplicity caveat** sentence | **open** (~10 comparisons on 11 traces) |
-| G12 | **class-coverage decomposition** | **open** — set up in a print, not computed |
+| G8 | master table + macro-F1 in 06 | **done** (summary reads metrics CSVs → `summary.csv`) |
+| G6 | **per-trace** error cut | **done** — per-trace grid + per-trace≈per-class note (`per_trace_accuracy.csv`) |
+| G7 | **cross-stream ECE** | **done** — all-stream ECE (`ece.csv`) + reliability overlay figure |
+| G9 | **two variances juxtaposed** | **done** — seed range vs test-sampling CI side by side |
+| G10 | **McNemar-style discordance** C1 vs C3/C2 | **done** — `mcnemar` (self-tested), counts + anti-conservative caveat |
+| G11 | **multiplicity caveat** sentence | **done** — primary/secondary flags in table + declared caveat |
+| G12 | **class-coverage decomposition** | **done** — `seen_blind_f1` (self-tested) → `class_coverage.csv` |
 | G4 | accuracy bars per config×domain | **open** — `viz`, outside nb-06 |
 | G5 | domain-diagnostics consolidated table | **open** — assembly, outside nb-06 |
 
@@ -200,6 +217,12 @@ AR-4 0.549 · AR-5 0.499 · AR-6 0.573 · AR-7 0.732.
 ---
 
 ## 5. Restart checklist (what to add, prioritized — all zero test contact)
+
+> **Status 2026-07-23: items 1–8 below are all implemented and verified** in
+> `notebooks/06_final_analysis.ipynb` (see the §0 Update). They are kept here as the
+> record of what was added and why. The only remaining report-critical work is
+> **outside notebook 06**: **G4** (`viz` accuracy bars per config×domain) and **G5**
+> (domain-diagnostics consolidated table). Notebook 06 itself is report-grade.
 
 All items are analysis on the already-committed `reports/final/*_windows.csv`
 (+ `*_metrics.csv`), plus one `viz` figure. None is a rerun or a new §0.7 row.
