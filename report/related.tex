@@ -11,14 +11,15 @@ spectrogram is the most common~\cite{Wang-2019}. The reference point for this
 report is SHARP~\cite{Meneghello-2023}, which extracts a Doppler representation
 from commodity IEEE~802.11 CSI by removing the phase offsets and reconstructing
 the channel, and classifies activities with a comparatively shallow, wide
-convolutional network followed by a decision-fusion step across antennas. SHARP
-reports strong in-environment accuracy but, like most of the literature, its
-headline numbers mix training and test environments; the cross-environment
-setting, where the geometry at test time is unseen, is where accuracy is known
-to degrade and is the setting we adopt. We reproduce the SHARP model as our C0
-anchor and reuse its antenna decision-fusion for that configuration, so that our
-comparison is anchored to a published, faithful baseline rather than to an
-in-house model of unknown strength.
+convolutional network followed by a decision-fusion step across antennas.
+SHARP explicitly targets environment- and person-independence, and its own
+evaluation already shows accuracy degrading on unseen rooms; that
+cross-environment setting, where the geometry at test time is unseen, is the
+one we adopt and push further with a strict leave-one-environment-out
+protocol. We reproduce the SHARP model as our C0 anchor and reuse its antenna
+decision-fusion for that configuration, so that our comparison is anchored to
+a published, faithful baseline rather than to an in-house model of unknown
+strength.
 
 \textbf{Domain generalization by adversarial invariance.}
 The dominant recipe for making a representation domain-invariant is adversarial:
@@ -37,8 +38,7 @@ that the adversary's cost is paid whether or not the target exists.
 Supervised contrastive learning (SupCon)~\cite{Khosla-2020} extends the
 self-supervised InfoNCE objective~\cite{Chen-2020} by treating all same-label
 samples as positives, and has been reported to yield representations that are
-more robust and transferable than those trained with cross-entropy. It has been
-proposed for sensing modalities as a route to environment-robust features. The
+more robust and transferable than those trained with cross-entropy. The
 promise is geometric --- a class-collapsed, well-separated embedding --- but
 whether that geometry survives a linear (or any) readout, and whether it
 transfers better than CE across environments, is empirical. We evaluate SupCon
@@ -57,10 +57,9 @@ assumptions.
 
 \textbf{Positioning.}
 Prior work overwhelmingly reports where a domain-invariance or contrastive
-objective \emph{helped}. Our contribution is orthogonal and, we argue,
-complementary: a controlled study, under one shared apparatus and a strict
-single-use test protocol, in which both objectives fail on a realistic
-CSI benchmark, together with frozen-encoder diagnostics that explain the failure
-as structural rather than incidental. Negative results of this kind are
+objective \emph{helped}. Our contribution is complementary: a controlled
+study, under one shared apparatus and a strict single-use test protocol, in
+which both objectives fail on a realistic CSI benchmark, with frozen-encoder
+diagnostics that explain the failure as structural. Such negative results are
 underreported and, on the common class of datasets dominated by one training
 environment, directly actionable.

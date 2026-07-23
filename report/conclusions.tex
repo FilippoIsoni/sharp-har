@@ -6,9 +6,10 @@
 In this project we evaluated, under one shared apparatus and a single-use test
 protocol, whether adversarial (GRL) and contrastive (SupCon) training
 objectives improve cross-environment WiFi CSI activity recognition over a
-plain cross-entropy model. They do not: SupCon is significantly worse, the GRL
-costs accuracy and training stability, and test-time adaptation is neutral at
-best. The deep CE model itself, however, outperforms the SHARP-style shallow
+plain cross-entropy model. They do not: SupCon is worse by a bootstrap-resolved
+margin; the GRL is worse still, with a much larger seed-to-seed spread; and
+test-time adaptation is neutral at best. The deep CE model itself, however,
+outperforms the SHARP-style shallow
 network by $23.5$ accuracy points on the unseen environment --- on this
 benchmark, backbone capacity mattered far more than any invariance objective.
 
@@ -48,6 +49,4 @@ modeling side, the open question is whether \emph{any} training-time objective
 can help when the domain factor is unreadable --- candidates that operate on
 the input rather than the representation (stronger physics-informed
 augmentations, synthetic environment simulation) are unaffected by our
-structural argument. Finally, the systematic underconfidence of the CE model
-suggests a simple calibration stage (temperature scaling on validation) before
-any deployment that consumes its confidence scores.
+structural argument.

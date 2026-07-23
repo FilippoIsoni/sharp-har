@@ -31,8 +31,9 @@ In this work we test exactly that, on the SHARP dataset~\cite{Meneghello-2023}
 under a leave-one-environment-out protocol: with backbone, data pipeline,
 sampler, seed and evaluation harness held identical, does adding a GRL or
 replacing cross-entropy (CE) with SupCon improve transfer to an unseen
-environment? Our answer is a controlled negative result, together with an
-explanation of why it had to be negative on this class of datasets.
+environment? Our answer is a controlled negative result, together with a
+measured explanation of why the adversarial route in particular could not
+have succeeded on this class of datasets.
 
 \textbf{Contributions.} The key contributions of this paper are:
 \begin{itemize}
@@ -43,11 +44,11 @@ deep CE model reaches macro-F1 $0.804$ on the held-out environment, against
 $0.543$ for the SHARP-style shallow network in the identical recipe.
 \item Evidence that neither objective improves over plain CE: SupCon loses
 $7.8$ accuracy points (bootstrap-resolved) and the GRL loses $15.8$ with a
-$10\times$ larger seed instability than CE.
+$10\times$ larger observed seed spread than CE.
 \item An explanation via frozen-encoder diagnostics: no domain attribute is
 linearly readable from the learned features, so the adversary has no target ---
 a structural property of training splits dominated by a single environment,
-replicated here across two rotations, two seeds and three loss families.
+replicated here across two rotations, three loss families and five encoders.
 \item A statistical protocol suited to small LOEO test sets: trace-level paired
 bootstrap, explicit separation of test-sampling and seed variance, and
 declared multiplicity --- under which we also show test-time adaptation (T3A,

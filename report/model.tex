@@ -25,7 +25,8 @@ differences.
 dataset~\cite{Meneghello-2023}, collected with identical IEEE~802.11 hardware
 in \emph{three environments} --- a bedroom, a living room and a laboratory ---
 with three subjects performing eight activities (labelled C, E, H, J, L, R, S,
-W). The recordings are organized into seven capture sets over twelve
+W; among them, E is the empty room, W walking, R running, J jumping and L
+sitting). The recordings are organized into seven capture sets over twelve
 campaigns; each physical recording (a \emph{trace}) is captured on four
 antennas. The environment structure enables a leave-one-environment-out
 evaluation; its imbalance --- the bedroom dominates the collection, and the
@@ -69,10 +70,10 @@ dimension $d_{\mathrm{enc}}=256$), chosen after a throughput gate on the target
 hardware. C0 uses a faithful reimplementation of the shallow, wide SHARP
 network~\cite{Meneghello-2023}, so the reproduction is architecturally honest;
 the same network is also dropped into the exact C1 recipe as a backbone
-ablation (\emph{C1-sharplike}), isolating the effect of depth at equal task
-scale.
+ablation (\emph{C1-sharplike}), so that the backbone axis is isolated with
+everything else held fixed.
 
-\textbf{Configurations.} Table~\ref{tab:configs} summarizes them. C0 is the
+\textbf{Configurations.} \tab{tab:configs} summarizes them. C0 is the
 baseline (the prior approach); C1 is our model; C2--C4 are its objective
 variants, spanning a $2\times2$ design over loss family (CE vs.\ SupCon) and
 adversary (none vs.\ GRL):
@@ -103,6 +104,7 @@ confirming a foregone null.
 C2--C4 its objective variants. All but C0 share one backbone, pipeline, sampler
 and harness.}
 \label{tab:configs}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{llll}
 \hline
 \textbf{Cfg} & \textbf{Loss} & \textbf{Adversary} & \textbf{Role} \\
@@ -113,7 +115,7 @@ C2 & CE         & GRL & adversarial invariance \\
 C3 & SupCon     & --- & contrastive \\
 C4 & SupCon     & GRL & closed on evidence \\
 \hline
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \textbf{Sampler, optimization, reproducibility.} The contrastive configuration

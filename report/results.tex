@@ -6,11 +6,11 @@
 \section{Results}
 \label{sec:results}
 
-In this section we report the experimental results. We first state the
-statistical protocol, then present the main test table, the comparison against
-the SHARP baseline, the effect of the two training objectives, the diagnostics
-that explain the negative result, and finally the error structure and
-calibration of the deliverable model.
+We first state the statistical protocol, then present the main test table,
+the comparison against the SHARP baseline, the effect of the two training
+objectives, the diagnostics that explain the negative result, test-time
+adaptation and augmentation, and finally the error structure and calibration
+of the deliverable model.
 
 \textbf{Statistical protocol.} The held-out test sets are small (11 traces for
 the primary rotation), so we treat the \emph{trace}, not the window, as the unit
@@ -25,19 +25,20 @@ descriptively, without an interval. Two sources of uncertainty are kept
 separate: the bootstrap measures \emph{test-sampling} variance, while
 \emph{training} (seed) variance is measured by the seed-43 replicates. Finally,
 since $\sim$10 comparisons share the same 11 test traces, we designate C1--C2
-and C1--C3 as the primary pre-registered comparisons and treat the rest as
-exploratory.
+and C1--C3 --- the two questions the study was designed to answer --- as
+primary and treat the remaining comparisons as exploratory.
 
 \subsection{Main results}
 \label{sec:res_main}
 
-Table~\ref{tab:test} reports validation and test performance for all
+\tab{tab:test} reports validation and test performance for all
 configurations, with the paired accuracy difference against our model C1 and
 its 95\% bootstrap interval. Three facts summarize the table:
 \begin{enumerate}
 \item \textbf{Our model transfers best.} C1 reaches macro-F1 $0.804$ on the
-held-out laboratory environment --- the highest of all configurations, and its
-CE family shows by far the smallest val$\to$test degradation.
+held-out laboratory environment; no training objective, backbone variant or
+test-time adaptation resolves an improvement over it, and it is seed-stable
+(its seed-43 replicate lands $0.5$ accuracy points away).
 \item \textbf{Neither training objective improves over CE.} SupCon is
 $7.8$ accuracy points below C1, and the interval excludes zero; the GRL variant
 is $15.8$ points below, a direction stable across both seeds although the
@@ -54,8 +55,8 @@ macro-F1 and accuracy on the held-out environment, and the paired accuracy
 difference vs.\ our model C1 with its 95\% trace-level bootstrap CI
 ($\ast$~=~interval excludes zero). Top block: primary rotation (leave-lab-out,
 8 classes). Middle: test-time adaptation on C1. Bottom: second rotation
-(C1-s6out-aug is paired against C1-s6out, its own baseline) and the 5-class
-SHARP reproduction; neither is comparable to the top block.}
+(C1-s6out-aug paired against its own baseline) and the 5-class SHARP
+reproduction; neither is comparable to the top block.}
 \label{tab:test}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llcccl}
@@ -86,27 +87,30 @@ C0 & SHARP repro (P1, 5-cls) & 0.892 & 0.605 & 0.612 & (own split) \\
 \subsection{Our model vs.\ the SHARP baseline}
 \label{sec:res_baseline}
 
-The faithful reproduction C0 confirms the reference implementation: on the
-paper's protocol (train on one bedroom subset, test on all other environments,
-5 classes, decision fusion) it reaches macro-F1 $0.605$ on the unseen
-environments, with per-environment accuracy between $0.50$ and $0.73$ ---
-consistent with the cross-environment degradation reported in the original
+The faithful reproduction C0 confirms the reference implementation: trained
+on one bedroom capture set with the paper's 5 classes and decision fusion, it
+reaches macro-F1 $0.605$ on the held-out capture sets --- the same bedroom on
+later campaigns plus the two unseen rooms --- with per-set accuracy between
+$0.50$ and $0.73$, consistent with the degradation reported in the original
 work. Because C0 runs on a different split and class set, the like-for-like
-architecture comparison is the ablation \emph{C1-sharplike}: the SHARP network
-inserted into the exact C1 recipe (same split, classes, loss, optimizer, seed;
-only the backbone differs). It reaches test macro-F1 $0.543$ against C1's
-$0.804$ --- a $23.5$-point accuracy gap whose interval $[-0.399,-0.092]$
-excludes zero. Interestingly, the gap on validation was $\sim$15 points and
-grows to $\sim$24 on the unseen environment: depth pays off most exactly where
-it matters, on cross-environment transfer.
+architecture comparison is the ablation \emph{C1-sharplike}: the SHARP
+network inserted into the exact C1 recipe (same split, classes, loss,
+optimizer, seed; only the backbone differs). It loses $23.5$ accuracy points
+to C1 (test macro-F1 $0.543$ vs.\ $0.804$), with an interval
+$[-0.399,-0.092]$ that excludes zero, after the same recipe had already shown
+a $\sim$15-point gap on the in-domain validation metric. The deep backbone is
+therefore decisively better both in domain and on the held-out environment
+--- and since it was originally chosen on a throughput gate, the accuracy
+axis now vindicates that choice independently.
 
 \subsection{Do the training objectives help?}
 \label{sec:res_obj}
 
 \textbf{SupCon does not.} C3 is below C1 under every readout we tried on its
-frozen features --- linear probe ($0.819$ val), NCM ($0.696$), kNN ($0.794$) ---
-and on test the paired difference $-0.078$, CI $[-0.128,-0.030]$, resolves
-against it. Giving SupCon a ``fair shot'' by fine-tuning the whole network from
+frozen features --- linear probe ($0.819$), nearest-class-mean ($0.718$), kNN
+($0.805$; all validation macro-F1, against C1's linear $0.884$) --- and on
+test the paired difference $-0.078$, CI $[-0.128,-0.030]$, resolves against
+it. Giving SupCon a ``fair shot'' by fine-tuning the whole network from
 its initialization (C3-ft) does not recover the gap either ($0.706$ on test,
 $\approx$ its own linear-probe ceiling): the SupCon representation is the
 limitation, not the frozen readout. A concatenation control on validation makes
@@ -119,13 +123,17 @@ points to C1. The direction is stable --- it holds on both seeds (seed-43 gap:
 $20.0$ points) and on validation --- but the bootstrap interval
 $[-0.323,+0.034]$ crosses zero: with 11 test traces, even a 16-point gap is not
 resolved at the 95\% level, and we report it as a direction with a range rather
-than a point estimate. The seed replicates add a second, independent
-observation: the same-config seed spread is $0.5$ accuracy points for C1 and
-$4.7$ for C2 --- the adversary does not merely cost accuracy, it destabilizes
-training. Finally, a linear probe on C2's \emph{frozen features} reaches $0.720$
+than a point estimate. The seed replicates add a second observation: the
+same-config seed spread is $0.5$ accuracy points for C1 against $4.7$ for C2
+--- with two seeds per configuration this is an observed range, not an
+estimate, but it suggests the adversary costs training stability as well as
+accuracy. A linear probe on C2's \emph{frozen features} reaches $0.720$
 accuracy on test, $7$ points above C2's own trained head ($0.647$): a
 substantial part of the GRL damage sits in the classifier head rather than in
-the representation.
+the representation. The damage is also concentrated, not uniform: at trace
+level C2 collapses on the H, W and S traces (on H, accuracy $0.04$ vs.\ C1's
+$0.64$), matches C1 on the jumping and sitting traces, and is even ahead on
+one running trace.
 
 \subsection{Why: the adversary has no target}
 \label{sec:res_diag}
@@ -134,10 +142,11 @@ The natural question is why an environment-invariance objective fails on an
 environment-transfer benchmark. We answer it by probing the \emph{frozen}
 encoders directly. On a trace-disjoint inner split of the training features we
 train linear probes for the activity (positive control) and for every domain
-attribute, each against its own majority baseline (Table~\ref{tab:domainprobe}).
+attribute, each against its own majority baseline (\tab{tab:domainprobe}).
 The activity control saturates, while \emph{every} domain attribute sits at or
 below its majority baseline: the environment, subject and hardware attributes
-are not linearly readable from the CE features at all. The same probes on the
+are not linearly readable from the CE features, on precisely the data --- train
+features --- that an in-training adversary gets to read. The same probes on the
 C2 (GRL) and C3 (SupCon) encoders, and on a second rotation whose train
 environments differ, give the same verdict. \fig{fig:tsne} shows the geometric
 counterpart: activities form tight clusters, while capture sets are uniformly
@@ -167,8 +176,8 @@ monitor            & 0.499 & 0.584 & $-0.086$ \\
 The implication is structural. A GRL removes domain information that the
 discriminator can read; here there is nothing to read, so the adversary can
 only inject gradient noise --- which is exactly what the training monitors
-showed (the domain head never rose above the majority-class floor in any GRL
-run, on either seed) and what the results confirm (a cost with no invariance
+showed (the domain head never rose meaningfully above the majority-class floor
+in any GRL run, on either seed) and what the results confirm (a cost with no invariance
 gain). The root cause is the composition of the training split: one environment
 dominates it, and the second is represented by a single capture set, so
 environment-invariance is barely definable on this training distribution. On
@@ -179,10 +188,11 @@ report this as an evidence-based triage decision.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{embeddings_c1_vs_c3.pdf}
-\caption{t-SNE~\cite{vanderMaaten-2008} of train features for C1 (CE) and C3
-(SupCon), colored by activity (left of each pair: clusters form) and by capture
-set (right: uniformly mixed). No domain sub-structure exists for an adversary
-to remove.}
+\caption{t-SNE~\cite{vanderMaaten-2008} of train features. Top row: C1 (CE);
+bottom row: C3 (SupCon). Left column: colored by activity (tight clusters
+form; in C3 the L/S/E clusters chain into one filament). Right column: the
+same points colored by capture set --- uniformly mixed within every cluster:
+no domain sub-structure exists for an adversary to remove.}
 \label{fig:tsne}
 \end{figure}
 
@@ -190,8 +200,9 @@ to remove.}
 \label{sec:res_tta}
 
 \textbf{TTA is neutral at best.} T3A is statistically indistinguishable from
-plain C1 ($+0.007$, CI $[-0.047,+0.061]$); AdaBN \emph{hurts} ($-0.059$), and
-dragging the combination down with it. Re-estimating BN statistics on a
+plain C1 ($+0.007$, CI $[-0.047,+0.061]$); AdaBN is negative ($-0.059$, CI
+$[-0.193,+0.031]$) and drags the combination down with it ($-0.047$).
+Re-estimating BN statistics on a
 single-environment, 11-trace unlabeled test set moves the statistics away from
 a training distribution that, per the diagnostics above, was not
 environment-specific to begin with --- consistent with our central finding.
@@ -232,13 +243,13 @@ scattered ones, indicate that the model transfers genuine motion features.
 effect of the label smoothing in its loss. The GRL model is the best calibrated
 (ECE $0.070$) while being the least accurate --- calibration and accuracy
 dissociate across the loss families --- and T3A, which sharpens predictions,
-worsens calibration (ECE $0.345$). If a downstream application needs calibrated
-confidences, temperature rescaling would be required regardless of the
-configuration chosen.
+worsens calibration (ECE $0.345$). Any deployment that consumes confidence
+scores therefore needs a temperature-scaling stage, whatever the
+configuration.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\columnwidth]{confusion_c1_test.pdf}
+\includegraphics[width=0.68\columnwidth]{confusion_c1_test.pdf}
 \caption{Confusion matrix of our model C1 on the held-out laboratory
 environment (row-normalized). The dominant confusions are
 walking$\leftrightarrow$running and H$\to$J.}
