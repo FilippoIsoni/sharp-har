@@ -19,15 +19,15 @@ same traces, C1--C2 and C1--C3 are primary and the rest exploratory.
 
 \tab{tab:test} reports every configuration with its paired accuracy difference
 against our model C1. C1 transfers best (macro-F1 $0.804$, seed-stable to
-$0.5$ accuracy points) and no variant resolves an improvement over it; neither
-objective helps, SupCon falling $7.8$ and the GRL $15.8$ points below it; and
-the largest single effect in the table is not an objective but the backbone,
-worth $23.5$ points at equal recipe.
+$0.5$ points) and no variant resolves an improvement over it: SupCon falls
+$7.8$ and the GRL $15.8$ points below it, while the largest single effect in
+the table is not an objective but the backbone, worth $23.5$ points at equal
+recipe.
 
 \begin{table}[t]
 \centering
-\caption{Main results: validation macro-F1 (used for checkpoint selection),
-test macro-F1 and accuracy on the held-out session, and the paired accuracy
+\caption{Main results: validation macro-F1 (checkpoint selection), test
+macro-F1 and accuracy on the held-out session, and the paired accuracy
 difference vs.\ C1 with its 95\% trace-level bootstrap CI ($\ast$ = interval
 excludes zero). Top: primary rotation (leave-lab-out, 8 classes, 11 traces).
 Bottom: second rotation (15 traces) and the 5-class SHARP anchor on its own
@@ -59,17 +59,16 @@ C0 is an \emph{anchor}, not a benchmark reproduction: it follows the published
 architecture and majority-vote fusion on the paper's five-class core, but
 holds out $20\%$ of the training capture set for early stopping, which the
 reference implementation does not. It therefore supports no claim of the form
-``we reproduced $X\%$'' --- only that our apparatus reproduces the
-\emph{behaviour} of the prior approach, which it does, degrading to macro-F1
-$0.605$ over the held-out capture sets much as the original work reports.
-Because C0 differs from our model in protocol, class set, fusion \emph{and}
-architecture at once, the like-for-like comparison is the ablation
-\emph{C1-sharplike}: the reference network inside the exact C1 recipe, only
-the backbone changed. It loses $23.5$ accuracy points (test macro-F1 $0.543$
-vs.\ $0.804$), CI $[-0.399,-0.092]$. Read honestly this says ``deep beats
-near-linear-wide in this recipe'', on one axis only; its role is to close the
-objection that our CE baseline is a strawman, so that the nulls below are
-measured against a strong control.
+``we reproduced $X\%$'', only that our apparatus reproduces the
+\emph{behaviour} of the prior approach, degrading to macro-F1 $0.605$ over the
+held-out capture sets much as the original work reports. Since C0 differs from
+our model in protocol, class set, fusion \emph{and} architecture at once, the
+like-for-like comparison is the ablation \emph{C1-sharplike}: the reference
+network inside the exact C1 recipe, only the backbone changed. It loses $23.5$
+accuracy points (test macro-F1 $0.543$ vs.\ $0.804$), CI $[-0.399,-0.092]$ ---
+``deep beats near-linear-wide in this recipe'', on one axis only. Its role is
+to close the objection that our CE baseline is a strawman, so that the nulls
+below are measured against a strong control.
 
 \subsection{Supervised contrastive learning does not transfer better}
 \label{sec:res_supcon}
@@ -96,14 +95,15 @@ validation --- its own linear-probe ceiling --- and $0.720$ on test.
 validation, \emph{below} the same-loss ensemble control C1$\oplus$C1$'$
 ($0.888$): SupCon is a worse partner than a second CE encoder.
 \emph{Geometry:} the left column of \fig{fig:tsne} shows why a linear readout
-struggles: both encoders form tight activity clusters, but C3's low-motion
-classes (L, S and the empty room) chain into one filament instead of three
-separable blobs, and the same diagnostic on C3-ft shows the fine-tune
-\emph{un-chaining} that geometry --- turning the SupCon encoder back into C1
-rather than building on it. Counted honestly this is two families of evidence,
+struggles --- C3's low-motion classes (L, S and the empty room) chain into one
+filament instead of three separable blobs --- and the same diagnostic on C3-ft
+shows the fine-tune \emph{un-chaining} that geometry, turning the SupCon
+encoder back into C1 rather than building on it. Counted honestly this is two families of evidence,
 not four instruments: the readouts share cached features and agree partly by
 construction, while the fine-tune is a different path and carries the
-confirmation.
+confirmation. Both point the same way --- the SupCon features are less
+informative about the activity, and no head, linear or not, recovers what they
+do not encode.
 
 \subsection{The adversary costs accuracy and stability}
 \label{sec:res_grl}
@@ -111,8 +111,8 @@ confirmation.
 C2 loses $15.8$ accuracy points on test. The direction is stable --- it holds
 on both seeds (seed-43 gap $20.0$ points) and on validation --- but the
 interval $[-0.323,+0.034]$ crosses zero: on $11$ traces even a $16$-point gap
-is unresolved, so we report a direction with a range, not a point estimate.
-The replicates add a second observation: the same-configuration spread is
+is unresolved. The replicates add a second observation: the
+same-configuration spread is
 $0.5$ accuracy points for C1 against $4.7$ for C2, so the adversary appears to
 cost stability as well as accuracy. A linear probe on C2's \emph{frozen}
 features reaches $0.720$ test accuracy, $7$ points above C2's own trained head
@@ -148,36 +148,36 @@ rotation trains either on a single environment or on one environment plus a
 single session, so environment invariance is barely definable on this training
 distribution --- which is also why C4 was closed without training, as
 evidence-based triage rather than a claim that the GRL is useless in general.
-The probe itself only shows that the domain is not \emph{linearly} decodable
-from traces the encoder has seen; it is the structural argument that
-generalizes the verdict to the dataset.
+The probe alone shows only that the domain is not \emph{linearly} decodable
+from traces the encoder has seen; the structural argument is what generalizes
+the verdict.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.88\columnwidth]{embeddings_c1_vs_c3.pdf}
-\caption{t-SNE~\cite{vanderMaaten-2008} of train features, identical recipe;
-top row C1 (CE), bottom row C3 (SupCon). \emph{Left, by activity:} both form
-tight clusters, but C3's L/S/E clusters chain into one filament instead of
-three separable blobs --- the geometric counterpart of its lower linear-probe
-score. \emph{Right, the same points by capture set:} colours are uniformly
-mixed inside every cluster, in both encoders --- no domain sub-structure
-exists for an adversary to remove.}
+\caption{t-SNE~\cite{vanderMaaten-2008} of train features; top row C1 (CE),
+bottom row C3 (SupCon). \emph{Left, by activity:} both form tight clusters,
+but C3's L/S/E clusters chain into one filament instead of three separable
+blobs --- the geometric counterpart of its lower linear-probe score.
+\emph{Right, the same points by capture set:} colours are uniformly mixed
+inside every cluster, in both encoders --- no domain sub-structure for an
+adversary to remove.}
 \label{fig:tsne}
 \end{figure}
 
 \subsection{Error structure and limitations}
 \label{sec:res_err}
 
-Checkpoint selection was blind to C, E and S on the primary rotation and we
-had pre-declared the risk that those classes would underperform; the opposite
-is true, the val-blind classes being the \emph{best} (mean F1 $0.904$ against
-$0.744$ for the val-seen ones), so class difficulty in the target environment,
-not selection blindness, drives per-class error. The errors themselves are
+Checkpoint selection was blind to C, E and S, and we had pre-declared the risk
+that those classes would underperform; the opposite holds, the val-blind
+classes being the \emph{best} ($0.904$ mean F1 against $0.744$), so class
+difficulty in the target environment, not selection blindness, drives
+per-class error. The errors themselves are
 physically sensible (\fig{fig:confusion}): C1 confuses mainly
 walking$\leftrightarrow$running and H$\to$J, pairs with adjacent Doppler
 signatures, and recognizes the empty room perfectly --- confusions between
-physically similar activities indicate that the model transfers genuine motion
-features rather than room artifacts. Calibration
+physically similar activities, i.e.\ genuine motion features rather than room
+artifacts. Calibration
 dissociates from accuracy: C1 is systematically \emph{under}confident (ECE
 $0.243$, an expected effect of label smoothing) while the GRL model is the
 best calibrated ($0.070$) and the least accurate, so any deployment consuming

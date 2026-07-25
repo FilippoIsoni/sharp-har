@@ -4,10 +4,9 @@
 \label{sec:related_work}
 
 \textbf{WiFi CSI human activity recognition.} Early CSI HAR pipelines fed
-hand-crafted statistics of the amplitude/phase time series to shallow
-classifiers; the field then moved to deep models operating on time--frequency
-representations, of which the micro-Doppler spectrogram is the most
-common~\cite{Wang-2019}. Our reference point is SHARP~\cite{Meneghello-2023}:
+hand-crafted amplitude/phase statistics to shallow classifiers; the field then
+moved to deep models on time--frequency representations, of which the
+micro-Doppler spectrogram is the most common~\cite{Wang-2019}. Our reference point is SHARP~\cite{Meneghello-2023}:
 it sanitizes the phase of commodity IEEE~802.11 CSI, reconstructs the channel,
 extracts a Doppler representation and classifies with a shallow, wide
 convolutional network followed by decision fusion across antennas. SHARP
@@ -29,7 +28,7 @@ sensing to remove environment- and subject-specific nuisance factors, on the
 implicit and rarely tested precondition that the nuisance factor is present
 and readable in the features; when it is not, the adversary reduces to a
 gradient of noise. A central point of this report is to \emph{measure} that
-precondition instead of assuming it.
+precondition.
 
 \textbf{Contrastive representation learning.} SupCon~\cite{Khosla-2020}
 extends the self-supervised InfoNCE objective~\cite{Chen-2020} by treating all
@@ -44,6 +43,4 @@ meta-learning~\cite{Ding-2020}, dedicated domain
 generalization~\cite{Yang-2024} or self-supervised
 pre-training~\cite{Yang-2023}; these are out of scope here, since each replaces
 backbone and protocol as well as objective --- precisely the confound this
-study avoids. Prior work reports overwhelmingly the cases where such
-objectives \emph{helped}; a controlled setting in which they do not, plus a
-diagnostic that predicts it, is what we contribute.
+study avoids.

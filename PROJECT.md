@@ -116,8 +116,11 @@ than one capture set. See §9 / Part IV for the consequence.
 
 **Classes.** `n_att = 8`, letters from the file names: **C, E, H, J, L, R, S, W**.
 Five form the reference paper's core set — E (empty room), W (walking),
-R (running), J (jumping), L (sitting still); C (sit-down/stand-up), H and S come
-from the extended set. **C0 uses the 5-class paper set** `["E","J","L","R","W"]`;
+R (running), J (jumping), L (sitting still); C (sit-down/stand-up), H (arm
+exercise) and S (standing still) come from the extended set. The H and S glosses
+are **not** documented in the released package: they were supplied by the team
+on 2026-07-25 for the report and are descriptive only — no code, split or metric
+depends on them. **C0 uses the 5-class paper set** `["E","J","L","R","W"]`;
 C1–C4 use all 8.
 
 **Day-1 inventory (`reports/inventory.csv`, `reports/contingency.csv`).**

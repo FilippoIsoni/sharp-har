@@ -9,11 +9,16 @@ cross-environment WiFi CSI activity recognition over plain cross-entropy. They
 do not: SupCon is worse by a bootstrap-resolved margin and the GRL is worse
 still and less stable across seeds, while the deep CE model beats the
 shallow--wide reference design by $23.5$ accuracy points --- backbone capacity
-mattered far more than any invariance objective. The observation we consider most useful is \emph{why} the
-objectives fail: frozen-encoder probes show that no domain attribute is
-linearly readable from the learned features, so a domain adversary has nothing
-to remove --- a precondition that costs one linear probe on cached features to
-check, and is worth checking on any dataset whose training split, like this
+mattered far more than any invariance objective. What we consider most useful
+are the two reasons \emph{why}, and we weigh them equally. The contrastive
+encoder fails in the representation itself: kNN and nearest-class-mean
+readouts, a concatenation control and a full CE fine-tune all decline to
+recover the gap, so its features are not informative enough to tell the
+activities apart and no head, linear or not, can repair that. The adversary
+fails for the complementary reason: frozen-encoder probes show that no domain
+attribute is linearly readable from the learned features, so it has nothing to
+remove. Both preconditions cost one probe on cached features to check, and
+both are worth checking --- on any dataset whose training split, like this
 one, is dominated by a single environment --- a message that goes to benchmark
 designers as much as to practitioners.
 
@@ -24,24 +29,22 @@ adaptation, the trace-level paired bootstrap and the frozen-encoder probing
 protocol were designed from the literature rather than assembled from known
 recipes, and while contrastive learning was familiar in its self-supervised
 form, its supervised variant and the gradient reversal layer had to be
-implemented and debugged from the original papers. The hardest decisions came
+implemented from the original papers. The hardest decisions came
 from the data, imbalanced along every axis at once --- environments, capture
 sets, subjects and classes --- so that each remedy costs something: pinning
 rare cells into training guarantees coverage but empties part of validation,
-balancing contrastive batches over capture sets oversamples trace-poor sets,
-and a third rotation that looked mandatory on paper had to be rejected for
-having $26$ training traces. We also learned to distrust single numbers: the
-seed replicates showed a same-configuration swing on the GRL larger than some
-cross-configuration gaps, and with $11$ test traces even a $16$-point gap is
-unresolved once the honest unit of analysis is the trace. Finally, a caveat we
-had declared in advance --- that classes invisible to validation would suffer
---- proved false on test, a reminder that plausible methodological worries
-should be measured, not just declared.
+and balancing contrastive batches over capture sets oversamples trace-poor
+sets. We also learned to distrust single numbers: the seed replicates showed a
+same-configuration swing on the GRL larger than some cross-configuration gaps,
+and with $11$ test traces even a $16$-point gap is unresolved once the honest
+unit of analysis is the trace. Finally, a caveat we had declared in advance
+--- that classes invisible to validation would suffer --- proved false on
+test: plausible methodological worries should be measured, not just declared.
 
 \textbf{Future work.} With one held-out session per rotation this is a
 transfer study rather than full domain generalization; the natural extension
 is a dataset with several well-populated training environments, where our
 diagnostic protocol transfers unchanged. Whether \emph{any} training-time
 objective can help when the domain factor is unreadable remains open ---
-candidates acting on the input, such as physics-informed augmentation, are the
-ones unaffected by our structural argument.
+candidates acting on the input, such as physics-informed augmentation, are
+unaffected by our structural argument.

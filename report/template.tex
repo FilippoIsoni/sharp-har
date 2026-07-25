@@ -131,16 +131,19 @@ mean something: one backbone, one data pipeline, one sampler, one seed and one
 evaluation harness on the SHARP micro-Doppler dataset under a
 leave-one-environment-out protocol, with checkpoints selected on validation
 only, the test set evaluated exactly once, and differences assessed by a
-trace-level paired bootstrap. Neither objective helps. Our deep residual CE
-model reaches macro-F1 $0.804$ on the unseen environment; SupCon loses $7.8$
-accuracy points with a bootstrap interval that excludes zero, the GRL loses
-$15.8$ with a $10\times$ larger seed spread, and the shallow--wide network of
-the reference design loses $23.5$ in the identical recipe. Frozen-encoder
-probes explain the failure: no domain attribute is linearly readable from the
-features an adversary would consume, so it has no target and can only inject
-gradient noise --- a structural consequence of how environments are
-distributed in the dataset. We therefore recommend measuring the readability
-of the nuisance factor before investing in invariance objectives.
+trace-level paired bootstrap. Neither objective helps, and each fails for its
+own measured reason. Our deep residual CE model reaches macro-F1 $0.804$ on
+the unseen environment. SupCon loses $7.8$ accuracy points with a bootstrap
+interval that excludes zero, and the deficit is in the representation, not in
+the readout: kNN, nearest-class-mean and a full fine-tune all fail to recover
+it, so its features do not encode what separates the activities. The GRL loses
+$15.8$ points, with a $10\times$ larger seed spread, because it has no target:
+no domain attribute is linearly readable from the features an adversary would
+consume, a structural consequence of how environments are distributed in the
+dataset. The reference design's shallow--wide network loses $23.5$ points in
+the identical recipe. We therefore recommend probing a contrastive encoder
+under several readouts, and the nuisance factor for readability, before
+investing in either objective.
 \end{abstract}
 
 \IEEEkeywords

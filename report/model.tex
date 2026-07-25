@@ -11,10 +11,8 @@ difference between two rows is attributable to the training objective and not
 to incidental engineering. \textbf{One configuration is deliberately outside
 this rule}: C0, the reimplementation of the reference SHARP design, runs on
 its own split protocol, five-class label set, backbone and majority-vote
-fusion, because it anchors our harness against the prior approach rather than
-entering the objective comparison (\secref{sec:res_baseline}); the
-architecture axis is isolated instead by an ablation that changes the backbone
-\emph{only}.
+fusion, anchoring our harness against the prior approach rather than entering
+the objective comparison (\secref{sec:res_baseline}).
 
 \begin{figure}[t]
 \centering
@@ -60,19 +58,16 @@ and seven \emph{capture sets} --- one (room, monitor position, subject,
 propagation) configuration each --- over twelve campaigns; the unit of
 recording is a \emph{trace}, acquired simultaneously on four antennas, and our
 inventory counts $101$ traces and $408$ per-antenna streams. Activities carry
-the dataset's letter codes: the five-class core is E
-(empty room), W (walking), R (running), J (jumping) and L (sitting still), and
-the extended set adds C (sit-down and stand-up) plus H and S, two activities
-whose letter-to-activity assignment the released package does not document ---
-we keep its codes rather than attach a gloss we cannot source.
+the dataset's letter codes: the five-class core is E (empty room), W (walking),
+R (running), J (jumping) and L (sitting still), and the extended set adds C
+(sit-down and stand-up), H (arm exercise) and S (standing still).
 
 \textbf{Front-end, windowing and normalization.} The data is distributed as
 Doppler traces already produced by the reference front-end (CSI phase
 sanitization, channel reconstruction, and a short-time Fourier transform along
 the packet axis with hop $T_c \approx 6$\,ms), giving per antenna a map of
-reflected power over $100$ velocity bins and time; we consume it as-is, since
-keeping the front-end fixed is what isolates the variable under study. Each
-map is cut into windows of $340$ time steps $\times$ $100$ velocity bins
+reflected power over $100$ velocity bins and time, which we consume as-is.
+Each map is cut into windows of $340$ time steps $\times$ $100$ velocity bins
 ($\approx2.0$\,s), with training stride $100$ ($\approx71\%$ overlap) and
 validation/test stride $340$ so that evaluation units are \emph{disjoint}: the
 primary rotation trains on $\approx69$k (window, antenna) samples and is
@@ -124,12 +119,11 @@ the price is that no C, E or S trace reaches validation on the primary
 rotation, making validation macro-F1 a five-class within-run selection signal
 --- common-mode across configurations, and with a per-class effect that
 \secref{sec:res_err} measures. A third, leave-the-bedroom-out rotation was
-formally rejected before any run: the bedroom holds five of the seven capture
-sets, so its training side would be two single-session environments totalling
-$26$ traces --- confounding ``the model does not generalize'' with ``the model
-had no data'' --- with a two-trace validation split. That same skewed
-incidence has a structural consequence (\secref{sec:res_diag}) which the
-rejected rotation could only have restated.
+rejected before any run: the bedroom holds five of the seven capture sets, so
+its training side would be two single-session environments totalling $26$
+traces, with a two-trace validation split --- confounding ``the model does not
+generalize'' with ``the model had no data''. That skewed incidence also has a
+structural consequence (\secref{sec:res_diag}).
 
 \section{Learning Framework}
 \label{sec:learning_framework}
@@ -169,9 +163,7 @@ with $p = \min(\mathrm{epoch}/20, 1)$, a ramp fixed in advance so the
 adversary reaches full strength independently of when early stopping fires.
 The contrastive head is an MLP $d_{\mathrm{enc}} \to d_{\mathrm{enc}} \to 128$
 with $\ell_2$-normalized output, trained with the supervised contrastive
-loss~\cite{Khosla-2020} at temperature $\tau=0.1$, which pulls together all
-views sharing a label against every other view in the batch. C3 trains in two
-phases: phase A optimizes it for a fixed horizon of $60$ epochs with no
+loss~\cite{Khosla-2020} at temperature $\tau=0.1$. C3 trains in two phases: phase A optimizes it for a fixed horizon of $60$ epochs with no
 in-loop selection, checkpointing on a pre-committed grid (epochs $40/50/60$);
 phase B freezes the encoder, discards the projection head and fits a linear
 probe on cached features, and only the grid checkpoint with the best
@@ -200,9 +192,9 @@ probe in this report, so encoders are always compared under one readout.
 \draw[->] (e.east) -- ++(3.5mm,0) |- (ce.west);
 \draw[->] (e.east) -- (grl.west);
 \draw[->] (e.east) -- ++(3.5mm,0) |- (sc.west);
-\node[box, below=8mm of e, text width=42mm, xshift=6mm] (pb)
+\node[box, below=9mm of e, text width=40mm] (pb)
   {phase B: freeze $f_\theta$, cache features, fit linear probe};
-\draw[->, dashed] (sc.south) -- ++(0,-3mm) -| (pb.east);
+\draw[->, dashed] (sc.south) |- (pb.east);
 \draw[->, dashed] (e.south) -- (pb.north);
 \end{tikzpicture}
 \caption{Learning framework: one encoder, three objectives --- cross-entropy
@@ -222,7 +214,7 @@ C4 was \emph{closed on evidence and never trained}: the diagnostics of
 so its expected outcome was ``C3 plus noise''. Three pre-registered arms
 complete the picture --- C3-ft, a full CE fine-tune from the SupCon encoder;
 C1-aug, the amplitude-augmentation arm; and C1-sharplike, the reference
-network inside the exact C1 recipe, only the backbone differing.
+network inside the exact C1 recipe.
 
 \textbf{Batching, optimization and reproducibility.} The CE configurations
 draw uniform batches of $256$ (window, antenna) samples and optimize an
@@ -234,7 +226,7 @@ capture sets where the class exists, making positives ``same activity,
 different domain'' by construction, and admits at most one window per trace
 per batch (falling back to a $\geq340$-frame offset for classes with fewer
 than $K$ traces), since overlapping windows of one recording would reintroduce
-the trivial positives that rule exists to remove. Optimization is AdamW
+trivial positives. Optimization is AdamW
 (weight decay $10^{-4}$, peak learning rate $10^{-3}$, cosine decay, $5$
 warm-up epochs), mixed precision, gradient clipping at $1.0$, epochs of $400$
 fixed steps ($300$ in phase A), at most $40$ epochs, early stopping on fused
@@ -243,9 +235,9 @@ sampler reseeding and augmentation; two pre-registered seed-$43$ replicates
 measure the training-variance floor.
 
 \textbf{Evaluation harness and the single-use test rule.} One shared harness
-maps a checkpoint to per-set metric files --- accuracy, macro-F1 (the mean
-over classes of the harmonic mean of precision and recall), per-class F1,
-confusion matrices and expected calibration error --- always reported with the
+maps a checkpoint to per-set metric files --- accuracy, macro-F1, per-class
+F1, confusion matrices and expected calibration error --- always reported with
+the
 number of test traces, since that is the effective sample size. Checkpoints
 are selected on validation only and the \emph{test set is evaluated exactly
 once}: one session over a frozen, pre-registered row list logged before any

@@ -23,8 +23,7 @@ environment-specific cues, and \emph{supervised contrastive} (SupCon)
 learning~\cite{Khosla-2020}, which promises a more transferable embedding
 geometry. Both are usually reported on the benchmarks where they helped, each
 with its own backbone and protocol; whether they help on a given dataset, and
-what must be true of that dataset for them to help at all, is assumed far more
-often than it is tested.
+what must be true of it for them to help, is assumed more often than tested.
 
 We test exactly that, on the SHARP micro-Doppler
 dataset~\cite{Meneghello-2023} under a leave-one-environment-out (LOEO)
@@ -34,11 +33,13 @@ variable; checkpoints are selected on validation alone, the test set is
 evaluated exactly once from a frozen row list, and differences are assessed
 with a paired bootstrap that treats the recording, not the window, as the
 statistical unit. The answer is a controlled negative result, and its value
-lies in the explanation: probes on the frozen encoders show that no domain
-attribute is linearly readable from the features an adversary would consume,
-so on data with this structure the adversarial route could not have worked.
-That precondition costs one linear probe on cached features, and we argue it
-should be measured before any invariance objective is trained.
+lies in two explanations of equal weight, both obtained by probing the frozen
+encoders: the contrastive features are not informative enough to separate the
+activities under any readout we tried, and no domain attribute is linearly
+readable from the features an adversary would consume, so on data with this
+structure the adversarial route could not have worked. Both preconditions cost
+one probe on cached features, and we argue they should be measured before
+either objective is trained.
 
 \textbf{Contributions.} The key contributions of this report are:
 \begin{itemize}
@@ -46,19 +47,22 @@ should be measured before any invariance objective is trained.
 cross-environment CSI HAR under one apparatus and a single-use test protocol;
 our CE residual network reaches macro-F1 $0.804$ on the unseen environment and
 no variant improves on it.
-\item Evidence that neither objective helps: SupCon loses $7.8$ accuracy
-points --- the one primary comparison the bootstrap resolves --- and the GRL
-$15.8$, with a $10\times$ larger seed spread and most of its damage in the
-classifier head rather than in the representation.
-\item A measured explanation: no domain attribute is linearly readable from
-train features, replicated on five encoders and two rotations, and the
-dataset's environment incidence makes this structural rather than accidental.
+\item Evidence that SupCon transfers \emph{worse} --- $7.8$ accuracy points,
+the one primary comparison the bootstrap resolves --- with the reason
+measured: non-linear readouts, a concatenation control and a full fine-tune
+agree that its features are not informative enough to tell the activities
+apart, so the loss is in the representation and no head can repair it.
+\item The complementary explanation for the GRL, which loses $15.8$ points
+with a $10\times$ larger seed spread: no domain attribute is linearly readable
+from train features --- replicated on five encoders and two rotations --- so
+the adversary has nothing to remove, and the dataset's environment incidence
+makes this structural rather than accidental.
 \item A statistical protocol for small LOEO test sets, under which the
 backbone alone is worth $23.5$ accuracy points --- more than any objective we
 tested.
 \end{itemize}
 
 \secref{sec:related_work} reviews related work,
-\secref{sec:processing_architecture} and \secref{sec:model} the pipeline,
-signals and splits, \secref{sec:learning_framework} the learning framework,
-\secref{sec:results} the results, and \secref{sec:conclusions} concludes.
+\secref{sec:processing_architecture}--\secref{sec:learning_framework} the
+pipeline, signals, splits and learning framework, \secref{sec:results} the
+results, and \secref{sec:conclusions} concludes.
