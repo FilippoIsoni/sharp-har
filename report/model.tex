@@ -3,148 +3,250 @@
 \section{Processing Pipeline}
 \label{sec:processing_architecture}
 
-The system maps a raw CSI recording to an activity label through four stages,
-shared identically by every configuration we compare: (i) a \emph{Doppler
-front-end} that turns each antenna's CSI into a micro-Doppler time--velocity
-map; (ii) a \emph{windowing} stage that segments each recording into
-fixed-length windows and normalizes them with training-only statistics; (iii) a
-shared convolutional \emph{encoder} mapping a window to a feature vector; and
-(iv) a task \emph{head} producing per-window class scores, fused across the
-four antennas into one prediction per window. The configurations differ
-\emph{only} in the training objective attached to the encoder (plus, for the
-adversarial ones, a domain head that exists at training time only): front-end,
-windowing, encoder architecture, sampler, fusion and evaluation harness are
-byte-for-byte the same. This single-apparatus design is what makes the
-comparison a test of the loss family rather than of incidental engineering
-differences.
+\fig{fig:pipeline} shows the path from a raw CSI recording to an activity
+label, from the Doppler front-end to the fusion of the four antenna scores.
+Learning acts on the shaded blocks only, and every configuration reuses the
+same front-end, windowing, sampler, encoder, fusion rule and harness, so a
+difference between two rows is attributable to the training objective and not
+to incidental engineering. \textbf{One configuration is deliberately outside
+this rule}: C0, the reimplementation of the reference SHARP design, runs on
+its own split protocol, five-class label set, backbone and majority-vote
+fusion, because it anchors our harness against the prior approach rather than
+entering the objective comparison (\secref{sec:res_baseline}); the
+architecture axis is isolated instead by an ablation that changes the backbone
+\emph{only}.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  >={Latex[width=1.2mm]},
+  box/.style={draw, rounded corners=1.5pt, align=center, inner sep=2pt,
+              minimum height=8mm, text width=14.5mm},
+  sh/.style={box, fill=black!8},
+  node distance=2.1mm]
+\node[box] (csi) {CSI\\4 antennas};
+\node[box, right=of csi] (fe) {Doppler\\front-end};
+\node[box, right=of fe] (map) {$340{\times}100$\\map/antenna};
+\node[box, right=of map] (win) {windowing\\$+\;\mu,\sigma$};
+\node[box, below=7mm of csi] (aug) {augment.\\(train only)};
+\node[sh, right=of aug] (enc) {encoder\\$f_\theta$};
+\node[sh, right=of enc] (head) {task head\\$+$ loss};
+\node[box, right=of head] (fus) {antenna\\fusion};
+\draw[->] (csi) -- (fe);
+\draw[->] (fe) -- (map);
+\draw[->] (map) -- (win);
+\draw[->] (aug) -- (enc);
+\draw[->] (enc) -- (head);
+\draw[->] (head) -- (fus);
+\draw[->] (win.south) -- ++(0,-2.4mm) -- ($(aug.north)+(0,2.4mm)$) -- (aug.north);
+\draw[->] (fus.south) -- ++(0,-2.6mm) node[below, font=\scriptsize] {label};
+\end{tikzpicture}
+\caption{Processing pipeline. Split and $(\mu,\sigma)$ are frozen before
+training; the prediction is the argmax of the softmax averaged over the four
+antennas.}
+\label{fig:pipeline}
+\end{figure}
 
 \section{Signals and Features}
 \label{sec:model}
 
-\textbf{Dataset.} We use the SHARP micro-Doppler
-dataset~\cite{Meneghello-2023}, collected with identical IEEE~802.11 hardware
-in \emph{three environments} --- a bedroom, a living room and a laboratory ---
-with three subjects performing eight activities, denoted by the dataset's own
-letter codes C, E, H, J, L, R, S, W. Five of them form the reference paper's
-core set --- E (empty room), W (walking), R (running), J (jumping) and L
-(sitting still) --- and the remaining three (C, H, S) come from the extended
-set, C being sit-down/stand-up. The recordings are organized into seven capture sets over twelve
-campaigns; each physical recording (a \emph{trace}) is captured on four
-antennas. The environment structure enables a leave-one-environment-out
-evaluation; its imbalance --- the bedroom dominates the collection, and the
-living room appears in a single capture set --- turns out to be central to our
-findings (\secref{sec:results}).
+\textbf{Measurement setup.} The SHARP micro-Doppler
+dataset~\cite{Meneghello-2023} was collected on a commodity IEEE~802.11 link
+with \emph{identical hardware throughout}: domains differ by room, monitor
+position, subject, day and line-of-sight condition, never by radio chipset. It
+holds three environments (bedroom, living room, laboratory), three subjects
+and seven \emph{capture sets} --- one (room, monitor position, subject,
+propagation) configuration each --- over twelve campaigns; the unit of
+recording is a \emph{trace}, acquired simultaneously on four antennas, and our
+inventory counts $101$ traces and $408$ per-antenna streams. Activities carry
+the dataset's letter codes: the five-class core is E
+(empty room), W (walking), R (running), J (jumping) and L (sitting still), and
+the extended set adds C (sit-down and stand-up) plus H and S, two activities
+whose letter-to-activity assignment the released package does not document ---
+we keep its codes rather than attach a gloss we cannot source.
 
-\textbf{Pre-processing and features.} From each antenna's CSI we obtain the
-micro-Doppler representation as in the reference pipeline, yielding a
-time--velocity map per antenna. We deliberately did not re-engineer the
-front-end: keeping it fixed isolates the variable under study, the training
-objective. Because the velocity and time axes carry a physical orientation,
-velocity flips and time reversal are excluded from augmentation.
+\textbf{Front-end, windowing and normalization.} The data is distributed as
+Doppler traces already produced by the reference front-end (CSI phase
+sanitization, channel reconstruction, and a short-time Fourier transform along
+the packet axis with hop $T_c \approx 6$\,ms), giving per antenna a map of
+reflected power over $100$ velocity bins and time; we consume it as-is, since
+keeping the front-end fixed is what isolates the variable under study. Each
+map is cut into windows of $340$ time steps $\times$ $100$ velocity bins
+($\approx2.0$\,s), with training stride $100$ ($\approx71\%$ overlap) and
+validation/test stride $340$ so that evaluation units are \emph{disjoint}: the
+primary rotation trains on $\approx69$k (window, antenna) samples and is
+tested on $425$ fused windows. Two global scalars $(\mu,\sigma)$, computed on
+training windows only, are stored in the frozen split file and reused
+unchanged elsewhere. Both axes carry a physical orientation, so flipping
+velocity (it inverts the Doppler sign) and reversing time (it maps sit-down
+onto stand-up) are forbidden augmentations.
 
-\textbf{Windowing and normalization.} Each trace is segmented into fixed-length
-windows with a fixed hop (a larger hop at evaluation time). Normalization
-statistics $(\mu,\sigma)$ are computed on the training split only, per
-rotation, stored in the frozen split file, and reused identically on validation
-and test.
-
-\textbf{Splits.} Two rules govern every split and are enforced by blocking
-assertions in the code. First, \emph{we split by trace, never by window}: all
-windows of a trace, on all four antennas, fall entirely on one side of the
-train/val/test partition --- windows of the same trace on both sides would leak
-the static channel and inflate every metric. Second, splits are frozen once as
-JSON files under version control and never edited. The primary rotation holds
-out the laboratory for test (11 traces); a second rotation holds out the living
-room (15 traces) and is used for replication. Rare activity--environment cells
-are pinned into training to guarantee coverage. One consequence is declared
-up-front: the small validation split does not contain every class (no C, E, S
-traces in the primary rotation), so validation macro-F1 is a 5-class,
-within-run selection signal, not comparable to the 8-class test metric --- and
-in \secref{sec:results} we test empirically whether this selection blindness
-harmed the affected classes.
-
-\section{Learning Framework}
-\label{sec:learning_framework}
-
-\textbf{Shared backbone.} All configurations except C0 share a deep residual
-convolutional encoder~\cite{He-2016} ($\approx$2.8\,M parameters, feature
-dimension $d_{\mathrm{enc}}=256$), chosen after a throughput gate on the target
-hardware. C0 uses a faithful reimplementation of the shallow, wide SHARP
-network~\cite{Meneghello-2023}, so the reproduction is architecturally honest;
-the same network is also dropped into the exact C1 recipe as a backbone
-ablation (\emph{C1-sharplike}), so that the backbone axis is isolated with
-everything else held fixed.
-
-\textbf{Configurations.} \tab{tab:configs} summarizes them. C0 is the
-baseline (the prior approach); C1 is our model; C2--C4 are its objective
-variants, spanning a $2\times2$ design over loss family (CE vs.\ SupCon) and
-adversary (none vs.\ GRL):
-\begin{itemize}
-\item \textbf{C0} --- SHARP reproduction on the paper's 5-class core and split,
-with the paper's antenna decision fusion.
-\item \textbf{C1} --- CE with label smoothing on the shared backbone; our model,
-and the internal control for C2--C4.
-\item \textbf{C2} --- C1 plus a capture-set classifier trained through a
-GRL~\cite{Ganin-2016}:
-$\mathcal{L}=\mathcal{L}_{\mathrm{task}}+\beta\,\lambda(p)\,\mathcal{L}_{\mathrm{env}}$
-with a fixed ramp $\lambda(p)$.
-\item \textbf{C3} --- SupCon~\cite{Khosla-2020}: a contrastive phase trains
-encoder and projection head with a $P{\times}K$ sampler and two augmented views
-per sample; a frozen-encoder linear probe then selects and evaluates the
-checkpoint. A CE fine-tune of the whole network from the SupCon initialization
-(\emph{C3-ft}) gives the representation a fair shot beyond the frozen probe.
-\item \textbf{C4} --- SupCon+GRL. \emph{Closed on evidence, not trained}: the
-diagnostics of \secref{sec:res_diag} show no readable domain target under
-either loss family, so C4 could only reproduce ``C3 plus noise''. We report
-this as an evidence-based triage decision rather than spend its budget
-confirming a foregone null.
-\end{itemize}
+\textbf{Augmentation.} \tab{tab:augment} lists the on-the-fly pipeline,
+applied after standardization in a fixed order, masks filled with the
+post-standardization mean. The cross-entropy configurations use the moderate
+column; the contrastive one draws \emph{two independent views} of each window
+with the stronger probabilities of the last column, since SupCon needs views
+hard enough for its positives to be informative. Velocity is masked sparingly,
+as that axis carries the feature separating walking from running.
 
 \begin{table}[t]
 \centering
-\caption{Configurations. C0 is the prior-approach baseline, C1 our model,
-C2--C4 its objective variants. All but C0 share one backbone, pipeline, sampler
-and harness.}
-\label{tab:configs}
+\caption{Augmentation pipeline, in application order after standardization.
+The last two columns give the probability for the cross-entropy profile and
+for each of the two contrastive views.}
+\label{tab:augment}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{llll}
+\begin{tabular}{lllcc}
 \hline
-\textbf{Cfg} & \textbf{Loss} & \textbf{Adversary} & \textbf{Role} \\
+\textbf{Transform} & \textbf{Axis} & \textbf{Parameters} & \textbf{CE} & \textbf{SupCon view} \\
 \hline
-C0 & CE (SHARP) & --- & baseline (prior approach) \\
-C1 & CE         & --- & our model / CE control \\
-C2 & CE         & GRL & adversarial invariance \\
-C3 & SupCon     & --- & contrastive \\
-C4 & SupCon     & GRL & closed on evidence \\
+Circular shift    & time     & $\pm10$ frames                     & 0.5 & 0.5 \\
+Masking           & time     & 1--2 masks, width 5--20            & 0.5 & 0.8 \\
+Masking           & velocity & 1--2 masks, width 2--10 bins       & 0.5 & 0.8 \\
+Amplitude scaling & ---      & $s \sim \mathcal{U}(0.8,1.2)$      & 0.5 & 0.8 \\
+Gaussian noise    & ---      & additive, $\sigma = 0.05$          & --- & 0.5 \\
 \hline
 \end{tabular}}
 \end{table}
 
-\textbf{Sampler, optimization, reproducibility.} The contrastive configuration
-uses a $P{\times}K$ sampler drawing $K$ distinct traces from each of $P$
-classes per batch, with a minimum reuse offset so a batch never contains
-near-duplicate windows of one trace; gradient accumulation is forbidden in the
-contrastive phase, as it would corrupt the in-batch positive/negative
-structure. A single seed (42) governs initialization, per-epoch sampler
-reseeding and augmentation; seed-43 replicates of C1 and C2 measure the
-training-variance floor. Differences within that floor are treated as
-comparable, not as improvements.
+\textbf{Splits and rotations.} Two rules are enforced by blocking assertions:
+\emph{we split by trace, never by window} --- all windows of a trace, on all
+four antennas, fall on one side, since otherwise the static channel leaks and
+inflates every metric --- and splits are frozen once as JSON under version
+control. The primary rotation holds out the laboratory ($81/9/11$ traces), the
+hardest choice available, and a second holds out the living room ($80/6/15$)
+for replication; a held-out capture set varies room, monitor position, subject
+and day at once, so we speak of held-out \emph{sessions} throughout. Because
+the class distribution is very uneven across capture sets, every (capture set,
+activity) cell with fewer than four traces has one trace pinned into training;
+the price is that no C, E or S trace reaches validation on the primary
+rotation, making validation macro-F1 a five-class within-run selection signal
+--- common-mode across configurations, and with a per-class effect that
+\secref{sec:res_err} measures. A third, leave-the-bedroom-out rotation was
+formally rejected before any run: the bedroom holds five of the seven capture
+sets, so its training side would be two single-session environments totalling
+$26$ traces --- confounding ``the model does not generalize'' with ``the model
+had no data'' --- with a two-trace validation split. That same skewed
+incidence has a structural consequence (\secref{sec:res_diag}) which the
+rejected rotation could only have restated.
+
+\section{Learning Framework}
+\label{sec:learning_framework}
+
+\fig{fig:learning} shows how the shared encoder is trained under the three
+objectives.
+
+\textbf{Backbones.} C1--C4 share a residual convolutional
+encoder~\cite{He-2016} adapted to a $340\times100$ input whose axes are not
+interchangeable. A stock ResNet-18 stem would crush the velocity axis to a few
+bins; instead the stem (conv $3{\times}3$ and max-pool, both stride $(2,1)$)
+and stages 3--4 downsample \emph{time} only, while one isotropic stride
+$(2,2)$ in stage 2 halves velocity once, leaving a final map of
+$\approx11{\times}50$. The four residual stages are halved in width
+($32/64/128/256$ channels) and global average pooling yields the feature
+vector, $d_{\mathrm{enc}}=256$; at $4.66$ GFLOPs per window and $2.79$\,M
+parameters, the encoder was selected on a throughput and memory gate, not on
+accuracy. C0 and the backbone ablation use instead a faithful reimplementation
+of the SHARP classifier~\cite{Meneghello-2023}: three parallel shallow
+branches concatenated, reduced by a $1{\times}1$ convolution, flattened to
+$25\,500$ features and mapped to the classes by one dense layer ---
+$\approx1$k convolutional against $\approx204$k dense parameters, a
+\emph{near-linear wide} model, the opposite design point.
+
+\textbf{Heads and objectives.} All heads are parametrized on
+$d_{\mathrm{enc}}$. The activity head is linear, trained with cross-entropy
+and label smoothing $0.1$. The adversarial head is an MLP
+($d_{\mathrm{enc}} \to d_{\mathrm{enc}}/2 \to$ 6 capture sets, dropout $0.3$)
+behind a gradient reversal layer, giving the C2 objective
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{\mathrm{act}} + \lambda(p)\,\mathcal{L}_{\mathrm{dom}},
+\qquad
+\lambda(p) = \frac{2}{1+e^{-10p}} - 1 ,
+\label{eq:grl}
+\end{equation}
+with $p = \min(\mathrm{epoch}/20, 1)$, a ramp fixed in advance so the
+adversary reaches full strength independently of when early stopping fires.
+The contrastive head is an MLP $d_{\mathrm{enc}} \to d_{\mathrm{enc}} \to 128$
+with $\ell_2$-normalized output, trained with the supervised contrastive
+loss~\cite{Khosla-2020} at temperature $\tau=0.1$, which pulls together all
+views sharing a label against every other view in the batch. C3 trains in two
+phases: phase A optimizes it for a fixed horizon of $60$ epochs with no
+in-loop selection, checkpointing on a pre-committed grid (epochs $40/50/60$);
+phase B freezes the encoder, discards the projection head and fits a linear
+probe on cached features, and only the grid checkpoint with the best
+validation macro-F1 reaches test. That frozen-probe recipe (Adam, $10^{-3}$,
+$\leq30$ epochs, early stopping on the shared metric) is reused for every
+probe in this report, so encoders are always compared under one readout.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  >={Latex[width=1.2mm]},
+  box/.style={draw, rounded corners=1.5pt, align=center, inner sep=2.5pt,
+              minimum height=7mm, text width=17mm},
+  enc/.style={box, fill=black!8, text width=19mm, minimum height=13mm},
+  tag/.style={font=\scriptsize\itshape}]
+\node[box] (in) {window\\$340{\times}100$};
+\node[enc, right=4mm of in] (e) {encoder $f_\theta$\\ResNet V-B\\$d_{\mathrm{enc}}{=}256$};
+\node[box, right=7mm of e, yshift=10mm] (ce) {linear head\\CE $+$ smoothing};
+\node[box, right=7mm of e] (grl) {GRL $\lambda(p)$\\capture-set MLP};
+\node[box, right=7mm of e, yshift=-10mm] (sc) {projection head\\SupCon, $\tau{=}0.1$};
+\node[tag, right=1.5mm of ce.east]  {C1, C2};
+\node[tag, right=1.5mm of grl.east] {C2};
+\node[tag, right=1.5mm of sc.east]  {C3};
+\draw[->] (in) -- (e);
+\draw[->] (e.east) -- ++(3.5mm,0) |- (ce.west);
+\draw[->] (e.east) -- (grl.west);
+\draw[->] (e.east) -- ++(3.5mm,0) |- (sc.west);
+\node[box, below=8mm of e, text width=42mm, xshift=6mm] (pb)
+  {phase B: freeze $f_\theta$, cache features, fit linear probe};
+\draw[->, dashed] (sc.south) -- ++(0,-3mm) -| (pb.east);
+\draw[->, dashed] (e.south) -- (pb.north);
+\end{tikzpicture}
+\caption{Learning framework: one encoder, three objectives --- cross-entropy
+(C1), cross-entropy plus a capture-set adversary behind a gradient reversal
+layer (C2), and supervised contrastive pre-training read out by a
+frozen-encoder linear probe (C3). The dashed path doubles as the diagnostic
+instrument: any encoder can be frozen, cached and probed for the activity or
+for a domain attribute.}
+\label{fig:learning}
+\end{figure}
+
+\textbf{Configurations.} The five configurations span a $2{\times}2$ design
+over loss family and adversary, plus the anchor: C0 (prior approach), C1 (CE,
+our model and internal control), C2 (CE+GRL), C3 (SupCon) and C4 (SupCon+GRL).
+C4 was \emph{closed on evidence and never trained}: the diagnostics of
+\secref{sec:res_diag} show no readable domain target under either loss family,
+so its expected outcome was ``C3 plus noise''. Three pre-registered arms
+complete the picture --- C3-ft, a full CE fine-tune from the SupCon encoder;
+C1-aug, the amplitude-augmentation arm; and C1-sharplike, the reference
+network inside the exact C1 recipe, only the backbone differing.
+
+\textbf{Batching, optimization and reproducibility.} The CE configurations
+draw uniform batches of $256$ (window, antenna) samples and optimize an
+\emph{unweighted} loss while being selected on macro-F1, a declared asymmetry
+kept for comparability with the reference recipe. The contrastive loss is
+intra-batch and cannot use uniform batches: a $P{\times}K$ sampler ($P=8$
+classes, $K=32$ traces each) draws each class's traces round-robin over the
+capture sets where the class exists, making positives ``same activity,
+different domain'' by construction, and admits at most one window per trace
+per batch (falling back to a $\geq340$-frame offset for classes with fewer
+than $K$ traces), since overlapping windows of one recording would reintroduce
+the trivial positives that rule exists to remove. Optimization is AdamW
+(weight decay $10^{-4}$, peak learning rate $10^{-3}$, cosine decay, $5$
+warm-up epochs), mixed precision, gradient clipping at $1.0$, epochs of $400$
+fixed steps ($300$ in phase A), at most $40$ epochs, early stopping on fused
+validation macro-F1 with patience $10$. Seed $42$ governs initialization,
+sampler reseeding and augmentation; two pre-registered seed-$43$ replicates
+measure the training-variance floor.
 
 \textbf{Evaluation harness and the single-use test rule.} One shared harness
-maps a checkpoint to per-set metric files; C0's decision fusion is a thin
-wrapper over the same harness. Checkpoint selection uses validation only, and
-the \emph{test set is evaluated exactly once}, at the end, in a single session
-over a frozen, pre-registered list of 16 evaluation rows --- every test access
-is logged by the harness before any test data is read. No intermediate test
-evaluation and no evaluate-then-decide selection is possible under this
-protocol.
-
-\textbf{Test-time adaptation.} On our model only, and pre-registered before
-the session, we evaluate AdaBN~\cite{Li-2017} (full-pass re-estimation of
-batch-norm statistics on the unlabeled test set), T3A~\cite{Iwasawa-2021} (a
-batch variant adjusting the classifier prototypes from confident test
-pseudo-labels), and their combination, with all hyperparameters fixed a
-priori. These bound how much of the residual gap is recoverable at inference
-time. We also evaluate a pre-registered amplitude-scaling augmentation arm
-(\emph{C1-aug}) on both rotations, with a declared discriminator between a
-cross-domain effect and generic regularization (\secref{sec:res_tta}).
+maps a checkpoint to per-set metric files --- accuracy, macro-F1 (the mean
+over classes of the harmonic mean of precision and recall), per-class F1,
+confusion matrices and expected calibration error --- always reported with the
+number of test traces, since that is the effective sample size. Checkpoints
+are selected on validation only and the \emph{test set is evaluated exactly
+once}: one session over a frozen, pre-registered row list logged before any
+test data is read, so evaluate-then-decide selection is impossible.

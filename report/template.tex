@@ -13,6 +13,8 @@
 \usepackage{xcolor}
 \usepackage{mathtools}
 \usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{import}
@@ -119,34 +121,31 @@ filippo.schiabel@studenti.unipd.it, melissa.dedej@studenti.unipd.it}
 
 \begin{abstract}
 WiFi Channel State Information (CSI) enables device-free human activity
-recognition, but models trained in one environment degrade when deployed in
-another, making cross-environment generalization the main obstacle to
-practical use. We present a controlled study on the SHARP micro-Doppler
-dataset under a leave-one-environment-out protocol: starting from a faithful
-reproduction of the reference SHARP model, we train a deep residual network
-with plain cross-entropy (CE) and ask whether two popular
-representation-shaping objectives --- an adversarial domain classifier trained
-through a gradient reversal layer (GRL) and a supervised contrastive (SupCon)
-loss --- improve transfer to the unseen environment. All configurations share
-one backbone, one data pipeline and one evaluation harness; the test set is
-evaluated once, with validation-selected checkpoints, and differences are
-assessed with a trace-level paired bootstrap. The deep CE model transfers
-best, reaching macro-F1 $0.804$ on the held-out environment against $0.543$
-for the SHARP-style shallow network in the identical recipe --- a
-$23.5$-point accuracy gap resolved by the bootstrap. Neither objective helps:
-SupCon loses $7.8$ accuracy points (bootstrap-resolved), and the GRL loses
-$15.8$ with a $10\times$ larger observed seed spread. Frozen-encoder probes
-explain why: no domain attribute is linearly readable from the CE features,
-so the adversary has no target and can only inject gradient noise. Test-time
-adaptation (T3A, AdaBN) does not close the gap, and an amplitude augmentation
-acts as a generic regularizer rather than a cross-domain lever. Our results
-suggest measuring the readability of the nuisance factor before investing in
-invariance objectives, and provide a reproducible negative baseline for CSI
-HAR benchmarking.
+recognition, but a model trained in one room degrades when it is moved to
+another, and cross-environment generalization is the main obstacle to
+deployment. We ask whether two popular representation-shaping objectives ---
+an adversarial domain classifier trained through a gradient reversal layer
+(GRL) and a supervised contrastive (SupCon) loss --- improve transfer over
+plain cross-entropy (CE), under conditions strict enough for the answer to
+mean something: one backbone, one data pipeline, one sampler, one seed and one
+evaluation harness on the SHARP micro-Doppler dataset under a
+leave-one-environment-out protocol, with checkpoints selected on validation
+only, the test set evaluated exactly once, and differences assessed by a
+trace-level paired bootstrap. Neither objective helps. Our deep residual CE
+model reaches macro-F1 $0.804$ on the unseen environment; SupCon loses $7.8$
+accuracy points with a bootstrap interval that excludes zero, the GRL loses
+$15.8$ with a $10\times$ larger seed spread, and the shallow--wide network of
+the reference design loses $23.5$ in the identical recipe. Frozen-encoder
+probes explain the failure: no domain attribute is linearly readable from the
+features an adversary would consume, so it has no target and can only inject
+gradient noise --- a structural consequence of how environments are
+distributed in the dataset. We therefore recommend measuring the readability
+of the nuisance factor before investing in invariance objectives.
 \end{abstract}
 
 \IEEEkeywords
-WiFi sensing, Channel State Information, Human Activity Recognition, Domain Generalization, Contrastive Learning, Adversarial Training.
+WiFi sensing, Channel State Information, Human Activity Recognition,
+Cross-Environment Generalization, Contrastive Learning, Adversarial Training.
 \endIEEEkeywords
 
 
