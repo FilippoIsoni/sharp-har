@@ -107,10 +107,11 @@ axis now vindicates that choice independently.
 \label{sec:res_obj}
 
 \textbf{SupCon does not.} C3 is below C1 under every readout we tried on its
-frozen features --- linear probe ($0.819$), nearest-class-mean ($0.718$), kNN
-($0.805$; all validation macro-F1, against C1's linear $0.884$) --- and on
-test the paired difference $-0.078$, CI $[-0.128,-0.030]$, resolves against
-it. Giving SupCon a ``fair shot'' by fine-tuning the whole network from
+frozen validation features --- linear probe $0.819$, kNN $0.805$,
+nearest-class-mean $0.718$ (macro-F1), against C1's $0.884$, $0.856$ and
+$0.889$ respectively --- so the frozen linear recipe is not what penalizes it:
+C1 is robust to the readout while C3 loses under all three. On test the paired
+difference $-0.078$, CI $[-0.128,-0.030]$, resolves against it. Giving SupCon a ``fair shot'' by fine-tuning the whole network from
 its initialization (C3-ft) does not recover the gap either ($0.706$ on test,
 $\approx$ its own linear-probe ceiling): the SupCon representation is the
 limitation, not the frozen readout. A concatenation control on validation makes
