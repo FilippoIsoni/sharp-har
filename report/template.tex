@@ -127,7 +127,7 @@ deployment. We ask whether two popular representation-shaping objectives ---
 an adversarial domain classifier trained through a gradient reversal layer
 (GRL) and a supervised contrastive (SupCon) loss --- improve transfer over
 plain cross-entropy (CE), under conditions strict enough for the answer to
-mean something: one backbone, one data pipeline, one sampler, one seed and one
+mean something: one backbone, one data pipeline, one seed and one
 evaluation harness on the SHARP micro-Doppler dataset under a
 leave-one-environment-out protocol, with checkpoints selected on validation
 only, the test set evaluated exactly once, and differences assessed by a
@@ -136,8 +136,9 @@ own measured reason. Our deep residual CE model reaches macro-F1 $0.804$ on
 the unseen environment. SupCon loses $7.8$ accuracy points with a bootstrap
 interval that excludes zero, and the deficit is in the representation, not in
 the readout: kNN, nearest-class-mean and a full fine-tune all fail to recover
-it, so its features do not encode what separates the activities. The GRL loses
-$15.8$ points, with a $10\times$ larger seed spread, because it has no target:
+it, so its features carry less of what separates the activities than CE's do.
+The GRL loses $15.8$ points --- more, but unresolved on $11$ traces --- with a
+$10\times$ larger seed spread, because it has no target:
 no domain attribute is linearly readable from the features an adversary would
 consume, a structural consequence of how environments are distributed in the
 dataset. The reference design's shallow--wide network loses $23.5$ points in

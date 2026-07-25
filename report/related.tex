@@ -23,8 +23,9 @@ for making a representation domain-invariant is adversarial: a domain
 discriminator is trained on the encoder features while a gradient reversal
 layer (GRL)~\cite{Ganin-2016} inverts its gradient into the encoder, so the
 encoder is optimized to make the domain \emph{unpredictable} while the task
-head still classifies. DANN-style training has been transplanted into CSI
-sensing to remove environment- and subject-specific nuisance factors, on the
+head still classifies. The recipe has been transplanted into WiFi
+sensing~\cite{Yang-2024} to remove environment- and subject-specific nuisance
+factors, on the
 implicit and rarely tested precondition that the nuisance factor is present
 and readable in the features; when it is not, the adversary reduces to a
 gradient of noise. A central point of this report is to \emph{measure} that
@@ -36,11 +37,9 @@ same-label samples as positives, and is reported to yield representations more
 robust and transferable than cross-entropy ones. The promise is geometric ---
 a class-collapsed, well-separated embedding --- but whether that geometry
 survives a readout, and whether it transfers across environments, is
-empirical: we interrogate it with linear, nearest-class-mean and kNN readouts,
-a concatenation control and a full fine-tune, so that a negative result cannot
-be blamed on the readout. Other lines pursue generalization by
-meta-learning~\cite{Ding-2020}, dedicated domain
-generalization~\cite{Yang-2024} or self-supervised
+empirical: we interrogate it under several readouts and a full fine-tune, so
+that a negative result cannot be blamed on one. Other lines pursue
+generalization by meta-learning~\cite{Ding-2020} or self-supervised
 pre-training~\cite{Yang-2023}; these are out of scope here, since each replaces
 backbone and protocol as well as objective --- precisely the confound this
 study avoids.

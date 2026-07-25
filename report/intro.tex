@@ -27,9 +27,10 @@ what must be true of it for them to help, is assumed more often than tested.
 
 We test exactly that, on the SHARP micro-Doppler
 dataset~\cite{Meneghello-2023} under a leave-one-environment-out (LOEO)
-protocol. Front-end, windowing, backbone, sampler, optimizer, seed and
-evaluation harness are held identical, so the training objective is the only
-variable; checkpoints are selected on validation alone, the test set is
+protocol. Front-end, windowing, backbone, optimizer, seed and
+evaluation harness are held identical, so the objective is the only free
+variable --- the contrastive arm's batch construction and two views are
+entailed by its loss, not chosen; checkpoints are selected on validation alone, the test set is
 evaluated exactly once from a frozen row list, and differences are assessed
 with a paired bootstrap that treats the recording, not the window, as the
 statistical unit. The answer is a controlled negative result, and its value
@@ -53,7 +54,7 @@ measured: non-linear readouts, a concatenation control and a full fine-tune
 agree that its features are not informative enough to tell the activities
 apart, so the loss is in the representation and no head can repair it.
 \item The complementary explanation for the GRL, which loses $15.8$ points
-with a $10\times$ larger seed spread: no domain attribute is linearly readable
+(unresolved on $11$ traces) with a $10\times$ larger seed spread: no domain attribute is linearly readable
 from train features --- replicated on five encoders and two rotations --- so
 the adversary has nothing to remove, and the dataset's environment incidence
 makes this structural rather than accidental.
@@ -61,8 +62,3 @@ makes this structural rather than accidental.
 backbone alone is worth $23.5$ accuracy points --- more than any objective we
 tested.
 \end{itemize}
-
-\secref{sec:related_work} reviews related work,
-\secref{sec:processing_architecture}--\secref{sec:learning_framework} the
-pipeline, signals, splits and learning framework, \secref{sec:results} the
-results, and \secref{sec:conclusions} concludes.

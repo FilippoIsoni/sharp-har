@@ -10,15 +10,17 @@
 window, is the unit of analysis: the windows of one recording share a channel
 and are not independent evidence. Differences are assessed by a trace-level
 \emph{paired} bootstrap ($N=10^4$) on \emph{accuracy}; macro-F1 is descriptive
-only, since just $\sim$2.8\% of resamples contain all eight classes. Bootstrap
+only, since six of the eight test classes are a single trace and just
+$\sim$2.8\% of resamples contain all eight. Bootstrap
 and seed variance are never merged, and since $\sim$10 comparisons share the
 same traces, C1--C2 and C1--C3 are primary and the rest exploratory.
 
 \subsection{Main results}
 \label{sec:res_main}
 
-\tab{tab:test} reports every configuration with its paired accuracy difference
-against our model C1. C1 transfers best (macro-F1 $0.804$, seed-stable to
+\tab{tab:test} reports the main configurations with their paired accuracy
+difference against our model C1. C1 transfers best among them (macro-F1
+$0.804$ against a $0.13$ majority baseline, seed-stable to
 $0.5$ points) and no variant resolves an improvement over it: SupCon falls
 $7.8$ and the GRL $15.8$ points below it, while the largest single effect in
 the table is not an objective but the backbone, worth $23.5$ points at equal
@@ -26,7 +28,8 @@ recipe.
 
 \begin{table}[t]
 \centering
-\caption{Main results: validation macro-F1 (checkpoint selection), test
+\caption{Main results: validation macro-F1 (checkpoint selection; five-class,
+not comparable to the test columns), test
 macro-F1 and accuracy on the held-out session, and the paired accuracy
 difference vs.\ C1 with its 95\% trace-level bootstrap CI ($\ast$ = interval
 excludes zero). Top: primary rotation (leave-lab-out, 8 classes, 11 traces).
@@ -42,7 +45,7 @@ C1 & CE (our model) & 0.887 & \textbf{0.804} & \textbf{0.805} & --- \\
 C1$'$ (s43) & CE, seed 43 & 0.878 & 0.799 & 0.800 & $-0.005$ \\
 C2 & CE + GRL & 0.842 & 0.601 & 0.647 & $-0.158\;[-0.323,+0.034]$ \\
 C2$'$ (s43) & CE + GRL, s43 & 0.787 & 0.562 & 0.600 & $-0.205$ \\
-C3 & SupCon (probe) & 0.819 & 0.729 & 0.727 & $-0.078\;[-0.128,-0.030]^{\ast}$ \\
+C3 & SupCon (probe) & 0.819 & 0.729 & 0.727 & $-0.078\;[-0.128,-0.029]^{\ast}$ \\
 C3-ft & SupCon + CE ft & 0.818 & 0.706 & 0.720 & $-0.085\;[-0.221,+0.058]$ \\
 C1-sharplike & CE, SHARP net & 0.738 & 0.543 & 0.569 & $-0.235\;[-0.399,-0.092]^{\ast}$ \\
 \hline
@@ -58,10 +61,10 @@ C0 & SHARP anchor (5-cls) & 0.892 & 0.605 & 0.612 & (own split) \\
 C0 is an \emph{anchor}, not a benchmark reproduction: it follows the published
 architecture and majority-vote fusion on the paper's five-class core, but
 holds out $20\%$ of the training capture set for early stopping, which the
-reference implementation does not. It therefore supports no claim of the form
-``we reproduced $X\%$'', only that our apparatus reproduces the
-\emph{behaviour} of the prior approach, degrading to macro-F1 $0.605$ over the
-held-out capture sets much as the original work reports. Since C0 differs from
+reference implementation does not. It supports no ``we reproduced $X\%$''
+claim, only that our apparatus reproduces the prior approach's
+\emph{behaviour}, degrading to macro-F1 $0.605$ over the
+held-out capture sets as the original work reports. Since C0 differs from
 our model in protocol, class set, fusion \emph{and} architecture at once, the
 like-for-like comparison is the ablation \emph{C1-sharplike}: the reference
 network inside the exact C1 recipe, only the backbone changed. It loses $23.5$
@@ -78,7 +81,7 @@ only one the bootstrap resolves. C3's contrastive phase converged cleanly ---
 its pre-committed checkpoint grid spans $0.7$ validation points
 ($0.819/0.815/0.812$ at epochs $40/50/60$), so the selected checkpoint sits on
 a plateau --- and on test it lands $7.8$ accuracy points below C1, CI
-$[-0.128,-0.030]$.
+$[-0.128,-0.029]$.
 
 Since a frozen linear probe could in principle understate a non-linear
 representation, we attacked that explanation from four directions.
@@ -93,23 +96,28 @@ from the SupCon initialization (C3-ft) was pre-registered with the hypothesis
 validation --- its own linear-probe ceiling --- and $0.720$ on test.
 \emph{Complementarity:} concatenated C1$\oplus$C3 features score $0.868$ on
 validation, \emph{below} the same-loss ensemble control C1$\oplus$C1$'$
-($0.888$): SupCon is a worse partner than a second CE encoder.
+($0.888$): SupCon is a worse partner than a second CE encoder, though both
+probes stop early on the fragile validation split, so the direction is firmer
+than the magnitude.
 \emph{Geometry:} the left column of \fig{fig:tsne} shows why a linear readout
 struggles --- C3's low-motion classes (L, S and the empty room) chain into one
 filament instead of three separable blobs --- and the same diagnostic on C3-ft
-shows the fine-tune \emph{un-chaining} that geometry, turning the SupCon
-encoder back into C1 rather than building on it. Counted honestly this is two families of evidence,
+(not shown) shows the fine-tune \emph{un-chaining} that geometry, turning the
+SupCon encoder back into C1 rather than building on it. Counted honestly this
+is two families of evidence,
 not four instruments: the readouts share cached features and agree partly by
 construction, while the fine-tune is a different path and carries the
-confirmation. Both point the same way --- the SupCon features are less
-informative about the activity, and no head, linear or not, recovers what they
-do not encode.
+confirmation --- it is also the arm that controls the one difference the design
+cannot remove, since it retrains the encoder under C1's own sampler and
+augmentation profile. Both point the same way --- the SupCon features are less
+informative about the activity than CE's, and no head, linear or not, recovers
+what they do not encode.
 
 \subsection{The adversary costs accuracy and stability}
 \label{sec:res_grl}
 
 C2 loses $15.8$ accuracy points on test. The direction is stable --- it holds
-on both seeds (seed-43 gap $20.0$ points) and on validation --- but the
+on both seeds (seed 43 against seed 43, $20.0$ points) and on validation --- but the
 interval $[-0.323,+0.034]$ crosses zero: on $11$ traces even a $16$-point gap
 is unresolved. The replicates add a second observation: the
 same-configuration spread is
@@ -128,26 +136,32 @@ path of \fig{fig:learning}. On a trace-disjoint inner split of the training
 traces we fit linear probes for the activity (positive control) and for every
 domain attribute, each against its own majority baseline. The control
 saturates ($1.000$ against a $0.197$ baseline) while \emph{every} domain
-attribute sits at or below its own: capture set $-0.090$, direct path
-$-0.098$, monitor position $-0.086$, and the environment and subject probes
-collapse to the constant majority predictor. None of them is linearly readable
+attribute sits at or below its own: capture set $-0.090$ against a $0.286$
+baseline --- the non-degenerate target, and the one the adversary optimizes ---
+direct path $-0.098$ and monitor position $-0.086$; the environment and subject
+probes collapse to the constant majority predictor, though at baselines of
+$0.854$ and $0.818$ those two are weak tests, degenerate for the same incidence
+reason that carries the argument below. None of them is linearly readable
 from the features, on precisely the data an in-training adversary reads. The
-same probes on the C2 and C3 encoders, on all three contrastive checkpoints
-and on the second rotation --- five encoders in total --- return the same
+same probes on the C2, C3 and C3-ft encoders, on all three contrastive
+checkpoints and on the second rotation --- five encoders in total --- return the same
 verdict, the largest positive deviation anywhere being $+0.015$; the right
 column of \fig{fig:tsne} is the geometric counterpart, capture-set colours
 uniformly mixed inside every activity cluster.
 
-The implication is structural. A GRL removes domain information its
-discriminator can read; here there is nothing to read, so it can only inject
-gradient noise --- which is what the training monitors showed (on both seeds
-the domain head never left the majority-class floor) and what the test rows
-confirm. The root cause is the environment incidence of \secref{sec:model}:
-with the bedroom in five capture sets and one set for each other room, any
+A GRL removes domain information its discriminator can read; here there is
+nothing to read, and the adversary head shows it directly --- on both seeds it
+never left the majority-class floor, already at epochs $1$--$2$ with $\lambda$
+still ramping, so it never became a discriminator at all. What reaches the
+encoder is then gradient noise, and \secref{sec:res_grl} locates its damage:
+the representation survives it, the jointly trained head does not.
+The implication is structural:
+with the bedroom in five capture sets and one set for each other room
+(\secref{sec:model}), any
 rotation trains either on a single environment or on one environment plus a
 single session, so environment invariance is barely definable on this training
-distribution --- which is also why C4 was closed without training, as
-evidence-based triage rather than a claim that the GRL is useless in general.
+distribution, and C4 was closed untrained on that basis --- evidence-based
+triage, not a claim that the GRL is useless in general.
 The probe alone shows only that the domain is not \emph{linearly} decodable
 from traces the encoder has seen; the structural argument is what generalizes
 the verdict.
@@ -175,20 +189,22 @@ difficulty in the target environment, not selection blindness, drives
 per-class error. The errors themselves are
 physically sensible (\fig{fig:confusion}): C1 confuses mainly
 walking$\leftrightarrow$running and H$\to$J, pairs with adjacent Doppler
-signatures, and recognizes the empty room perfectly --- confusions between
+signatures, and recognizes the empty room perfectly; its largest remaining
+confusion is S$\to$L, a pair inside the low-motion group that C3's embedding
+chains into one filament. The confusions are between
 physically similar activities, i.e.\ genuine motion features rather than room
 artifacts. Calibration
 dissociates from accuracy: C1 is systematically \emph{under}confident (ECE
 $0.243$, an expected effect of label smoothing) while the GRL model is the
-best calibrated ($0.070$) and the least accurate, so any deployment consuming
+best calibrated ($0.070$) and the least accurate objective, so any deployment consuming
 confidence scores needs temperature scaling.
 
 \textbf{Scope and limitations.} The same session also evaluated two further
 pre-registered arms that we do not discuss for lack of space --- test-time
 adaptation (AdaBN~\cite{Li-2017}, T3A~\cite{Iwasawa-2021}) and amplitude
 augmentation --- neither of which resolved an improvement over C1 (best
-$+0.007$, with an interval crossing zero). Beyond those, model selection is
-in-domain ($15\%$ of the training traces), so the selected checkpoints may be
+$+0.007$ here, with an interval crossing zero). Beyond those, model selection is
+in-domain ($9$ held-out training traces), so the selected checkpoints may be
 sub-optimal out of domain; each held-out set is a single session, so
 ``environment'' is confounded with subject, monitor position and day; and at
 $11$ and $15$ traces a percentile bootstrap separates two or three performance

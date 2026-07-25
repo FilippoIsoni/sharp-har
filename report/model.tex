@@ -6,7 +6,7 @@
 \fig{fig:pipeline} shows the path from a raw CSI recording to an activity
 label, from the Doppler front-end to the fusion of the four antenna scores.
 Learning acts on the shaded blocks only, and every configuration reuses the
-same front-end, windowing, sampler, encoder, fusion rule and harness, so a
+same front-end, windowing, encoder, fusion rule and harness, so a
 difference between two rows is attributable to the training objective and not
 to incidental engineering. \textbf{One configuration is deliberately outside
 this rule}: C0, the reimplementation of the reference SHARP design, runs on
@@ -42,7 +42,7 @@ the objective comparison (\secref{sec:res_baseline}).
 \end{tikzpicture}
 \caption{Processing pipeline. Split and $(\mu,\sigma)$ are frozen before
 training; the prediction is the argmax of the softmax averaged over the four
-antennas.}
+antennas, worth $8.5$ test points over the best single antenna.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -57,7 +57,7 @@ holds three environments (bedroom, living room, laboratory), three subjects
 and seven \emph{capture sets} --- one (room, monitor position, subject,
 propagation) configuration each --- over twelve campaigns; the unit of
 recording is a \emph{trace}, acquired simultaneously on four antennas, and our
-inventory counts $101$ traces and $408$ per-antenna streams. Activities carry
+inventory counts $101$ traces and $404$ per-antenna streams. Activities carry
 the dataset's letter codes: the five-class core is E (empty room), W (walking),
 R (running), J (jumping) and L (sitting still), and the extended set adds C
 (sit-down and stand-up), H (arm exercise) and S (standing still).
@@ -70,40 +70,23 @@ reflected power over $100$ velocity bins and time, which we consume as-is.
 Each map is cut into windows of $340$ time steps $\times$ $100$ velocity bins
 ($\approx2.0$\,s), with training stride $100$ ($\approx71\%$ overlap) and
 validation/test stride $340$ so that evaluation units are \emph{disjoint}: the
-primary rotation trains on $\approx69$k (window, antenna) samples and is
+primary rotation trains on $\approx53$k (window, antenna) samples and is
 tested on $425$ fused windows. Two global scalars $(\mu,\sigma)$, computed on
 training windows only, are stored in the frozen split file and reused
 unchanged elsewhere. Both axes carry a physical orientation, so flipping
 velocity (it inverts the Doppler sign) and reversing time (it maps sit-down
 onto stand-up) are forbidden augmentations.
 
-\textbf{Augmentation.} \tab{tab:augment} lists the on-the-fly pipeline,
-applied after standardization in a fixed order, masks filled with the
-post-standardization mean. The cross-entropy configurations use the moderate
-column; the contrastive one draws \emph{two independent views} of each window
-with the stronger probabilities of the last column, since SupCon needs views
-hard enough for its positives to be informative. Velocity is masked sparingly,
+\textbf{Augmentation.} On the fly, after standardization, in a fixed order:
+circular time shift ($\pm10$ frames), time masking ($1$--$2$ masks of $5$--$20$
+frames), velocity masking ($1$--$2$ masks of $2$--$10$ bins) and amplitude
+scaling ($s\sim\mathcal{U}(0.8,1.2)$), masks filled with the
+post-standardization mean. The cross-entropy configurations apply each with
+probability $0.5$; the contrastive one draws \emph{two independent views} of
+each window at $0.8$, with additive Gaussian noise ($\sigma=0.05$) at $0.5$,
+since SupCon needs views hard enough for its positives to be informative.
+Velocity is masked sparingly,
 as that axis carries the feature separating walking from running.
-
-\begin{table}[t]
-\centering
-\caption{Augmentation pipeline, in application order after standardization.
-The last two columns give the probability for the cross-entropy profile and
-for each of the two contrastive views.}
-\label{tab:augment}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lllcc}
-\hline
-\textbf{Transform} & \textbf{Axis} & \textbf{Parameters} & \textbf{CE} & \textbf{SupCon view} \\
-\hline
-Circular shift    & time     & $\pm10$ frames                     & 0.5 & 0.5 \\
-Masking           & time     & 1--2 masks, width 5--20            & 0.5 & 0.8 \\
-Masking           & velocity & 1--2 masks, width 2--10 bins       & 0.5 & 0.8 \\
-Amplitude scaling & ---      & $s \sim \mathcal{U}(0.8,1.2)$      & 0.5 & 0.8 \\
-Gaussian noise    & ---      & additive, $\sigma = 0.05$          & --- & 0.5 \\
-\hline
-\end{tabular}}
-\end{table}
 
 \textbf{Splits and rotations.} Two rules are enforced by blocking assertions:
 \emph{we split by trace, never by window} --- all windows of a trace, on all
@@ -197,10 +180,8 @@ probe in this report, so encoders are always compared under one readout.
 \draw[->, dashed] (sc.south) |- (pb.east);
 \draw[->, dashed] (e.south) -- (pb.north);
 \end{tikzpicture}
-\caption{Learning framework: one encoder, three objectives --- cross-entropy
-(C1), cross-entropy plus a capture-set adversary behind a gradient reversal
-layer (C2), and supervised contrastive pre-training read out by a
-frozen-encoder linear probe (C3). The dashed path doubles as the diagnostic
+\caption{Learning framework: one encoder, three objectives, tagged at right.
+The dashed path doubles as the diagnostic
 instrument: any encoder can be frozen, cached and probed for the activity or
 for a domain attribute.}
 \label{fig:learning}
@@ -229,7 +210,7 @@ than $K$ traces), since overlapping windows of one recording would reintroduce
 trivial positives. Optimization is AdamW
 (weight decay $10^{-4}$, peak learning rate $10^{-3}$, cosine decay, $5$
 warm-up epochs), mixed precision, gradient clipping at $1.0$, epochs of $400$
-fixed steps ($300$ in phase A), at most $40$ epochs, early stopping on fused
+fixed steps ($300$ in phase A), at most $40$ CE epochs, early stopping on fused
 validation macro-F1 with patience $10$. Seed $42$ governs initialization,
 sampler reseeding and augmentation; two pre-registered seed-$43$ replicates
 measure the training-variance floor.
