@@ -19,8 +19,8 @@ same traces, C1--C2 and C1--C3 are primary and the rest exploratory.
 \label{sec:res_main}
 
 \tab{tab:test} reports the main configurations with their paired accuracy
-difference against our model C1. C1 transfers best among them (macro-F1
-$0.804$ against a $0.13$ majority baseline, seed-stable to
+difference against our model C1. C1 transfers best among them (accuracy
+$0.805$ against a $0.13$ majority baseline, seed-stable to
 $0.5$ points) and no variant resolves an improvement over it: SupCon falls
 $7.8$ and the GRL $15.8$ points below it, while the largest single effect in
 the table is not an objective but the backbone, worth $23.5$ points at equal
@@ -34,7 +34,7 @@ macro-F1 and accuracy on the held-out session, and the paired accuracy
 difference vs.\ C1 with its 95\% trace-level bootstrap CI ($\ast$ = interval
 excludes zero). Top: primary rotation (leave-lab-out, 8 classes, 11 traces).
 Bottom: second rotation (15 traces) and the 5-class SHARP anchor on its own
-protocol, neither comparable to the top block.}
+protocol (57 traces), neither comparable to the top block.}
 \label{tab:test}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llcccl}
@@ -93,7 +93,7 @@ non-linear structure is genuinely present --- it still does not reach C3's own
 linear probe. \emph{Fine-tuning:} unfreezing everything and training with CE
 from the SupCon initialization (C3-ft) was pre-registered with the hypothesis
 ``comparable to C1 within one point'' and falsified it, settling at $0.818$ on
-validation --- its own linear-probe ceiling --- and $0.720$ on test.
+validation --- its own linear-probe ceiling --- and $0.720$ on test; later epochs never beat its warm-up best.
 \emph{Complementarity:} concatenated C1$\oplus$C3 features score $0.868$ on
 validation, \emph{below} the same-loss ensemble control C1$\oplus$C1$'$
 ($0.888$): SupCon is a worse partner than a second CE encoder, though both
@@ -144,12 +144,13 @@ $0.854$ and $0.818$ those two are weak tests, degenerate for the same incidence
 reason that carries the argument below. None of them is linearly readable
 from the features, on precisely the data an in-training adversary reads. The
 same probes on the C2, C3 and C3-ft encoders, on all three contrastive
-checkpoints and on the second rotation --- five encoders in total --- return the same
+checkpoints and on the second rotation --- five encoders, C2 by construction --- return the same
 verdict, the largest positive deviation anywhere being $+0.015$; the right
 column of \fig{fig:tsne} is the geometric counterpart, capture-set colours
 uniformly mixed inside every activity cluster.
 
-A GRL removes domain information its discriminator can read; here there is
+A GRL removes only what its discriminator reads --- and our probe is linear,
+but the adversary is an MLP; here there is
 nothing to read, and the adversary head shows it directly --- on both seeds it
 never left the majority-class floor, already at epochs $1$--$2$ with $\lambda$
 still ramping, so it never became a discriminator at all. What reaches the
@@ -194,16 +195,16 @@ confusion is S$\to$L, a pair inside the low-motion group that C3's embedding
 chains into one filament. The confusions are between
 physically similar activities, i.e.\ genuine motion features rather than room
 artifacts. Calibration
-dissociates from accuracy: C1 is systematically \emph{under}confident (ECE
-$0.243$, an expected effect of label smoothing) while the GRL model is the
+dissociates from accuracy: every stream is \emph{under}confident, C1 most (ECE
+$0.243$; antenna averaging, plus label smoothing) while the GRL model is the
 best calibrated ($0.070$) and the least accurate objective, so any deployment consuming
 confidence scores needs temperature scaling.
 
 \textbf{Scope and limitations.} The same session also evaluated two further
 pre-registered arms that we do not discuss for lack of space --- test-time
 adaptation (AdaBN~\cite{Li-2017}, T3A~\cite{Iwasawa-2021}) and amplitude
-augmentation --- neither of which resolved an improvement over C1 (best
-$+0.007$ here, with an interval crossing zero). Beyond those, model selection is
+augmentation --- neither of which resolved an improvement over C1 (best $+0.073$,
+on the second rotation, interval crossing zero). Beyond those, model selection is
 in-domain ($9$ held-out training traces), so the selected checkpoints may be
 sub-optimal out of domain; each held-out set is a single session, so
 ``environment'' is confounded with subject, monitor position and day; and at

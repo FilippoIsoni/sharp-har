@@ -149,8 +149,14 @@ Three real-data findings, fixed in `inventory.py` and frozen into the splits:
   evaluation units are uncorrelated; ~3.4× fewer eval windows, irrelevant to
   budget.
 - **All window counts in this project are in (window, antenna) samples**, i.e.
-  already ×4 over antennas. ~197 train-stride / 58 eval-stride windows per
-  antenna per trace; primary rotation ≈ 69 k train samples.
+  already ×4 over antennas. ~158 train-stride / 47 eval-stride windows per
+  antenna per trace over the 101 traces (~165 / 49 on the p2_lab train side,
+  whose traces run longer); primary rotation = **53 400** train samples,
+  and 349 / 425 fused eval windows on val / test.
+  *Corrected 2026-07-26:* this bullet previously read "~197 / 58 … ≈ 69 k",
+  which no artifact supports; the figures above are recomputed from
+  `reports/inventory.csv` + `splits/p2_lab.json`. The report always carried
+  the right number (§IV, "≈53k"), so nothing measured depended on the error.
 - Windows inherit activity, subject, environment, AR-set, trace-id and antenna
   from the parent trace.
 
@@ -562,7 +568,11 @@ limiting: forbidden). Default loading is lazy per-trace from local disk.
 - **Key figures (final):** the report references exactly **two** — the t-SNE
   C1-vs-C3 embedding figure and C1's test confusion matrix. Accuracy bars were
   **dropped** (the main table conveys the results; cut for the 6-page budget);
-  the domain-diagnostics table is **delivered** as a report table. Per-class,
+  the domain-diagnostics numbers are **delivered in the prose of §VI-E**, not as
+  a table — a 6-row tabular costs ~10 column lines and the paper has under one
+  line of slack (measured 2026-07-26: five words appended at the tail push it to
+  7 pages). Promoting them to a table is the first thing to do if a page is ever
+  freed; the report has exactly **one** table, `tab:test`. Per-class,
   reliability and forest-plot figures are produced by notebook 06 and kept
   unreferenced (the forest plot was the lead add-if-space candidate, excluded
   for lack of page slack).
@@ -780,11 +790,20 @@ AR-2 0.662 · AR-3 0.721 · AR-4 0.549 · AR-5 0.499 · AR-6 0.573 · AR-7 0.732
 ECE per stream is in the main table. Reading: **C2 (GRL) is the best calibrated
 (0.070) while being the least accurate**, C1 is the worst-calibrated of the
 accurate models (0.243) and is systematically **under**confident (accuracy above
-confidence in every reliability bin) — an expected effect of the label smoothing
-in its loss. **T3A sharpens predictions and worsens calibration** (0.345).
+confidence in every reliability bin). **T3A worsens calibration** (0.345).
 Calibration and accuracy dissociate across the loss families; any deployment
 consuming confidence scores needs temperature scaling regardless of
 configuration.
+*Corrected 2026-07-26 (two readings that were wrong in direction or cause):*
+**every one of the 16 streams is under-confident**, not just C1 — accuracy minus
+mean fused confidence runs +0.067 (C2_s43) to +0.345 (C1_T3A), C1 at +0.243.
+Label smoothing therefore cannot be the driver: C1_lin (+0.153), C3 (+0.101) and
+C0 (+0.100) carry none, and C2 has *C1's own* smoothing with the smallest gap.
+The common cause is §1.3 fusion — the mean of four softmaxes whose per-antenna
+accuracies are 0.694/0.664/0.508/0.720 is far flatter than any of them. And T3A
+does **not** "sharpen": it lowers mean confidence 0.561 → 0.467, i.e. it worsens
+ECE by deepening the under-confidence. Numbers recomputed from
+`reports/final/*_windows.csv`.
 *Declared caveat:* C0's ECE is mildly ill-defined — under the repo's majority-vote
 fusion, `confidence = max(mean softmax)` is not the probability of the predicted
 class. C0 is therefore excluded from the reliability overlay and its ECE carries
@@ -1056,6 +1075,7 @@ timestamp of record.
 | 2026-07-22 | **L6 ratified — `C1_aug_s43` dropped** (list 17 → 16) | The comparison is paired, so init noise is already controlled; the seed twin re-uses the *same* S7 test set, so it cannot touch the dominant uncertainty. The cross-rotation twin is the replication worth keeping. Config and runner stay in the repo, unlaunched |
 | 2026-07-22 | **Single §0.7 test session executed** — 16 rows, one shot | Preceded by a full val dry run with zero test contact; 21 accesses logged |
 | 2026-07-23 | **Report figure plan resolved** — exactly 2 figures; accuracy bars dropped; forest plot excluded | 6-page IEEE budget; the main table's CI column carries the intervals |
+| 2026-07-26 | **Stress-test correction pass on the report** — 10 length-neutral edits, no measured number changed, still exactly 6 pages | Full re-verification of every reported figure against `reports/final/` and `report/tables/`: all 9 table rows and all 6 mirrored CIs are exact, and the paired bootstrap was independently reproduced (C1−C3 = +0.0776 [+0.0295, +0.1282]). Fixed: the `0.13` baseline is a majority-class *accuracy*, not a macro-F1 (macro-F1 of that predictor is 0.029); under-confidence attributed to fusion rather than to label smoothing (§III.5); the linear probe / MLP adversary gap named and closed by the adversary's own majority floor; C3-ft's selected checkpoint disclosed as inside the warm-up, with every later full-LR epoch worse; abstract no longer derives probe unreadability *from* the incidence argument (two claims, different targets); C0's n = 57 added; the augmentation sentence now quotes the largest effect (+0.073) not the smallest; C2 marked as a circular replication of the domain probe; "backbone capacity" → "depth" (L7). Budget measured empirically, not estimated: the tail has < 1 line of slack, so the edit set was chosen greedily by value under a ~150-character ceiling |
 
 **Amendment discipline** (what made all of the above legitimate): the §0.7 row
 list may be amended **only by a team call and only while the session is closed**;

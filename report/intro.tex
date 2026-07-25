@@ -29,8 +29,8 @@ We test exactly that, on the SHARP micro-Doppler
 dataset~\cite{Meneghello-2023} under a leave-one-environment-out (LOEO)
 protocol. Front-end, windowing, backbone, optimizer, seed and
 evaluation harness are held identical, so the objective is the only free
-variable --- the contrastive arm's batch construction and two views are
-entailed by its loss, not chosen; checkpoints are selected on validation alone, the test set is
+variable --- batching, two views and view strength follow from the contrastive
+loss, not chosen; checkpoints are selected on validation alone, the test set is
 evaluated exactly once from a frozen row list, and differences are assessed
 with a paired bootstrap that treats the recording, not the window, as the
 statistical unit. The answer is a controlled negative result, and its value
