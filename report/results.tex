@@ -33,20 +33,17 @@ primary and treat the remaining comparisons as exploratory.
 
 \tab{tab:test} reports validation and test performance for all
 configurations, with the paired accuracy difference against our model C1 and
-its 95\% bootstrap interval. Three facts summarize the table:
-\begin{enumerate}
+its 95\% bootstrap interval. Three facts summarize it:
+\begin{itemize}
 \item \textbf{Our model transfers best.} C1 reaches macro-F1 $0.804$ on the
-held-out laboratory environment; no training objective, backbone variant or
-test-time adaptation resolves an improvement over it, and it is seed-stable
-(its seed-43 replicate lands $0.5$ accuracy points away).
-\item \textbf{Neither training objective improves over CE.} SupCon is
-$7.8$ accuracy points below C1, and the interval excludes zero; the GRL variant
-is $15.8$ points below, a direction stable across both seeds although the
-interval is wide (see \secref{sec:res_obj}).
-\item \textbf{The deep backbone beats the SHARP-style network decisively.} At
-equal recipe and class set, the shallow--wide network loses $23.5$ accuracy
-points, interval well away from zero (\secref{sec:res_baseline}).
-\end{enumerate}
+held-out laboratory environment, no variant resolves an improvement over it,
+and it is seed-stable (its seed-43 replicate lands $0.5$ accuracy points away).
+\item \textbf{Neither training objective helps.} SupCon and the GRL variant
+fall $7.8$ and $15.8$ accuracy points below it (\secref{sec:res_obj}).
+\item \textbf{The deep backbone matters most.} At equal recipe and class set,
+the shallow--wide SHARP network loses $23.5$ points
+(\secref{sec:res_baseline}).
+\end{itemize}
 
 \begin{table}[t]
 \centering
