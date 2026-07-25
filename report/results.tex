@@ -84,21 +84,21 @@ C0 & SHARP repro (P1, 5-cls) & 0.892 & 0.605 & 0.612 & (own split) \\
 \subsection{Our model vs.\ the SHARP baseline}
 \label{sec:res_baseline}
 
-The faithful reproduction C0 confirms the reference implementation: trained
-on one bedroom capture set with the paper's 5 classes and decision fusion, it
-reaches macro-F1 $0.605$ on the held-out capture sets --- the same bedroom on
-later campaigns plus the two unseen rooms --- with per-set accuracy between
-$0.50$ and $0.73$, consistent with the degradation reported in the original
-work. Because C0 runs on a different split and class set, the like-for-like
-architecture comparison is the ablation \emph{C1-sharplike}: the SHARP
+Our C0 anchor is a \emph{partial} reproduction --- a faithful reimplementation
+of the SHARP architecture and decision fusion, but with a 20\% validation
+hold-out and our own frozen split. Trained on one bedroom capture set with the
+paper's 5 classes, it reaches macro-F1 $0.605$ on the held-out capture sets ---
+the same bedroom on later campaigns plus the two unseen rooms --- with per-set
+accuracy between $0.50$ and $0.73$, consistent with the degradation reported in
+the original work. The like-for-like architecture comparison is instead the
+ablation \emph{C1-sharplike}: the SHARP
 network inserted into the exact C1 recipe (same split, classes, loss,
 optimizer, seed; only the backbone differs). It loses $23.5$ accuracy points
 to C1 (test macro-F1 $0.543$ vs.\ $0.804$), with an interval
 $[-0.399,-0.092]$ that excludes zero, after the same recipe had already shown
 a $\sim$15-point gap on the in-domain validation metric. The deep backbone is
-therefore decisively better both in domain and on the held-out environment
---- and since it was originally chosen on a throughput gate, the accuracy
-axis now vindicates that choice independently.
+therefore decisively better both in domain and on the held-out environment,
+vindicating the throughput-gate choice on the accuracy axis too.
 
 \subsection{Do the training objectives help?}
 \label{sec:res_obj}
