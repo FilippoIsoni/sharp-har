@@ -1,59 +1,93 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 ## Project
 
-WiFi CSI Human Activity Recognition on the SHARP Doppler dataset, evaluated under a Leave-One-Environment-Out protocol. Five experimental configurations (C0 reproduction, C1 CE baseline, C2 CE+GRL, C3 SupCon, C4 SupCon+GRL) share one backbone, one data pipeline, and one evaluation harness. **C4 was closed on evidence without being run** (2026-07-17, pipeline doc v5.2: the GRL has no readable domain target under either loss family); the v5.2 tail adds seed-43 replicates, a living-out rotation for C1, val-only NCM/kNN/concat diagnostics, and pre-registered transductive test rows (AdaBN/T3A on C1).
+WiFi CSI Human Activity Recognition on the SHARP TMC Doppler dataset, evaluated
+under Leave-One-Environment-Out. **`PROJECT.md` is the single source of truth**
+— specification (§0–§9), execution record, measured results, findings and
+limitations, decision log, repository map. Read the sections you need before
+changing anything; if code and `PROJECT.md` disagree, the document wins, or the
+discrepancy gets discussed — never silently resolved. Module docstrings cite it
+as `Ref. §X.Y`; Part I preserves that numbering. Superseded documents live in
+`docs/archive/` and must not be read or updated.
 
-**Dataset reality (v5.1 errata):** the shared Drive copy holds the SHARP TMC dataset — sets S1–S7 (internally named AR-1…AR-7, 1:1), 12 campaigns (S1a/b/c, S2a/b, S3a, S4a/b, S5a, S6a/b, S7a), 3 environments (bedroom S1–S5, living room S6, laboratory S7), 3 persons, identical hardware everywhere. AR-8/AR-9 do not exist. Primary P2 rotation = leave-S7-out (`splits/p2_lab.json`); C0 uses the paper's 5-class set. Training data comes exclusively from the shared Drive folder — never re-download from IEEE DataPort.
-
-**`STATUS.md` tracks where we are.** Read it at the start of a session; when work completes a milestone or changes the plan, update `STATUS.md` in the same commit (move items between Done/In progress/Next, keep it synthetic — one line per item). Do not duplicate status information here.
-
-**`pipeline_wifi_har_v5.md` is the single source of truth.** Every module docstring references its sections (e.g. §4.2, §5.3). Before implementing or changing anything, read the relevant section; if code and pipeline doc disagree, the doc wins — or the discrepancy gets discussed, never silently resolved.
+**Phase: the project is closed experimentally.** The single test session ran
+2026-07-22; the analysis closed 2026-07-23. What remains is the IEEE report in
+`report/` and the presentation. **No new training run, no new test contact, no
+split regeneration** — code freeze 2026-07-28, deadline 2026-07-30.
 
 ## Language and style conventions
 
-- **All code, comments, docstrings, notebook text, and commit messages are in English.** The team communicates in Italian, but nothing Italian goes into the repo (exception: the pipeline doc itself and Italian domain terms already used as data labels, e.g. `attivita`, `campagna` — keep those column names as they are, they are part of the frozen artifact schema).
-- Docstrings cite the pipeline section they implement (`Ref. §X.Y`), as the existing modules do. Keep this pattern.
-- Everything is parametrized on `d_enc` and `n_att` — no hardcoded feature or class counts anywhere.
-- Type hints + `from __future__ import annotations` in every module, as in the existing code.
+- **All code, comments, docstrings, notebook text and commit messages are in
+  English.** The team communicates in Italian; nothing Italian goes into the
+  repo. Exception: Italian domain terms already used as data labels
+  (`attivita`, `campagna`) — those column names are part of the frozen artifact
+  schema and stay as they are.
+- Docstrings cite the section they implement (`Ref. §X.Y`). Keep this pattern.
+- Everything is parametrized on `d_enc` and `n_att` — no hardcoded feature or
+  class counts anywhere.
+- Type hints + `from __future__ import annotations` in every module.
 
 ## Commands
 
 ```bash
-pip install -r requirements.txt   # numpy/pandas for day 1; torch etc. for training days
+pip install -r requirements.txt
 ```
 
-There is no test suite, linter config, or build step. Verification happens through the blocking asserts built into the pipeline code (split disjointness, axes check, AR-set coverage, NaN policy, rare-cell coverage) and through the day-2 smoke gate. Training runs happen on Google Colab via the notebooks; local work is code-only.
+No test suite, linter config or build step. Verification happens through the
+blocking asserts built into the pipeline code (split disjointness, axes check,
+AR-set coverage, NaN policy, rare-cell coverage, sampler invariants, cache
+alignment, §0.7 readiness) and through the committed gate reports. Training runs
+on Google Colab via the notebooks; local work is code-only.
 
 ## Architecture
 
-**Thin notebooks, logic in the package.** `notebooks/*.ipynb` only mount Drive, stage data, call `sharp_har` functions, and display output. No logic is ever added to a notebook — the dataloader requires cross-review and notebooks can't be diffed for that. Templates (`notebooks/0*.ipynb`) stay output-free on Git; the executed copy of every real run is committed **verbatim with outputs** under `notebooks/runs/` as `YYYY-MM-DD_<config>.ipynb` (see its README) and never edited afterwards.
+**Thin notebooks, logic in the package.** `notebooks/*.ipynb` mount Drive, stage
+data, call `sharp_har` functions and display output. No logic is ever added to a
+notebook — the dataloader needs cross-review and notebooks can't be diffed for
+it. Templates stay output-free on Git; the executed copy of every real run is
+committed **verbatim with outputs** under `notebooks/runs/` as
+`YYYY-MM-DD_<config>.ipynb` and never edited afterwards. Investigation sessions
+go to `notebooks/diagnostics/`; a diagnostic graduates into the package when its
+numbers enter the report *and* it is re-run across sessions.
 
-**Gated implementation.** Modules are deliberately stubs (`NotImplementedError`) until their pipeline day arrives — the day-2 throughput gate can change the architecture (escalation §5.2), so nothing downstream is implemented before its gate passes. Do not "helpfully" fill in a stub without being asked.
+**Every module is live — there are no stubs left.** `inventory` · `windowing` ·
+`splits` · `data` · `augment` · `sampler` · `models/{resnet_vb,sharp_like,heads}`
+· `losses` · `train` · `harness` · `probe` · `diagnostics` · `transductive` ·
+`session` · `bench` · `viz` · `utils`. See `PROJECT.md` Part VI for what each one
+owns.
 
-Current status:
-- **Implemented (day 1):** `utils.py`, `inventory.py`, `windowing.py` (window enumeration + μ/σ only), `splits.py`, notebook `01_inventory_splits`.
-- **Implemented (day 2):** `data.py` (`DopplerDataset` + `build_file_index`), `models/resnet_vb.py` (V-B backbone), `ActivityHead` in `models/heads.py`, `ce_with_label_smoothing` in `losses.py`, `train.py` (`train_run`, CE path with full checkpoint/auto-resume), `notebooks/02_smoke_gate.ipynb` (end-to-end staging + resume + throughput gate runner).
-- **Implemented (day 3):** `harness.py` (fusion softmax-avg + SHARP-repo C0 decision fusion, per-AR-set metrics CSVs, test-invocation JSONL logging, `cache_features`/`evaluate_features`), `sampler.py` (`PKSampler` with reuse/offset logging), `augment.py` (CE + SupCon-view profiles), `probe.py` (frozen linear-probe recipe + majority baseline), `supcon_loss` + `ProjectionHead`, `models/__init__.build_backbone` (shared factory), `bench.py` + `notebooks/02b_phase_a_gate.ipynb` (phase-A 512-view full-batch gate).
-- **Implemented (day 4):** `GRL` + `grl_lambda` ramp in `losses.py`, `ARSetHead`, `models/sharp_like.py` (Keras-same padding, `feature_dim` 25500), full `train_run` wiring (CE augmentation profile, SupCon phase A with P×K + `TwoViewAugmenter`, GRL loss + §6-C2 monitoring), notebooks `00`, `03`. **No stubs left** — every module is live; day 4+ work is running the §10.2 plan, not filling code in.
-- **Implemented (day-4 review):** `viz.py` (`plot_history`/`plot_confusion`/`compare_runs`, panels driven by the columns present in a run's history.csv — notebooks call these, never define plots inline); harness `_load_end_to_end` head sizing fixed to `backbone.feature_dim` (C0/sharp_like eval).
-- **Implemented (§10.2 tail prep):** `probe.probe_encoder`/`probe.select_phase_b` (probe runners: persisted heads + `phase_b_selection.json`; §7 `persona` target derived from `AR_SET_METADATA`), `viz.metrics_table`, thin notebooks `04_probe` (val-only probe sessions) and `05_test_final` (the single §0.7 test session).
-- **Implemented (§0.7 session dispatch):** `session.py` — the four-kind row dispatch backing notebook `05_test_final` (`required_paths`/`readiness_missing` for the readiness assert, `run_row` for e2e/c0/probe/t3a, `finalize_csvs` for the notebook-06 naming contract, `row_accuracy` for the dry-run check). Keeps the once-only test-access logic in the package (thin-notebook rule); notebook 05 holds only the frozen `ROWS` table + display.
+**One config per experimental run.** `configs/*.yaml` fully describe a run
+(backbone, loss, adversary, sampler, optimizer, horizon, augmentation profile);
+`train.py` consumes a config, never per-run flags. `configs/paths.yaml` holds
+Colab paths.
 
-**One config per experimental run.** `configs/c*.yaml` fully describe a run (backbone, loss, adversary, sampler, optimizer, horizon); `train.py` consumes a config, never per-run flags. `configs/paths.yaml` holds Colab paths.
+**Frozen artifacts flow through Git** and are never modified: `splits/*.json`,
+`reports/*.csv`, `reports/gate_*.json`, `reports/final/`, `report/tables/*.csv`
+and the executed notebooks. Data (~762 MB on shared Drive) and checkpoints never
+enter the repo.
 
-**Frozen artifacts flow through Git.** `splits/*.json` (trace-id lists + μ/σ + axes/classes metadata) and `reports/*.csv` (inventory, contingency) are day-1 deliverables committed once and never modified. Data (~762 MB on shared Drive) and checkpoints never enter the repo.
+## Non-negotiable rules (§0 — violations invalidate results)
 
-## Non-negotiable rules (pipeline §0 — violations invalidate results)
+1. Splits are frozen as JSON on Git and never edited afterwards.
+2. **Split by trace, never by window** — windows of one trace on two sides of a
+   split is leakage. All 4 antennas of a trace stay on the same side.
+3. μ/σ computed on train only, per rotation, stored in the split file, reused
+   identically on val/test.
+4. Every run saves: full YAML config, seed, git hash, checkpoints, per-set CSV
+   metrics. One shared eval harness (`checkpoint → CSV`) for all streams.
+5. Seed 42 everywhere (init, per-epoch sampler reseed, augmentation); the only
+   exception is the two pre-registered seed-43 replicates. Differences under ~2
+   points are "comparable", not improvements.
+6. No training run outside the budget table (§8.4).
+7. **The test set was evaluated once, on 2026-07-22, with val-selected
+   checkpoints.** That session is closed and the row list is frozen. Any further
+   test access would invalidate the protocol.
 
-1. Splits are frozen on day 1 as JSON on Git and never edited afterwards.
-2. **Split by trace, never by window** — windows of one trace in both train and test is leakage.
-3. Normalization μ/σ computed on train only, per rotation, stored in the split file, reused identically on val/test.
-4. Every run saves: full YAML config, seed, git hash, checkpoints, per-set CSV metrics. One shared eval harness (`checkpoint → CSV`) for all streams.
-5. Single seed 42 everywhere (init, samplers reseeded per epoch, augmentation). Differences under ~2 points are "comparable", not improvements.
-6. No training run outside the budget table (§8.4) or before the day-2 throughput gate passes.
-7. **The test set is evaluated once, at the end, with the val-selected checkpoint only.** Every test invocation goes through the logging harness — including C0's SHARP-repo-style eval, via wrapper.
-
-Domain-specific constraints worth remembering: velocity-axis flip and time flip are forbidden augmentations (§3); gradient accumulation is forbidden in SupCon phase A (§4.2); the P×K sampler enforces distinct traces with a ≥340 offset on reuse (§4.2).
+Domain constraints worth remembering: velocity-axis flip and time flip are
+forbidden augmentations (§3); gradient accumulation is forbidden in SupCon phase
+A (§4.2); the P×K sampler enforces distinct traces with a ≥340 offset on reuse
+(§4.2); the frozen `ce`/`supcon_view` augmentation profiles are byte-identical
+and new profiles are added additively (§3).

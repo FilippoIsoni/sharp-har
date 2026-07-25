@@ -1,3 +1,8 @@
+<!-- SUPERSEDED — archived 2026-07-25. Do not read this document for current
+information and do not update it. It has been replaced by ../../PROJECT.md
+(single source of truth); its statistical protocol, literature framing and incidence proof live on in PROJECT.md §9 and Part IV; the G1–G12 gap list was closed 2026-07-23. Kept verbatim below
+this banner as the historical record. -->
+
 # CONSOLIDATION REVIEW
 
 > Literature-grounded review of directions to **consolidate the project and

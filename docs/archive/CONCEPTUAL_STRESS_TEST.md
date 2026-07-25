@@ -1,3 +1,8 @@
+<!-- SUPERSEDED — archived 2026-07-25. Do not read this document for current
+information and do not update it. It has been replaced by ../../PROJECT.md
+(single source of truth); its conclusions live on as the binding “allowed wording” table in PROJECT.md Part IV §3, and its two implementation items (L6, L8) as decisions in Part V and results in Part III. Kept verbatim below
+this banner as the historical record. -->
+
 # CONCEPTUAL STRESS TEST
 
 > Multi-level conceptual pressure test of the project (2026-07-20) — an

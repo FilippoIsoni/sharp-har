@@ -5,6 +5,14 @@ changelog"; §0.1 forbids editing the frozen split JSONs. Resolution:
 this file, committed next to the splits, is that changelog — the JSONs
 themselves are never touched.
 
+> **Note (2026-07-25).** This file stays in place as the dated
+> pre-registration audit trail; its entries are historical and are never
+> rewritten. Documents they cite by their old names (`STATUS.md`,
+> `CONSOLIDATION_REVIEW.md`, `CONCEPTUAL_STRESS_TEST.md`) now live under
+> `docs/archive/`; the current summary of every decision below is
+> `PROJECT.md` Part V, and section references (§X.Y) resolve to
+> `PROJECT.md` Part I.
+
 ## 2026-07-16 — Escalation (a): phase-A epoch_steps 400 → 300
 
 - **Trigger:** day-3 phase-A gate NO-GO (`reports/gate_day3_phase_a.json`,

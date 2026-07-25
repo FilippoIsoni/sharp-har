@@ -1,3 +1,8 @@
+<!-- SUPERSEDED — archived 2026-07-25. Do not read this document for current
+information and do not update it. It has been replaced by ../../PROJECT.md
+(single source of truth); its specification lives on as PROJECT.md Part I, which preserves this document's section numbering (§0–§9) so the `Ref. §X.Y` citations in `sharp_har/` still resolve. Kept verbatim below
+this banner as the historical record. -->
+
 # Pipeline sperimentale — WiFi CSI Human Activity Recognition (NNDL Project) — v5
 
 **Dataset:** Doppler traces pre-estratti dal dataset Meneghello et al. (IEEE DataPort, 80 MHz, 802.11ac) — copia già disponibile su Drive condiviso `DATASET_SHARP`

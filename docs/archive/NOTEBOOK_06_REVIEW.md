@@ -1,3 +1,8 @@
+<!-- SUPERSEDED — archived 2026-07-25. Do not read this document for current
+information and do not update it. It has been replaced by ../../PROJECT.md
+(single source of truth); its measured-numbers appendix and its two declared caveats live on in PROJECT.md Part III; the notebook is report-grade and its checklist is closed. Kept verbatim below
+this banner as the historical record. -->
+
 # NOTEBOOK 06 — DEEP REVIEW
 
 > Multi-level review of `notebooks/06_final_analysis.ipynb`, produced 2026-07-22.

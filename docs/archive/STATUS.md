@@ -1,3 +1,8 @@
+<!-- SUPERSEDED — archived 2026-07-25. Do not read this document for current
+information and do not update it. It has been replaced by ../../PROJECT.md
+(single source of truth); its measured results, run record and decisions live on in PROJECT.md Parts II, III and V; the session chronicle was deliberately not carried over (it is in git history and in the archived notebooks). Kept verbatim below
+this banner as the historical record. -->
+
 # STATUS
 
 > Single synthetic source for "where we are" in the pipeline. Update it
