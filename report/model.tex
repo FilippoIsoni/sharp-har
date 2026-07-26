@@ -193,9 +193,8 @@ our model and internal control), C2 (CE+GRL), C3 (SupCon) and C4 (SupCon+GRL).
 C4 was \emph{closed on evidence and never trained}: the diagnostics of
 \secref{sec:res_diag} show no readable domain target under either loss family,
 so its expected outcome was ``C3 plus noise''. Three pre-registered arms
-complete the picture --- C3-ft, a full CE fine-tune from the SupCon encoder;
-C1-aug, the amplitude-augmentation arm; and C1-sharplike, the reference
-network inside the exact C1 recipe.
+complete the picture: C3-ft (a full CE fine-tune from the SupCon encoder),
+C1-aug (amplitude augmentation) and C1-sharplike (the backbone ablation).
 
 \textbf{Batching, optimization and reproducibility.} The CE configurations
 draw uniform batches of $256$ (window, antenna) samples and optimize an
