@@ -29,8 +29,10 @@ sharp_har/     the versioned package — ALL logic lives here
 configs/       one YAML per run
 notebooks/     thin runners (templates output-free; executed copies in runs/)
 splits/        frozen split JSONs + pre-registration changelog
-reports/       measured artifacts (inventory, gates, the single test session)
-report/        the IEEE paper: sources, 8 measured tables, figures
+reports/       measured artifacts (inventory, gates, the single test session,
+               the 8 report tables, the report figures)
+report/        the IEEE paper build tree: LaTeX sources, IEEEtran, the copies
+               of the tables and figures it typesets
 docs/archive/  superseded documents, kept for the record only
 ```
 
