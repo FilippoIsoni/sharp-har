@@ -122,11 +122,10 @@ C2 loses $15.8$ accuracy points on test. The direction is stable on both seeds
 interval $[-0.323,+0.034]$ crosses zero: the same $11$ traces resolve half that
 gap for C3, so the limit is not their number but their agreement, C2's damage
 falling on the H, W and S traces. The same-configuration spread is
-$0.5$ points for C1 against $4.7$ for C2: the adversary appears to
-cost stability as well as accuracy. A linear probe on C2's \emph{frozen}
+$0.5$ points for C1 against $4.7$ for C2. A linear probe on C2's \emph{frozen}
 features reaches $0.720$ test accuracy, $7$ points above its own trained head
-($0.647$), against $+0.002$ for C1: much of the damage
-sits in the head, not the representation.
+($0.647$), against $+0.002$ for C1: the damage splits about evenly
+between representation and head.
 
 \subsection{Why: the adversary has no target}
 \label{sec:res_diag}
@@ -145,9 +144,9 @@ $0.854$ and $0.818$ those two are weak tests, degenerate for the same incidence
 reason that carries the argument below. None of them is linearly readable
 from the features, on precisely the data an in-training adversary reads. The
 same probes on the C2, C3 and C3-ft encoders, on all three contrastive
-checkpoints and on the second rotation --- trivially so on C2, by
-construction --- return the same
-verdict, the largest positive deviation anywhere being $+0.015$; the right
+checkpoints and on the second rotation return the same
+verdict, the largest positive deviation anywhere being $+0.015$ --- though C2's
+own control falls to $0.893$, the adversary's cost in fit, not only transfer; the right
 column of \fig{fig:tsne} is the geometric counterpart, capture-set colours
 uniformly mixed inside every activity cluster.
 
@@ -156,8 +155,8 @@ but the adversary is an MLP; here there is
 nothing to read, and the adversary head shows it directly --- on both seeds it
 never left the majority-class floor, already at epochs $1$--$2$ with $\lambda$
 still ramping, so it never became a discriminator at all. What reaches the
-encoder is then gradient noise, and \secref{sec:res_grl} locates its damage:
-the representation survives it, the jointly trained head does not.
+encoder is then gradient noise, and \secref{sec:res_grl} locates its damage in both the
+representation and the head.
 The implication is structural:
 with the bedroom in five capture sets and one set for each other room
 (\secref{sec:model}), any
