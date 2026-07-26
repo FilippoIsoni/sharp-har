@@ -117,6 +117,9 @@ filippo.schiabel@studenti.unipd.it, melissa.dedej@studenti.unipd.it}
 
 \begin{document}
 
+% Applies the IEEEtran.bst control entry in biblio.bib (IEEE "et al." rule).
+\bstctlcite{IEEEexample:BSTcontrol}
+
 \maketitle
 
 \begin{abstract}
@@ -134,9 +137,8 @@ only, the test set evaluated exactly once, and differences assessed by a
 trace-level paired bootstrap. Neither objective helps, and each fails for its
 own measured reason. Our deep residual CE model reaches macro-F1 $0.804$ on
 the unseen environment. SupCon loses $7.8$ accuracy points with a bootstrap
-interval that excludes zero, and the deficit is in the representation, not in
-the readout: kNN, nearest-class-mean and a full fine-tune all fail to recover
-it, so its features carry less of what separates the activities than CE's do.
+interval that excludes zero, and the deficit is in the representation, not the
+readout: kNN, nearest-class-mean and a full fine-tune all fail to recover it.
 The GRL loses $15.8$ points --- more, but unresolved, its damage falling on a
 few traces --- with a $10\times$ larger seed spread, because it has no target:
 no domain attribute is linearly readable from the features an adversary reads,
@@ -163,7 +165,10 @@ Cross-Environment Generalization, Contrastive Learning, Adversarial Training.
 \input{conclusions}
 
 \bibliography{biblio}
-\bibliographystyle{ieeetr}
+% IEEEtranBST.bst is the official IEEEtran.bst v1.14, byte-identical, vendored
+% under a distinct name: the shipped IEEEtran/ *directory* shadows the plain
+% style name and BibTeX aborts trying to open the directory as a file.
+\bibliographystyle{IEEEtranBST}
 
 \end{document}
 

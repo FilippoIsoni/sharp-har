@@ -8,12 +8,13 @@
 
 \textbf{Statistical protocol.} With $11$ test traces the \emph{trace}, not the
 window, is the unit of analysis: the windows of one recording share a channel
-and are not independent evidence. Differences are assessed by a trace-level
-\emph{paired} bootstrap ($N=10^4$) on \emph{accuracy}; macro-F1 is descriptive
+and are not independent evidence~\cite{Hammerla-2015}. Differences are assessed by a trace-level
+\emph{paired} percentile bootstrap~\cite{Efron-1993} ($N=10^4$) on \emph{accuracy}; macro-F1 is descriptive
 only, since six of the eight test classes are a single trace and just
 $\sim$2.8\% of resamples contain all eight. Bootstrap
-and seed variance are never merged, and since $\sim$10 comparisons share the
-same traces, C1--C2 and C1--C3 are primary and the rest exploratory.
+and seed variance are never merged~\cite{Bouthillier-2021}, and since $\sim$10
+comparisons share the same traces, C1--C2 and C1--C3 are primary and the rest
+exploratory.
 
 \subsection{Main results}
 \label{sec:res_main}
@@ -64,14 +65,14 @@ holds out $20\%$ of the training capture set for early stopping, which the
 reference implementation does not. It supports no ``we reproduced $X\%$''
 claim, only that our apparatus reproduces the prior approach's
 \emph{behaviour}, degrading to macro-F1 $0.605$ over the
-held-out capture sets as the original work reports. Since C0 differs from
+held-out capture sets as the original work reports~\cite{Meneghello-2023}. Since C0 differs from
 our model in protocol, class set, fusion \emph{and} architecture at once, the
 like-for-like comparison is the ablation \emph{C1-sharplike}: the reference
 network inside the exact C1 recipe, only the backbone changed. It loses $23.5$
 accuracy points (test macro-F1 $0.543$ vs.\ $0.804$), CI $[-0.399,-0.092]$ ---
 ``deep beats near-linear-wide in this recipe'', on one axis only. Its role is
-to close the objection that our CE baseline is a strawman, so that the nulls
-below are measured against a strong control.
+to close the objection that our CE baseline is a strawman~\cite{Gulrajani-2021},
+so that the nulls below are measured against a strong control.
 
 \subsection{Supervised contrastive learning does not transfer better}
 \label{sec:res_supcon}
@@ -109,9 +110,9 @@ not four instruments: the readouts share cached features and agree partly by
 construction, while the fine-tune is a different path and carries the
 confirmation --- it is also the arm that controls the one difference the design
 cannot remove, since it retrains the encoder under C1's own sampler and
-augmentation profile. Both point the same way --- the SupCon features are less
-informative about the activity than CE's, and no head, linear or not, recovers
-what they do not encode.
+augmentation profile. Both point the same way: the SupCon features are less
+informative about the activity than CE's, and no head recovers what they do
+not encode.
 
 \subsection{The adversary costs accuracy and stability}
 \label{sec:res_grl}
@@ -149,7 +150,7 @@ verdict, the largest positive deviation anywhere being $+0.015$; the right
 column of \fig{fig:tsne} is the geometric counterpart, capture-set colours
 uniformly mixed inside every activity cluster.
 
-A GRL removes only what its discriminator reads --- and our probe is linear,
+A GRL removes only what its discriminator reads~\cite{Ganin-2016} --- and our probe is linear,
 but the adversary is an MLP; here there is
 nothing to read, and the adversary head shows it directly --- on both seeds it
 never left the majority-class floor, already at epochs $1$--$2$ with $\lambda$
@@ -192,17 +193,16 @@ physically sensible (\fig{fig:confusion}): C1 confuses mainly
 walking$\leftrightarrow$running and H$\to$J, pairs with adjacent Doppler
 signatures, and recognizes the empty room perfectly; its largest remaining
 confusion is S$\to$L, a pair inside the low-motion group that C3's embedding
-chains into one filament. The confusions are between
-physically similar activities, i.e.\ genuine motion features rather than room
+chains into one filament; the confusions track motion similarity, not room
 artifacts. Calibration
 dissociates from accuracy: every configuration above is \emph{under}confident, C1 most (ECE
-$0.243$; antenna averaging, plus label smoothing) while the GRL model is the
+$0.243$; antenna averaging, plus label smoothing~\cite{Mueller-2019}) while the GRL model is the
 best calibrated ($0.070$) and the least accurate objective, so any deployment consuming
-confidence scores needs temperature scaling.
+confidence scores needs temperature scaling~\cite{Guo-2017}.
 
 \textbf{Scope and limitations.} The same session also evaluated two further
 pre-registered arms that we do not discuss for lack of space --- test-time
-adaptation (AdaBN~\cite{Li-2017}, T3A~\cite{Iwasawa-2021}) and amplitude
+adaptation and amplitude
 augmentation --- neither of which resolved an improvement over C1 (best $+0.073$,
 on the second rotation, interval crossing zero). Beyond those, model selection is
 in-domain ($9$ held-out training traces), so the selected checkpoints may be

@@ -11,10 +11,9 @@ still and less stable across seeds, while the deep CE model beats the
 shallow--wide reference design by $23.5$ accuracy points --- depth mattered
 more here than any invariance objective. What we consider most useful
 are the two reasons \emph{why}. The contrastive
-encoder fails in the representation itself: kNN and nearest-class-mean
-readouts, a concatenation control and a full CE fine-tune all decline to
-recover the gap, so its features carry less of what tells the activities
-apart. The adversary
+encoder fails in the representation itself: no readout we tried, nor a full CE
+fine-tune, recovers the gap --- its features carry less of what tells the
+activities apart. The adversary
 fails for the complementary reason: frozen-encoder probes show that no domain
 attribute is linearly readable from the learned features, so it has nothing to
 remove. Both preconditions cost one probe on cached features to check, and

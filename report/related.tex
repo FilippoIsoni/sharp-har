@@ -6,7 +6,7 @@
 \textbf{WiFi CSI human activity recognition.} Early CSI HAR pipelines fed
 hand-crafted amplitude/phase statistics to shallow classifiers; the field then
 moved to deep models on time--frequency representations, of which the
-micro-Doppler spectrogram is widely used~\cite{Wang-2019}. Our reference point is SHARP~\cite{Meneghello-2023}:
+micro-Doppler spectrogram is widely used~\cite{Wang-2019,Wang-2026}. Our reference point is SHARP~\cite{Meneghello-2023}:
 it sanitizes the phase of commodity IEEE~802.11 CSI, reconstructs the channel,
 extracts a Doppler representation and classifies with a shallow, wide
 convolutional network followed by decision fusion across antennas. SHARP
@@ -18,27 +18,29 @@ with a single-use test session, and reimplement the SHARP network both as a
 protocol anchor and as a backbone ablation inside our own recipe, separating
 the architecture axis from the objective axis.
 
-\textbf{Domain generalization by adversarial invariance.} The dominant recipe
-for making a representation domain-invariant is adversarial: a domain
+\textbf{Domain generalization by adversarial invariance.} The best-known
+recipe for making a representation domain-invariant is adversarial: a domain
 discriminator is trained on the encoder features while a gradient reversal
 layer (GRL)~\cite{Ganin-2016} inverts its gradient into the encoder, so the
 encoder is optimized to make the domain \emph{unpredictable} while the task
-head still classifies. WiFi sensing pursues the same
-invariance~\cite{Wang-2024}, adversarially or by aligning feature
-distributions across training environments, on the implicit and rarely tested
+head still classifies. WiFi sensing pursues the same invariance
+adversarially~\cite{Wang-2021} or by aligning feature distributions across
+training environments~\cite{Wang-2024}, on the implicit and rarely tested
 precondition that the nuisance factor is present and readable in the features;
 when it is not, the adversary reduces to a gradient of noise. A central point
 of this report is to \emph{measure} that precondition.
 
 \textbf{Contrastive representation learning.} SupCon~\cite{Khosla-2020}
 extends the self-supervised contrastive objective of SimCLR~\cite{Chen-2020} by treating all
-same-label samples as positives, and is reported to yield representations more
-robust and transferable than cross-entropy ones. The promise is geometric ---
+same-label samples as positives, and reports representations more robust and
+transferable than cross-entropy ones --- a transferability since contested for
+objectives that improve in-domain accuracy~\cite{Kornblith-2021}.
+The promise is geometric ---
 a class-collapsed, well-separated embedding --- but whether that geometry
 survives a readout, and whether it transfers across environments, is
 empirical: we interrogate it under several readouts and a full fine-tune, so
 that a negative result cannot be blamed on one. Other lines pursue
-generalization by meta-learning~\cite{Ding-2020} or self-supervised
-pre-training~\cite{Yang-2023}; these are out of scope here, since each replaces
+generalization by meta-learning or self-supervised
+pre-training~\cite{Wang-2026}; these are out of scope here, since each replaces
 backbone and protocol as well as objective --- precisely the confound this
 study avoids.

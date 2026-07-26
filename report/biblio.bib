@@ -2,8 +2,22 @@
 % NOTE: verify every volume/number/pages field against the canonical source
 % before submission; the entries below are complete but should be double-checked.
 
+% IEEEtran.bst control entry, applied by \bstctlcite in template.tex. It turns
+% on the "et al." rule (more than four names -> first name + et al.), which is
+% what keeps the reference list inside the 6-page budget: at the IEEE default of
+% six the list runs one entry onto a seventh page. Do not raise or disable it
+% without re-checking the page count.
+@IEEEtranBSTCTL{IEEEexample:BSTcontrol,
+	CTLuse_forced_etal       = "yes",
+	CTLmax_names_forced_etal = "4",
+	CTLnames_show_etal       = "1",
+	CTLuse_alt_spacing       = "yes",
+	CTLalt_stretch_factor    = "4",
+	CTLdash_repeated_names   = "yes"
+	}
+
 @article{Meneghello-2023,
-	Author = {Francesca Meneghello and Domenico Garlisi and Nicol\`o Dal Fabbro and Ilenia Tinnirello and Michele Rossi},
+	Author = {Francesca Meneghello and Domenico Garlisi and Nicol\`o {Dal Fabbro} and Ilenia Tinnirello and Michele Rossi},
 	Title = {{SHARP: Environment and Person Independent Activity Recognition with Commodity IEEE 802.11 Access Points}},
 	Journal = {{IEEE Transactions on Mobile Computing}},
 	Volume = {22},
@@ -41,6 +55,59 @@
 	Year = {2020}
 	}
 
+% Carries the Introduction's motivating premise ("in-distribution accuracy is
+% high, cross-environment generalization is the obstacle") and, in Section II,
+% the out-of-scope families (meta-learning, self-supervised pre-training): it
+% is the survey that taxonomizes exactly those. Accepted in IEEE COMST 2026,
+% DOI 10.1109/COMST.2026.3670854; no volume/pages assigned yet.
+@article{Wang-2026,
+	Author = {Fei Wang and Tingting Zhang and Wei Xi and Han Ding and Ge Wang and Di Zhang and Yuanhao Cui and Fan Liu and Jinsong Han and Jie Xu and Tony Xiao Han},
+	Title = {{A Survey on Wi-Fi Sensing Generalizability: Taxonomy, Techniques, Datasets, and Future Research Prospects}},
+	Journal = {{IEEE Communications Surveys \& Tutorials}},
+	Note = {{Early access}},
+	Year = {2026}
+	}
+
+% Supports rule §0.2 (split by trace, never by window) and the choice of the
+% trace as the statistical unit in Section VI: overlapping/adjacent windows of
+% one recording are pairwise similar, so window-level cross-validation
+% over-estimates activity-recognition accuracy.
+@inproceedings{Hammerla-2015,
+	Author = {Nils Y. Hammerla and Thomas Pl\"otz},
+	Title = {{Let's (Not) Stick Together: Pairwise Similarity Biases Cross-Validation in Activity Recognition}},
+	Pages = {1041--1051},
+	Booktitle = {{ACM International Joint Conference on Pervasive and Ubiquitous Computing (UbiComp)}},
+	Address = {{Osaka, Japan}},
+	Month = sep,
+	Year = {2015}
+	}
+
+@book{Efron-1993,
+	Author = {Bradley Efron and Robert J. Tibshirani},
+	Title = {{An Introduction to the Bootstrap}},
+	Publisher = {{Chapman \& Hall/CRC}},
+	Address = {{Boca Raton, FL, US}},
+	Year = {1993}
+	}
+
+% Prior evidence that objectives improving in-domain accuracy can yield *less*
+% transferable frozen features -- SupCon among them. Cited in Section II so
+% that our SupCon null is positioned against the literature, not asserted.
+@inproceedings{Kornblith-2021,
+	Author = {Simon Kornblith and Ting Chen and Honglak Lee and Mohammad Norouzi},
+	Title = {{Why Do Better Loss Functions Lead to Less Transferable Features?}},
+	Booktitle = {{Advances in Neural Information Processing Systems (NeurIPS)}},
+	Address = {{Online}},
+	Month = dec,
+	Year = {2021}
+	}
+
+% UNCITED as of 2026-07-26, kept for reuse. AdaBN and T3A were named in the
+% Section VI limitations clause; the two entries cost 6 lines of reference list
+% and were spent on arms the report explicitly declines to discuss, so they lost
+% the page-budget trade against citations that back claims actually made. Restore
+% them only together, and only with ~6 lines freed -- the text reads
+% "test-time adaptation" generically and needs no citation as it stands.
 @inproceedings{Li-2017,
 	Author = {Yanghao Li and Naiyan Wang and Jianping Shi and Jiaying Liu and Xiaodi Hou},
 	Title = {{Revisiting Batch Normalization for Practical Domain Adaptation}},
@@ -79,20 +146,11 @@
 	Year = {2016}
 	}
 
-% Ding-2020 and Yang-2023 are cited only as "declared out of scope" pointers in
-% Section II. Wang-2024 (AirFi) carries a substantive claim there: it achieves
+% Wang-2024 (AirFi) and Wang-2021 (WiHARAN) carry the two disjuncts of the same
+% sentence in Section II and are not interchangeable: AirFi reaches
 % cross-environment invariance by distribution alignment, NOT by an adversarial
-% discriminator -- do not restate it as a GRL method.
-@inproceedings{Ding-2020,
-	Author = {Shuya Ding and Zhe Chen and Tianyue Zheng and Jun Luo},
-	Title = {{RF-Net: A Unified Meta-Learning Framework for RF-enabled One-Shot Human Activity Recognition}},
-	Pages = {517--530},
-	Booktitle = {{ACM Conference on Embedded Networked Sensor Systems (SenSys)}},
-	Address = {{Virtual Event, Japan}},
-	Month = nov,
-	Year = {2020}
-	}
-
+% discriminator -- do not restate it as a GRL method; WiHARAN is the adversarial
+% one.
 @article{Wang-2024,
 	Author = {Dazhuo Wang and Jianfei Yang and Wei Cui and Lihua Xie and Sumei Sun},
 	Title = {{AirFi: Empowering WiFi-based Passive Human Gesture Recognition to Unseen Environment via Domain Generalization}},
@@ -104,15 +162,56 @@
 	Year = {2024}
 	}
 
-@article{Yang-2023,
-	Author = {Jianfei Yang and Xinyan Chen and Han Zou and Dazhuo Wang and Lihua Xie},
-	Title = {{AutoFi: Toward Automatic Wi-Fi Human Sensing via Geometric Self-Supervised Learning}},
-	Journal = {{IEEE Internet of Things Journal}},
-	Volume = {10},
-	Number = {8},
-	Pages = {7416--7425},
+@inproceedings{Wang-2021,
+	Author = {Zhengyang Wang and Sheng Chen and Wei Yang and Yang Xu},
+	Title = {{Environment-Independent Wi-Fi Human Activity Recognition with Adversarial Network}},
+	Pages = {3330--3334},
+	Booktitle = {{IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)}},
+	Address = {{Online}},
+	Month = jun,
+	Year = {2021}
+	}
+
+@inproceedings{Bouthillier-2021,
+	Author = {Xavier Bouthillier and Pierre Delaunay and Mirko Bronzi and Assya Trofimov and Brennan Nichyporuk and Justin Szeto and Nazanin Mohammadi Sepahvand and Edward Raff and Kanika Madan and Vikram Voleti and Samira Ebrahimi Kahou and Vincent Michalski and Tal Arbel and Chris Pal and Ga\"el Varoquaux and Pascal Vincent},
+	Title = {{Accounting for Variance in Machine Learning Benchmarks}},
+	Volume = {3},
+	Pages = {747--769},
+	Booktitle = {{Conference on Machine Learning and Systems (MLSys)}},
+	Address = {{Online}},
 	Month = apr,
-	Year = {2023}
+	Year = {2021}
+	}
+
+@inproceedings{Gulrajani-2021,
+	Author = {Ishaan Gulrajani and David Lopez-Paz},
+	Title = {{In Search of Lost Domain Generalization}},
+	Booktitle = {{International Conference on Learning Representations (ICLR)}},
+	Address = {{Online}},
+	Month = may,
+	Year = {2021}
+	}
+
+@inproceedings{Guo-2017,
+	Author = {Chuan Guo and Geoff Pleiss and Yu Sun and Kilian Q. Weinberger},
+	Title = {{On Calibration of Modern Neural Networks}},
+	Pages = {1321--1330},
+	Booktitle = {{International Conference on Machine Learning (ICML)}},
+	Address = {{Sydney, Australia}},
+	Month = aug,
+	Year = {2017}
+	}
+
+% Supports the calibration aside in Section VI: label smoothing shifts a model
+% away from overconfidence, which is the mechanism the text names alongside
+% antenna averaging for C1's *under*confidence.
+@inproceedings{Mueller-2019,
+	Author = {Rafael M\"uller and Simon Kornblith and Geoffrey Hinton},
+	Title = {{When Does Label Smoothing Help?}},
+	Booktitle = {{Advances in Neural Information Processing Systems (NeurIPS)}},
+	Address = {{Vancouver, Canada}},
+	Month = dec,
+	Year = {2019}
 	}
 
 @article{vanderMaaten-2008,

@@ -63,7 +63,7 @@ R (running), J (jumping) and L (sitting still), and the extended set adds C
 (sit-down and stand-up), H (arm exercise) and S (standing still).
 
 \textbf{Front-end, windowing and normalization.} The data is distributed as
-Doppler traces already produced by the reference front-end (CSI phase
+Doppler traces already produced by the reference front-end~\cite{Meneghello-2023} (CSI phase
 sanitization, channel reconstruction, and a short-time Fourier transform along
 the packet axis with hop $T_c \approx 6$\,ms), giving per antenna a map of
 reflected power over $100$ velocity bins and time, which we consume as-is.
@@ -84,14 +84,15 @@ scaling ($s\sim\mathcal{U}(0.8,1.2)$), masks filled with the
 post-standardization mean. The cross-entropy configurations apply each with
 probability $0.5$; the contrastive one draws \emph{two independent views} of
 each window at $0.8$, with additive Gaussian noise ($\sigma=0.05$) at $0.5$,
-since SupCon needs views hard enough for its positives to be informative.
+since SupCon needs views hard enough for its positives to be
+informative~\cite{Chen-2020}.
 Velocity is masked sparingly,
 as that axis carries the feature separating walking from running.
 
 \textbf{Splits and rotations.} Two rules are enforced by blocking assertions:
 \emph{we split by trace, never by window} --- all windows of a trace, on all
 four antennas, fall on one side, since otherwise the static channel leaks and
-inflates every metric --- and splits are frozen once as JSON under version
+inflates every metric~\cite{Hammerla-2015} --- and splits are frozen once as JSON under version
 control. The primary rotation holds out the laboratory ($81/9/11$ traces), the
 hardest choice available, and a second holds out the living room ($80/6/15$)
 for replication; a held-out capture set varies room, monitor position, subject
@@ -142,14 +143,15 @@ behind a gradient reversal layer, giving the C2 objective
 \lambda(p) = \frac{2}{1+e^{-10p}} - 1 ,
 \label{eq:grl}
 \end{equation}
-with $p = \min(\mathrm{epoch}/20, 1)$, a ramp fixed in advance so the
-adversary reaches full strength independently of when early stopping fires.
+with $p = \min(\mathrm{epoch}/20, 1)$, the ramp of~\cite{Ganin-2016} fixed in
+advance so the adversary reaches full strength independently of when early
+stopping fires.
 The contrastive head is an MLP $d_{\mathrm{enc}} \to d_{\mathrm{enc}} \to 128$
 with $\ell_2$-normalized output, trained with the supervised contrastive
 loss~\cite{Khosla-2020} at temperature $\tau=0.1$. C3 trains in two phases: phase A optimizes it for a fixed horizon of $60$ epochs with no
 in-loop selection, checkpointing on a pre-committed grid (epochs $40/50/60$);
 phase B freezes the encoder, discards the projection head and fits a linear
-probe on cached features, and only the grid checkpoint with the best
+probe on cached features~\cite{Chen-2020}, and only the grid checkpoint with the best
 validation macro-F1 reaches test. That frozen-probe recipe (Adam, $10^{-3}$,
 $\leq30$ epochs, early stopping on the shared metric) is reused for every
 probe in this report, so encoders are always compared under one readout.
@@ -164,7 +166,7 @@ probe in this report, so encoders are always compared under one readout.
   enc/.style={box, fill=black!8, text width=19mm, minimum height=13mm},
   tag/.style={font=\scriptsize\itshape}]
 \node[box] (in) {window\\$340{\times}100$};
-\node[enc, right=4mm of in] (e) {encoder $f_\theta$\\ResNet V-B\\$d_{\mathrm{enc}}{=}256$};
+\node[enc, right=4mm of in] (e) {encoder $f_\theta$\\ResNet, adapted\\$d_{\mathrm{enc}}{=}256$};
 \node[box, right=7mm of e, yshift=10mm] (ce) {linear head\\CE $+$ smoothing};
 \node[box, right=7mm of e] (grl) {GRL $\lambda(p)$\\capture-set MLP};
 \node[box, right=7mm of e, yshift=-10mm] (sc) {projection head\\SupCon, $\tau{=}0.1$};
@@ -190,9 +192,9 @@ for a domain attribute.}
 \textbf{Configurations.} The five configurations span a $2{\times}2$ design
 over loss family and adversary, plus the anchor: C0 (prior approach), C1 (CE,
 our model and internal control), C2 (CE+GRL), C3 (SupCon) and C4 (SupCon+GRL).
-C4 was \emph{closed on evidence and never trained}: the diagnostics of
-\secref{sec:res_diag} show no readable domain target under either loss family,
-so its expected outcome was ``C3 plus noise''. Three pre-registered arms
+C4 was \emph{closed on evidence and never trained}: with no readable domain
+target under either loss family (\secref{sec:res_diag}), its expected outcome
+was ``C3 plus noise''. Three pre-registered arms
 complete the picture: C3-ft (a full CE fine-tune from the SupCon encoder),
 C1-aug (amplitude augmentation) and C1-sharplike (the backbone ablation).
 
@@ -216,7 +218,7 @@ measure the training-variance floor.
 
 \textbf{Evaluation harness and the single-use test rule.} One shared harness
 maps a checkpoint to per-set metric files --- accuracy, macro-F1, per-class
-F1, confusion matrices and expected calibration error --- always reported with
+F1, confusion matrices and expected calibration error~\cite{Guo-2017} --- always reported with
 the
 number of test traces, since that is the effective sample size. Checkpoints
 are selected on validation only and the \emph{test set is evaluated exactly

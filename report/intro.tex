@@ -11,19 +11,22 @@ Recognition (HAR) from CSI needs no wearable, no camera and no cooperation
 from the subject, which makes it attractive for assisted living, surveillance
 and smart-home applications~\cite{Wang-2019}. The micro-Doppler signature ---
 the distribution of reflected power over velocity and time --- is among the
-most informative representations derived from CSI, and is our input throughout.
+representations most widely used for it, and is our input throughout.
 
 What separates CSI HAR from deployment is not in-distribution accuracy, which
-is by now high, but \emph{generalization across environments}: a model trained
+is by now high, but \emph{generalization across environments}~\cite{Wang-2026}:
+a model trained
 in one room entangles the activity with that room's static geometry. The
 literature answers with two representation-shaping objectives ---
 \emph{adversarial domain invariance}, where a domain classifier behind a
 gradient reversal layer (GRL)~\cite{Ganin-2016} pushes the encoder to discard
 environment-specific cues, and \emph{supervised contrastive} (SupCon)
-learning~\cite{Khosla-2020}, which promises a more transferable embedding
-geometry. Both are usually reported on the benchmarks where they helped, each
+learning~\cite{Khosla-2020}, which promises a more robust and transferable
+embedding geometry. Both are usually reported on the benchmarks where they
+helped, each
 with its own backbone and protocol; whether they help on a given dataset, and
-what must be true of it for them to help, is assumed more often than tested.
+what must be true of it for them to help, is assumed more often than
+tested~\cite{Gulrajani-2021}.
 
 We test exactly that, on the SHARP micro-Doppler
 dataset~\cite{Meneghello-2023} under a leave-one-environment-out (LOEO)
@@ -39,8 +42,7 @@ encoders: the contrastive features are not informative enough to separate the
 activities under any readout we tried, and no domain attribute is linearly
 readable from the features an adversary would consume, so on data with this
 structure the adversarial route could not have worked. Both preconditions cost
-one probe on cached features, and we argue they should be measured before
-either objective is trained.
+one probe on cached features.
 
 \textbf{Contributions.} The key contributions of this report are:
 \begin{itemize}
@@ -52,7 +54,7 @@ no variant improves on it.
 the one primary comparison the bootstrap resolves --- with the reason
 measured: non-linear readouts, a concatenation control and a full fine-tune
 agree that its features are not informative enough to tell the activities
-apart, so the loss is in the representation and no head can repair it.
+apart.
 \item The complementary explanation for the GRL, which loses $15.8$ points
 (unresolved: the damage falls on a few traces) with a $10\times$ larger seed
 spread: no domain attribute is linearly readable
