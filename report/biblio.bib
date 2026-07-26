@@ -37,6 +37,12 @@
 	Year = {2016}
 	}
 
+% Verified 2026-07-26 against the NeurIPS camera-ready: the paper claims higher
+% accuracy, robustness to natural corruptions and hyperparameter stability. It
+% does NOT claim better transfer -- §4.4 states "SupCon is on par with
+% cross-entropy [...] on transfer learning performance" and leaves the
+% objective/transfer connection to future work. Do not re-word Sections I--II
+% to attribute a transferability promise to this reference.
 @inproceedings{Khosla-2020,
 	Author = {Prannay Khosla and Piotr Teterwak and Chen Wang and Aaron Sarna and Yonglong Tian and Phillip Isola and Aaron Maschinot and Ce Liu and Dilip Krishnan},
 	Title = {{Supervised Contrastive Learning}},
@@ -91,8 +97,14 @@
 	}
 
 % Prior evidence that objectives improving in-domain accuracy can yield *less*
-% transferable frozen features -- SupCon among them. Cited in Section II so
-% that our SupCon null is positioned against the literature, not asserted.
+% transferable frozen features. Verified 2026-07-26: the nine objectives it
+% compares are softmax CE, label smoothing, dropout, logit penalty, logit
+% normalization, cosine softmax, sigmoid CE and squared error -- SupCon is NOT
+% among them, so Section II must keep the claim general ("objectives that
+% sharpen class separation"), never attribute a SupCon result to this paper.
+% The mechanism is what makes it apt here: greater penultimate-layer class
+% separation buys source accuracy and costs transfer, and class separation is
+% exactly what SupCon optimizes.
 @inproceedings{Kornblith-2021,
 	Author = {Simon Kornblith and Ting Chen and Honglak Lee and Mohammad Norouzi},
 	Title = {{Why Do Better Loss Functions Lead to Less Transferable Features?}},
@@ -146,11 +158,13 @@
 	Year = {2016}
 	}
 
-% Wang-2024 (AirFi) and Wang-2021 (WiHARAN) carry the two disjuncts of the same
-% sentence in Section II and are not interchangeable: AirFi reaches
-% cross-environment invariance by distribution alignment, NOT by an adversarial
-% discriminator -- do not restate it as a GRL method; WiHARAN is the adversarial
-% one.
+% Wang-2024 (AirFi) and Wang-2021 carry the two disjuncts of the same sentence
+% in Section II and are not interchangeable: AirFi reaches *cross-environment*
+% invariance by MMD alignment across the training environments. It does also
+% use an adversarial autoencoder, but that discriminator regularizes the latent
+% code against a chosen prior -- it is not a domain classifier and there is no
+% gradient reversal -- so do not move AirFi to the adversarial disjunct on the
+% strength of the word "adversarial"; Wang-2021 is the adversarial one.
 @article{Wang-2024,
 	Author = {Dazhuo Wang and Jianfei Yang and Wei Cui and Lihua Xie and Sumei Sun},
 	Title = {{AirFi: Empowering WiFi-based Passive Human Gesture Recognition to Unseen Environment via Domain Generalization}},

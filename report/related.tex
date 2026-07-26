@@ -32,9 +32,9 @@ of this report is to \emph{measure} that precondition.
 
 \textbf{Contrastive representation learning.} SupCon~\cite{Khosla-2020}
 extends the self-supervised contrastive objective of SimCLR~\cite{Chen-2020} by treating all
-same-label samples as positives, and reports representations more robust and
-transferable than cross-entropy ones --- a transferability since contested for
-objectives that improve in-domain accuracy~\cite{Kornblith-2021}.
+same-label samples as positives, and reports more robust representations than
+cross-entropy --- but only parity on transfer, and objectives that sharpen
+class separation can transfer worse~\cite{Kornblith-2021}.
 The promise is geometric ---
 a class-collapsed, well-separated embedding --- but whether that geometry
 survives a readout, and whether it transfers across environments, is
