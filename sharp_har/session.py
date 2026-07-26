@@ -1,7 +1,7 @@
 """§0.7 single final-test-session orchestration: the frozen pre-registered
 row list turned into shared-harness checkpoint -> CSV calls. Ref. §0.7, §9.
 
-Thin-notebook rule (CLAUDE.md architecture): notebook 05 declares the frozen
+Thin-notebook rule (PROJECT.md Part VI): notebook 05 declares the frozen
 ROWS table and the run mode and displays the results; this module owns the
 logic that reads the frozen artifacts and drives the four evaluation kinds,
 the same reason harness/probe/diagnostics logic lives in the package and not

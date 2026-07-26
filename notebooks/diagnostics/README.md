@@ -21,7 +21,7 @@ Rules:
   **Declared exception:** a diagnostic that graduates into a §9/§10.4
   report figure or metric (e.g. `viz.plot_embeddings`) belongs in the
   package like any other `viz.py` function, with cross-review before
-  freeze (CLAUDE.md: no logic in notebooks) — the notebook stays thin
+  freeze (PROJECT.md Part VI: no logic in notebooks) — the notebook stays thin
   and only calls it. The dividing line (sharpened 2026-07-18): truly
   one-off probes stay notebook-local; anything with its own new math
   whose numbers enter the report and that is re-run across sessions is

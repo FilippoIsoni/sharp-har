@@ -11,7 +11,7 @@
 > Those references resolve here. Parts II–VI are new and unnumbered.
 >
 > Every number in this document traces to a committed artifact:
-> `splits/*.json`, `reports/gate_*.json`, `reports/final/`, `report/tables/*.csv`.
+> `splits/*.json`, `reports/gate_*.json`, `reports/final/`, `reports/tables/*.csv`.
 > Nothing is quoted from a chat log or from notebook stdout.
 
 **Status — 2026-07-25.** Experiments are **closed**. The single test session ran
@@ -666,13 +666,13 @@ Session notebook archived as `notebooks/runs/2026_07_22_test_final.ipynb`.
 
 Post-session analysis ran **2026-07-23** (notebook 06, zero test contact of its
 own — it reads only the session CSVs), producing the 8 tables in
-`report/tables/` that Part III quotes.
+`reports/tables/` that Part III quotes.
 
 ---
 
 # PART III — MEASURED RESULTS
 
-All numbers below are read from `report/tables/*.csv` and `reports/final/`.
+All numbers below are read from `reports/tables/*.csv` and `reports/final/`.
 `n_traces` is quoted with every row: it is the effective n.
 
 ## 1. Main test table
