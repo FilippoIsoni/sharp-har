@@ -18,6 +18,12 @@ as `Ref. §X.Y`; Part I preserves that numbering. Superseded documents live in
 `report/` and the presentation. **No new training run, no new test contact, no
 split regeneration** — code freeze 2026-07-28, deadline 2026-07-30.
 
+**The report PDF is `report/final_report.pdf`; `report/template.pdf` is never
+modified.** Sources are `report/*.tex` with `template.tex` as the root, so a
+plain build overwrites `template.pdf` — compile into a temporary directory and
+copy the result over `final_report.pdf` instead. The IEEE budget is 6 pages:
+check the page count of every build and keep edits length-neutral.
+
 ## Language and style conventions
 
 - **All code, comments, docstrings, notebook text and commit messages are in

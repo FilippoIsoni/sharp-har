@@ -54,10 +54,11 @@ measured: non-linear readouts, a concatenation control and a full fine-tune
 agree that its features are not informative enough to tell the activities
 apart, so the loss is in the representation and no head can repair it.
 \item The complementary explanation for the GRL, which loses $15.8$ points
-(unresolved on $11$ traces) with a $10\times$ larger seed spread: no domain attribute is linearly readable
+(unresolved: the damage falls on a few traces) with a $10\times$ larger seed
+spread: no domain attribute is linearly readable
 from train features --- replicated on five encoders and two rotations --- so
-the adversary has nothing to remove, and the dataset's environment incidence
-makes this structural rather than accidental.
+the adversary has nothing to remove, and the environment incidence
+makes this structural, not accidental.
 \item A statistical protocol for small LOEO test sets, under which the
 backbone alone is worth $23.5$ accuracy points --- more than any objective we
 tested.

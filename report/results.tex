@@ -116,16 +116,16 @@ what they do not encode.
 \subsection{The adversary costs accuracy and stability}
 \label{sec:res_grl}
 
-C2 loses $15.8$ accuracy points on test. The direction is stable --- it holds
-on both seeds (seed 43 against seed 43, $20.0$ points) and on validation --- but the
-interval $[-0.323,+0.034]$ crosses zero: on $11$ traces even a $16$-point gap
-is unresolved. The replicates add a second observation: the
-same-configuration spread is
-$0.5$ accuracy points for C1 against $4.7$ for C2, so the adversary appears to
+C2 loses $15.8$ accuracy points on test. The direction is stable on both seeds
+(seed 43 against seed 43, $20.0$ points) and on validation, but the
+interval $[-0.323,+0.034]$ crosses zero: the same $11$ traces resolve half that
+gap for C3, so the limit is not their number but their agreement, C2's damage
+falling on the H, W and S traces. The same-configuration spread is
+$0.5$ points for C1 against $4.7$ for C2: the adversary appears to
 cost stability as well as accuracy. A linear probe on C2's \emph{frozen}
-features reaches $0.720$ test accuracy, $7$ points above C2's own trained head
-($0.647$), against a probe--head gap of $+0.002$ for C1: much of the damage
-sits in the classifier head, not in the representation.
+features reaches $0.720$ test accuracy, $7$ points above its own trained head
+($0.647$), against $+0.002$ for C1: much of the damage
+sits in the head, not the representation.
 
 \subsection{Why: the adversary has no target}
 \label{sec:res_diag}

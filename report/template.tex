@@ -137,11 +137,10 @@ the unseen environment. SupCon loses $7.8$ accuracy points with a bootstrap
 interval that excludes zero, and the deficit is in the representation, not in
 the readout: kNN, nearest-class-mean and a full fine-tune all fail to recover
 it, so its features carry less of what separates the activities than CE's do.
-The GRL loses $15.8$ points --- more, but unresolved on $11$ traces --- with a
-$10\times$ larger seed spread, because it has no target:
-no domain attribute is linearly readable from the features an adversary would
-consume, and the dataset's environment incidence leaves the target itself
-degenerate. The reference design's shallow--wide network loses $23.5$ points in
+The GRL loses $15.8$ points --- more, but unresolved, its damage falling on a
+few traces --- with a $10\times$ larger seed spread, because it has no target:
+no domain attribute is linearly readable from the features an adversary reads,
+and the dataset's environment incidence leaves the target degenerate. The reference design's shallow--wide network loses $23.5$ points in
 the identical recipe. We therefore recommend probing a contrastive encoder
 under several readouts, and the nuisance factor for readability, before
 investing in either objective.
