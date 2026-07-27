@@ -13,16 +13,24 @@ discrepancy gets discussed — never silently resolved. Module docstrings cite i
 as `Ref. §X.Y`; Part I preserves that numbering. Superseded documents live in
 `docs/archive/` and must not be read or updated.
 
-**Phase: the project is closed experimentally.** The single test session ran
-2026-07-22; the analysis closed 2026-07-23. What remains is the IEEE report in
-`report/` and the presentation. **No new training run, no new test contact, no
-split regeneration** — code freeze 2026-07-28, deadline 2026-07-30.
+**Phase: the project is closed.** The single test session ran 2026-07-22, the
+analysis closed 2026-07-23, the report was frozen 2026-07-26. Delivery is two
+artifacts — `report/Isoni_Schiabel_Dedej_report.pdf` and
+`Isoni_Schiabel_Dedej_code.zip` — and there is no presentation. **No new
+training run, no new test contact, no split regeneration** — code freeze
+2026-07-28, deadline 2026-07-30.
 
-**The report PDF is `report/final_report.pdf`; `report/template.pdf` is never
-modified.** Sources are `report/*.tex` with `template.tex` as the root, so a
-plain build overwrites `template.pdf` — compile into a temporary directory and
-copy the result over `final_report.pdf` instead. The IEEE budget is 6 pages:
-check the page count of every build and keep edits length-neutral.
+**The report PDF is `report/Isoni_Schiabel_Dedej_report.pdf`;
+`report/template.pdf` is never modified.** Sources are `report/*.tex` with
+`template.tex` as the root, so a plain build overwrites `template.pdf` —
+compile into a temporary directory and copy the result onto the delivered name
+instead. The IEEE budget is 6 pages: check the page count of every build and
+keep edits length-neutral.
+
+**`Isoni_Schiabel_Dedej_code.zip` is a build product**, gitignored, rooted at
+`sharp-har/`: the tracked tree minus `report/`, `docs/` and this file. Rebuild
+it whenever a tracked file it carries changes (`PROJECT.md` and `README.md`
+included) — see `PROJECT.md` Part VI §3.
 
 ## Language and style conventions
 

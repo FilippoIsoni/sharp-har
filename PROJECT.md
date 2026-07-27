@@ -14,10 +14,12 @@
 > `splits/*.json`, `reports/gate_*.json`, `reports/final/`, `reports/tables/*.csv`.
 > Nothing is quoted from a chat log or from notebook stdout.
 
-**Status — 2026-07-25.** Experiments are **closed**. The single test session ran
-2026-07-22 (16 pre-registered rows, one shot, full audit trail); the analysis
-closed 2026-07-23 (8 measured tables); the IEEE report is drafted, refined and
-builds to exactly 6 pages. Remaining work: report polish and the presentation.
+**Status — 2026-07-27. The project is closed; nothing is open.** The single test
+session ran 2026-07-22 (16 pre-registered rows, one shot, full audit trail); the
+analysis closed 2026-07-23 (8 measured tables); the report was verified against
+the artifacts, corrected and frozen 2026-07-26 at exactly 6 pages. **Delivery is
+two files** — `report/Isoni_Schiabel_Dedej_report.pdf` and
+`Isoni_Schiabel_Dedej_code.zip` (Part VI §3); there is no presentation.
 Deadline 2026-07-30, code freeze 2026-07-28. **No new run, no new test contact,
 no split regeneration.**
 
@@ -1078,6 +1080,8 @@ timestamp of record.
 | 2026-07-26 | **Stress-test correction pass on the report** — 10 length-neutral edits, no measured number changed, still exactly 6 pages | Full re-verification of every reported figure against `reports/final/` and `report/tables/`: all 9 table rows and all 6 mirrored CIs are exact, and the paired bootstrap was independently reproduced (C1−C3 = +0.0776 [+0.0295, +0.1282]). Fixed: the `0.13` baseline is a majority-class *accuracy*, not a macro-F1 (macro-F1 of that predictor is 0.029); under-confidence attributed to fusion rather than to label smoothing (§III.5); the linear probe / MLP adversary gap named and closed by the adversary's own majority floor; C3-ft's selected checkpoint disclosed as inside the warm-up, with every later full-LR epoch worse; abstract no longer derives probe unreadability *from* the incidence argument (two claims, different targets); C0's n = 57 added; the augmentation sentence now quotes the largest effect (+0.073) not the smallest; C2 marked as a circular replication of the domain probe; "backbone capacity" → "depth" (L7). Budget measured empirically, not estimated: the tail has < 1 line of slack, so the edit set was chosen greedily by value under a ~150-character ceiling |
 | 2026-07-26 | **L7 amended** — "appendix ablation, never a headline" dropped; the qualifier ("depth vs near-linear-wide, at equal recipe, nothing about throughput") kept and extended to every occurrence | The clause was unsatisfiable in a 6-page conference format (no appendix) and mis-weighted: C1 vs C1_sharplike is one of two bootstrap-resolved comparisons and the more robust of the two under jackknife. Compliance audit of the five occurrences: `results.tex:70` (verbatim wording + "on one axis only"), `results.tex:26` ("at equal recipe"), `template.tex:144` ("shallow--wide … identical recipe") and `conclusions.tex:11` ("deep … shallow--wide reference design", "here") satisfy the amended rule; **`intro.tex:62` ("the backbone alone is worth 23.5 accuracy points") does not name the axis and remains the one open deviation** — left unedited by team call, the report is not reopened for it |
 
+| 2026-07-27 | **Delivery set fixed and the project closed** — two artifacts, `report/Isoni_Schiabel_Dedej_report.pdf` and `Isoni_Schiabel_Dedej_code.zip`; **no presentation** | The paper is frozen after the 2026-07-26 verification pass and the code package carries the whole audit trail (splits, gates, the test session, the executed notebooks). Nothing in the experimental record is reopened by the delivery: the zip is a build product of the tracked tree (Part VI §3) |
+
 **Amendment discipline** (what made all of the above legitimate): the §0.7 row
 list may be amended **only by a team call and only while the session is closed**;
 a drop tightens the list and is always admissible; a post-val decision is
@@ -1116,7 +1120,9 @@ notebooks/diagnostics/  Executed investigation sessions
 splits/               Frozen split JSONs + CHANGELOG (pre-registration audit trail)
 reports/              Measured artifacts: inventory, contingency, gates, embeddings
 reports/final/        The single test session's CSVs + test_invocations.jsonl
-report/               IEEEtran paper: *.tex, tables/ (8 measured CSVs), figures/
+reports/tables/       The 8 measured tables Part III quotes (indexed by its README)
+reports/figures/      Notebook-06 vector figures (its README says which are typeset)
+report/               IEEEtran build tree + the delivered PDF; excluded from the code zip
 docs/archive/         Superseded documents, kept for the record only
 ```
 
@@ -1156,15 +1162,34 @@ session is *not* reproducible by re-running it — that would be a second test
 contact; it is reproducible from `reports/final/` downstream (notebook 06 is
 free to re-run).
 
-## 3. Remaining work
+## 3. Delivery
 
-1. Report polish on `report/` (the draft is refined and builds to exactly 6
-   pages with Tectonic, zero undefined references, both figures rendering — do
-   **not** build in place: the output name `template.pdf` would clobber the
-   course template).
-2. The presentation.
+**Two artifacts, and nothing else is open.**
 
-Nothing else is open. Code freeze 2026-07-28, deadline 2026-07-30.
+1. **`report/Isoni_Schiabel_Dedej_report.pdf`** — the IEEE paper, 6 pages
+   exactly, one table (`tab:test`) and two measured figures, plus the two TikZ
+   block diagrams drawn inline. Built from `report/*.tex` with `template.tex` as
+   the root. **Never build in place:** the root file's name makes the output
+   `template.pdf`, which is the untouchable course template — compile into a
+   temporary directory (Tectonic) and copy the result onto the delivered name.
+   The frozen build has zero undefined references and both figures rendering;
+   every number in it was re-verified against `reports/final/` and
+   `report/tables/` on 2026-07-26 (Part V).
+2. **`Isoni_Schiabel_Dedej_code.zip`** — the code and evidence package: the
+   repository tree under a single `sharp-har/` root, **minus `report/`** (the
+   paper ships as the PDF, not as a build tree), **minus `docs/archive/`**
+   (superseded documents) and minus `CLAUDE.md` (an assistant-conventions file,
+   not a project document). It therefore carries `sharp_har/`, `configs/`,
+   `notebooks/` (templates + every executed run), `splits/`, `reports/` (the
+   single test session, the 8 tables, the figures, the gates and the day-1
+   inventory), `PROJECT.md`, `README.md` and `requirements.txt`. Data (~762 MB)
+   and checkpoints stay on Drive, as they did throughout. The zip is a build
+   product: it is gitignored and regenerated from the tracked tree whenever a
+   tracked file it contains changes.
+
+There is **no presentation** deliverable. Code freeze 2026-07-28, deadline
+2026-07-30; the only admissible edits until then are to the two artifacts above
+and to the documents describing them.
 
 ## 4. Sources
 
@@ -1204,7 +1229,7 @@ Where the content of each archived document went. The archived copies under
 | `CONSOLIDATION_REVIEW.md` | §9 statistical protocol, Part IV literature framing of the two nulls, the incidence proof (F3), Part VI sources | The decision table (all directions resolved) and the G1–G12 gap list (all closed 2026-07-23) |
 | `CONCEPTUAL_STRESS_TEST.md` | **Part IV §3 "allowed wording"** (L0, L1, L2, L4, L5, L7) and the seed-value principle; L6 and L8 as decisions in Part V and results in Part III | The level-by-level essays and the "where it bends" argumentation, once their conclusions became binding wording |
 | `NOTEBOOK_06_REVIEW.md` | Part III (its measured-numbers appendix, in full) and the two declared caveats (C0 ECE under vote fusion, percentile CI at n = 11) | The review process itself and the four dated update passes; the notebook is report-grade and the checklist is closed |
-| `README.md` | Kept, trimmed to a repository entry point pointing here | Duplicate protocol and rule listings |
+| `README.md` | Kept as the repository front page: orientation, the headline table with its `n_traces`, the artifact map and how to read it — binding statements stay here | The specification, the decision log and the declaration list; any rule stated in a form that could drift from §0 |
 | `splits/CHANGELOG.md` | Kept in place as the pre-registration audit trail next to the frozen splits; summarized in Part V | — |
 | `notebooks/*/README.md` | Kept in place (local conventions and per-folder indices) | — |
 
