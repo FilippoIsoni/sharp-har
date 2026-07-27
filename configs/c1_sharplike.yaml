@@ -27,6 +27,14 @@
 # V-B choice (made on the day-2 throughput gate, not on accuracy) was
 # justified — NOT a higher number. Expect "comparable-or-worse"; only a
 # large val gap is informative on the 9-trace / 5-class val (§0.5 band).
+#
+# ADDENDUM 2026-07-21 (additive — nothing above is rewritten): after the
+# val run, this checkpoint WAS promoted to a §0.7 test row, in the only
+# admissible form named above (pre-register-AND-commit-to-report, with an
+# outcome-independent interpretive key). The pre-registration is
+# `splits/CHANGELOG.md`, entry "2026-07-21 (addendum)"; the decision and
+# its rationale are in PROJECT.md Part V. The "SCOPE" paragraph above is
+# the state at approval time and is kept verbatim as the dated record.
 name: C1_sharplike
 protocol: P2-lab
 split_file: splits/p2_lab.json

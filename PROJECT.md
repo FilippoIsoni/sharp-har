@@ -1185,7 +1185,22 @@ free to re-run).
    inventory), `PROJECT.md`, `README.md` and `requirements.txt`. Data (~762 MB)
    and checkpoints stay on Drive, as they did throughout. The zip is a build
    product: it is gitignored and regenerated from the tracked tree whenever a
-   tracked file it contains changes.
+   tracked file it contains changes. The file list comes from `git ls-files`,
+   never from the working directory, so untracked by-products (`__pycache__/`,
+   checkpoints, staging dirs) cannot leak into it.
+
+**Two documents are adapted at build time.** `README.md` and this file describe
+a tree; the package *is* a different tree, so the packaged copies restate the
+passages about layout as they apply to the package — the delivery paragraph,
+the pointer to the superseded documents, the repository map, Appendix A's
+preamble and the "Historical name references" clause, all of which otherwise
+point at `report/` and `docs/archive/`, which the package does not carry (they
+stay in the Git repository). **The adaptation is confined to those passages:**
+no specification, no measured number, no decision and no rule differs between
+the two versions, and each packaged copy carries a banner saying it is the
+packaged copy. In the repository these two documents keep describing the
+repository — that is what they are for, and the Git version is the authority on
+it.
 
 There is **no presentation** deliverable. Code freeze 2026-07-28, deadline
 2026-07-30; the only admissible edits until then are to the two artifacts above
